@@ -1,0 +1,10 @@
+@use '@styles/variables';
+@use '@styles/mixins';
+
+
+body {
+    margin: 0;
+    font-family: variables.$font-stack;
+    background-color: variables.$secondary-color;
+    color: black;
+}

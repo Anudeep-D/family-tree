@@ -1,0 +1,30 @@
+# Backend (Spring Boot + Gradle)
+/build/
+/out/
+/.gradle/
+/target/
+/*.iml
+*.log
+*.jar
+*.war
+
+# Frontend (React + Vite/Webpack)
+node_modules/
+dist/
+.vite/
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Podman/Docker
+**/neo4j/data/
+**/neo4j/logs/
+**/neo4j/import/
+**/neo4j/plugins/

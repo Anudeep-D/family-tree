@@ -1,0 +1,15 @@
+// sample
+
+@mixin flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  @mixin responsive-text($size-md, $size-lg) {
+    font-size: $size-md;
+  
+    @media (min-width: $breakpoint-lg) {
+      font-size: $size-lg;
+    }
+  }
