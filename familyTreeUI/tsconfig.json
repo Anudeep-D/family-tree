@@ -1,33 +1,74 @@
 {
   "compilerOptions": {
+    // Allows importing modules using absolute paths starting from project root
     "baseUrl": ".",
+
+    // Custom path aliases for cleaner imports
     "paths": {
-      "@/*": ["src/*"],
-      "@styles/*": ["src/styles/*"],
-      "@components/*": ["src/components/*"]
+      "@/*": ["src/*"],                        // Allows import like '@/utils/file'
+      "@styles/*": ["src/styles/*"],           // Allows import like '@styles/colors.scss'
+      "@routes/*": ["src/routes/*"]            // Allows import like '@routes/Button'
     },
+
+    // Target JavaScript version (compiled code will be compatible with ES2020)
     "target": "ES2020",
+
+    // Use 'define' semantics for class fields (matches recent JavaScript spec)
     "useDefineForClassFields": true,
+
+    // Include modern JavaScript and DOM library APIs
     "lib": ["esnext", "DOM", "DOM.Iterable"],
+
+    // Output ES modules (for bundlers like Vite, Webpack, etc.)
     "module": "ESNext",
+
+    // Skip type checking of declaration files (*.d.ts) — improves build speed
     "skipLibCheck": true,
+
+    // Ensure file names are referenced with the correct casing across the project
     "forceConsistentCasingInFileNames": true,
 
-    /* Bundler mode */
+    /* Bundler mode related settings */
+
+    // Use Node-style module resolution (how imports are resolved)
     "moduleResolution": "node",
+
+    // Allow default imports from CommonJS modules (required for many npm packages)
     "esModuleInterop": true,
+
+    // Allow importing TypeScript files with extensions like `.ts` or `.tsx`
     "allowImportingTsExtensions": true,
+
+    // Enables importing JSON files as modules
     "resolveJsonModule": true,
+
+    // Treat each file as a module (required for isolated type checking)
     "isolatedModules": true,
+
+    // Don’t emit any output files; useful when TypeScript is used only for type-checking
     "noEmit": true,
+
+    // Use the modern JSX transform (no need to import React in every file)
     "jsx": "react-jsx",
 
-    /* Linting */
+    /* Linting options */
+
+    // Enable strict type checking across the project
     "strict": true,
+
+    // Error on unused local variables
     "noUnusedLocals": true,
+
+    // Error on unused function parameters
     "noUnusedParameters": true,
+
+    // Prevent accidental fallthrough between switch cases
     "noFallthroughCasesInSwitch": true
   },
+
+  // Include files from the 'src' directory for compilation
   "include": ["src"],
+
+  // Reference another tsconfig (useful for separating server/client configs)
   "references": [{ "path": "./tsconfig.node.json" }]
 }
