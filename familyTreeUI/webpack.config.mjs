@@ -30,7 +30,7 @@ export const resolve = {
   alias: {
     "@": path.resolve(__dirname, "src"),                 // Use @ as alias for src
     "@styles": path.resolve(__dirname, "src/styles"),    // Alias for styles folder
-    "@components": path.resolve(__dirname, "src/routes") // Alias matching Vite config
+    "@routes": path.resolve(__dirname, "src/routes")     // Alias matching routes folder
   },
 };
 
