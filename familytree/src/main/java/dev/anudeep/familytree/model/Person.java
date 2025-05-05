@@ -1,21 +1,33 @@
 package dev.anudeep.familytree.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.*;
 
+import java.util.Date;
 import java.util.List;
 
 @Node("Person")
+@Setter @Getter @AllArgsConstructor @NoArgsConstructor
 public class Person {
 
     @Id
     @GeneratedValue
     private Long id;
-
+    private String elementId;
     private String name;
     private String gender;
-
-    private String house;
     private String nickName;
+    private boolean isAlive;
+    private Date dob;
+    private Date doe;
+    private String photo;
+    private String qualification;
+    private String job;
+    private String currLocation;
+    private String character; //temporary or optional
 
     @Relationship(type = "PARENT_OF", direction = Relationship.Direction.OUTGOING)
     private List<Person> children;
@@ -24,79 +36,6 @@ public class Person {
     private List<Person> partners;
 
     @Relationship(type = "BELONGS_TO", direction = Relationship.Direction.OUTGOING)
-    private List<House> houses;
+    private House house;
 
-    // Constructors
-    public Person() {}
-
-    public Person(String name, String gender, String house, String nickName) {
-        this.name = name;
-        this.gender = gender;
-        this.house = house;
-        this.nickName = nickName;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public String getHouse() {
-        return house;
-    }
-
-    public void setHouse(String house) {
-        this.house = house;
-    }
-
-    public String getNickName() {
-        return nickName;
-    }
-
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
-    }
-
-    public List<Person> getChildren() {
-        return children;
-    }
-
-    public void setChildren(List<Person> children) {
-        this.children = children;
-    }
-
-    public List<Person> getPartners() {
-        return partners;
-    }
-
-    public void setPartners(List<Person> partners) {
-        this.partners = partners;
-    }
-
-    public List<House> getHouses() {
-        return houses;
-    }
-
-    public void setHouses(List<House> houses) {
-        this.houses = houses;
-    }
 }

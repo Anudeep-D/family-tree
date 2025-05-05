@@ -75,6 +75,7 @@ MERGE (sandor:Person {name: "Sandor Clegane", gender: "male", isAlive: false, ch
 MERGE (joffrey)-[:BELONGS_TO]->(lannister)
 MERGE (tommen)-[:BELONGS_TO]->(lannister)
 MERGE (myrcella)-[:BELONGS_TO]->(lannister)
+MERGE (tywin)-[:BELONGS_TO]->(lannister)
 MERGE (margaery)-[:BELONGS_TO]->(tyrell)
 MERGE (selyse)-[:BELONGS_TO]->(baratheon)
 MERGE (yara)-[:BELONGS_TO]->(greyjoy)

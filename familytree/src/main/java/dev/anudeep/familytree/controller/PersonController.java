@@ -1,5 +1,6 @@
 package dev.anudeep.familytree.controller;
 
+import dev.anudeep.familytree.model.House;
 import dev.anudeep.familytree.model.Person;
 import dev.anudeep.familytree.service.PersonService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,12 +22,12 @@ public class PersonController {
         this.personService = personService;
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Get person by ID")
+    @GetMapping("/{elementId}")
+    @Operation(summary = "Get person by elementId")
     public Person getPerson(
-            @Parameter(description = "ID of the person to retrieve", required=true, example = "42")
-            @PathVariable Long id) {
-        return personService.getPersonById(id);
+            @Parameter(description = "elementId of the person to retrieve", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @PathVariable String elementId) {
+        return personService.getPersonById(elementId);
     }
 
     @PostMapping
@@ -35,27 +36,36 @@ public class PersonController {
         return personService.createPerson(person);
     }
 
-    @GetMapping("/{id}/partners")
-    @Operation(summary = "Get partners of a person by ID")
+    @GetMapping("/{elementId}/partners")
+    @Operation(summary = "Get partners of a person by elementId")
     public List<Person> getPartners(
-            @Parameter(description = "ID of the person to retrieve partners of", required=true, example = "42")
-            @PathVariable Long id) {
-        return personService.getPartners(id);
+            @Parameter(description = "elementId of the person to retrieve partners of", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @PathVariable String elementId) {
+        return personService.getPartners(elementId);
     }
 
-    @GetMapping("/{id}/children")
-    @Operation(summary = "Get children of a person by ID")
+    @GetMapping("/{elementId}/children")
+    @Operation(summary = "Get children of a person by elementId")
     public List<Person> getChildren(
-            @Parameter(description = "ID of the person to retrieve children of", required=true, example = "42")
-            @PathVariable Long id) {
-        return personService.getChildren(id);
+            @Parameter(description = "elementId of the person to retrieve children of", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @PathVariable String elementId) {
+        return personService.getChildren(elementId);
     }
 
-    @GetMapping("/{id}/house")
-    @Operation(summary = "Get house of a person by ID")
-    public List<Person> getHouse(
-            @Parameter(description = "ID of the person to retrieve house person belongs to", required=true, example = "42")
-            @PathVariable Long id) {
-        return personService.getHouse(id);
+    @GetMapping("/{elementId}/siblings")
+    @Operation(summary = "Get siblings of a person by elementId")
+    public List<Person> getSiblings(
+            @Parameter(description = "elementId of the person to retrieve siblings of person", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @PathVariable String elementId) {
+        return personService.getSiblings(elementId);
     }
+
+    @GetMapping("/{elementId}/house")
+    @Operation(summary = "Get house of a person by elementId")
+    public House getHouse(
+            @Parameter(description = "elementId of the person to retrieve person's house belongs to", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @PathVariable String elementId) {
+        return personService.getHouse(elementId);
+    }
+
 }

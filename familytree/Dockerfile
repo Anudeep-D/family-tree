@@ -3,10 +3,20 @@
 FROM eclipse-temurin:17-jdk as builder
 # Set working directory in the container                   
 WORKDIR /app     
-# Copy all backend source code                                   
-COPY . .           
-# Build the Spring Boot app (must have gradlew script)                                 
-RUN chmod +x ./gradlew && ./gradlew bootJar         
+# Copy only Gradle wrapper and build config files first
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .         
+
+# Pre-download dependencies (this step is cached unless these files change)
+RUN chmod +x ./gradlew && ./gradlew dependencies
+
+# Now copy the actual source code
+COPY src src
+
+# Clean and then build the JAR Build the Spring Boot app (must have gradlew script)
+RUN ./gradlew clean bootJar       
 
 # Stage 2: Run the built JAR
 # Use Java 17 again for a clean run environment
