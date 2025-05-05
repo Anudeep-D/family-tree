@@ -14,8 +14,6 @@ import java.util.List;
 public class Person {
 
     @Id
-    @GeneratedValue
-    private Long id;
     private String elementId;
     private String name;
     private String gender;

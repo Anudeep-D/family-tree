@@ -8,7 +8,7 @@ import org.springframework.data.neo4j.repository.query.Query;
 import java.util.List;
 
 
-public interface PersonRepository extends Neo4jRepository<Person, Long> {
+public interface PersonRepository extends Neo4jRepository<Person, String> {
 
     // Find person
     @Query("MATCH (p:Person) WHERE elementId(p) = $elementId RETURN p {.*, elementId: elementId(p) } AS person")

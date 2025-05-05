@@ -12,8 +12,6 @@ import org.springframework.data.neo4j.core.schema.Node;
 @Setter @Getter @AllArgsConstructor @NoArgsConstructor
 public class House {
     @Id
-    @GeneratedValue
-    private Long id;
     private String elementId;
     private String name;
     private String gods;        //optional

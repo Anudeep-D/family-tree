@@ -6,7 +6,7 @@ import org.springframework.data.neo4j.repository.query.Query;
 
 
 
-public interface HouseRepository extends Neo4jRepository<House, Long> {
+public interface HouseRepository extends Neo4jRepository<House, String> {
 
     // Find house
     @Query("MATCH (h:House) WHERE elementId(h) = $elementId RETURN h {.*, elementId: elementId(h) } AS house")

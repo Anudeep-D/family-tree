@@ -6,7 +6,7 @@ import org.springframework.data.neo4j.repository.query.Query;
 
 import java.util.List;
 
-public interface GraphRepository extends Neo4jRepository<Person, Long> {
+public interface GraphRepository extends Neo4jRepository<Person, String> {
 
     // Find immediate family (undirected relationship)
     @Query("MATCH (p:Person)-[:MARRIED_TO]-(partner:Person) WHERE elementId(p) = $elementId RETURN DISTINCT partner")
