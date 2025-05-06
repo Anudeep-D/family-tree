@@ -8,11 +8,13 @@ import dev.anudeep.familytree.model.Person;
 import dev.anudeep.familytree.repository.GraphRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.neo4j.driver.types.Node;
+import org.neo4j.driver.types.Relationship;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
@@ -29,6 +31,59 @@ public class GraphService {
 
     @Autowired
     private Neo4jClient neo4jClient;
+
+    public FlowGraphDTO getGraph() {
+        Set<FlowNodeDTO> nodes = new HashSet<>();
+        Set<FlowEdgeDTO> edges = new HashSet<>();
+        String cypher = """
+            MATCH (n)
+            OPTIONAL MATCH (n)-[r]->(m)
+            RETURN n, r, m
+        """;
+        AtomicInteger line= new AtomicInteger(1);
+        neo4jClient.query(cypher).fetch()
+                .all()
+                .forEach(row -> {
+                    log.info("Row fetched {}", line.getAndIncrement());
+                    Node node = (Node) row.get("n");
+                    Node target = (Node) row.get("m");
+                    Relationship rel = (Relationship) row.get("r");
+                    addNode(node,nodes);
+                    addNode(target,nodes);
+                    addEdge(rel, edges);
+                });
+        log.info("Graph generated with {} nodes and {} edges",nodes.size(), edges.size());
+        return new FlowGraphDTO(new ArrayList<>(nodes), new ArrayList<>(edges));
+    }
+
+    private void addNode(Node obj, Set<FlowNodeDTO> nodes) {
+        Optional<Node> n = Optional.ofNullable(obj);
+        if (n.isPresent()) {
+            Node node = n.get();
+            String id = node.elementId();
+            String name = node.get("name").asString("");
+            String type = node.labels().iterator().next();
+            Map<String, Object> data = node.asMap();
+            FlowNodeDTO flowNode = new FlowNodeDTO(id, name, type, data, new FlowPositionDTO());
+            log.info("node identified {}",flowNode);
+            nodes.add(flowNode);
+        }
+    }
+
+    private void addEdge(Relationship obj, Set<FlowEdgeDTO> edges) {
+        Optional<Relationship> rel = Optional.ofNullable(obj);
+        if (rel.isPresent()) {
+            Relationship relation = rel.get();
+            String srcId = relation.startNodeElementId();
+            String tgtId = relation.endNodeElementId();
+            String edgeId = relation.elementId();
+            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, relation.type());
+            if (!edges.contains(flowEdge)) {
+                log.info("edge identified {}",flowEdge);
+                edges.add(flowEdge);
+            }
+        }
+    }
 
     public FlowGraphDTO getFamilyTree(String elementId) {
         String cypher = """

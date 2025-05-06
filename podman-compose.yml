@@ -5,7 +5,7 @@ services:
     container_name: familytree-frontend  # Name of the Nginx container
     image: nginx:alpine                  # Use a lightweight Nginx image
     ports:
-      - "${FRONTEND_PORT}:80"                          # Map container's port 80 to host port 80
+      - "${FRONTEND_PORT}:80"           # Map container's port 80 to host port 3000
     volumes:
       - ./familyTreeUI/dist:/usr/share/nginx/html  # Serve built React files from this directory
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro  # Mount custom Nginx config (read-only)

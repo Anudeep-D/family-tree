@@ -12,6 +12,7 @@ MERGE (greyjoy:House {name: "Greyjoy", words: "We Do Not Sow", sigil: "Kraken", 
 MERGE (mormont:House {name: "Mormont", words: "Here We Stand", sigil: "Bear", hometown: "Bear Island", gods: "Old Gods of the Forest"})
 MERGE (baelish:House {name: "Baelish", words: "None", sigil: "None", hometown: "None", gods: "None"})
 MERGE (tarth:House {name: "Tarth", words: "None", sigil: "Star", hometown: "Tarth", gods: "Faith of the Seven"})
+MERGE (unknown:House {name: "Unknown", words: "None", sigil: "None", hometown: "None", gods: "None"})
 MERGE (clegane:House {name: "Clegane", words: "None", sigil: "Three dogs on a yellow field", hometown: "Unknown", gods: "Faith of the Seven"})
 
 // --- Create/Merge Person Nodes ---

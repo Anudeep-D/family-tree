@@ -7,6 +7,7 @@
     "paths": {
       "@/*": ["src/*"],                        // Allows import like '@/utils/file'
       "@styles/*": ["src/styles/*"],           // Allows import like '@styles/colors.scss'
+      "@types/*": ["src/types/*"], 
       "@routes/*": ["src/routes/*"]            // Allows import like '@routes/Button'
     },
 

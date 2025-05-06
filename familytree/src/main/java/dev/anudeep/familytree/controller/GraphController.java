@@ -7,7 +7,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -31,6 +33,18 @@ public class GraphController {
             @PathVariable String elementId) {
         log.info("GraphController: Fetching immediate family of a person by elementId {}", elementId);
         return graphService.getFamily(elementId);
+    }
+
+    @GetMapping("/")
+    @Operation(summary = "Get full graph")
+    public FlowGraphDTO getGraph() {
+        try {
+            log.info("GraphController: Fetching the complete graph");
+            return graphService.getGraph();
+        } catch (Exception e) {
+            log.error("Failed to fetch full graph", e);  // log stack trace
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error generating graph", e);
+        }
     }
 
     @GetMapping("/{elementId}/familytree")

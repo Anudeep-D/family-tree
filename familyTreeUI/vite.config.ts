@@ -14,6 +14,7 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, 'src'), // Use @ for base src/
       '@styles': path.resolve(__dirname, 'src/styles'), // Custom alias for styles
+      '@types': path.resolve(__dirname, 'src/types'), 
       '@routes': path.resolve(__dirname, 'src/routes'), // Alias for routes
     },
   },
