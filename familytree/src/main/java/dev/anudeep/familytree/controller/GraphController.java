@@ -6,10 +6,12 @@ import dev.anudeep.familytree.service.GraphService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @Tag(name = "Graph API", description = "Endpoints for managing family graphs")
 @RestController
 @RequestMapping("/api/graph")
@@ -27,6 +29,7 @@ public class GraphController {
     public List<Person> getFamily(
             @Parameter(description = "elementId of the person to retrieve family of person", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String elementId) {
+        log.info("GraphController: Fetching immediate family of a person by elementId {}", elementId);
         return graphService.getFamily(elementId);
     }
 
@@ -35,6 +38,7 @@ public class GraphController {
     public FlowGraphDTO getFamilyTree(
             @Parameter(description = "ElementId of the person to retrieve family tree of person", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String elementId) {
+        log.info("GraphController: Fetching family tree of a person by elementId {}", elementId);
         return graphService.getFamilyTree(elementId);
     }
 }

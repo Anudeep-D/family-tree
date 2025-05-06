@@ -6,6 +6,7 @@ import dev.anudeep.familytree.dto.FlowNodeDTO;
 import dev.anudeep.familytree.dto.FlowPositionDTO;
 import dev.anudeep.familytree.model.Person;
 import dev.anudeep.familytree.repository.GraphRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.neo4j.driver.types.Node;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.core.Neo4jClient;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+@Slf4j
 @Service
 public class GraphService {
     private final GraphRepository repository;
@@ -39,7 +41,7 @@ public class GraphService {
             // Return all people and relationships
             RETURN DISTINCT root, spouse, descendant, descendantSpouse
         """;
-
+        log.info("Cypher to fetch family tree:\n {}", cypher);
         Set<FlowNodeDTO> nodes = new HashSet<>();
         Set<FlowEdgeDTO> edges = new HashSet<>();
         neo4jClient.query(cypher)
@@ -56,7 +58,8 @@ public class GraphService {
                     addParentEdges(row.get("root"), row.get("descendant"), edges);
                     addMarriageEdge(row.get("descendant"), row.get("descendantSpouse"), edges);
                 });
-        System.out.println("FlowGraphDTO -> "+nodes.size()+", "+edges.size());
+
+        log.info("Graph generated with {} nodes and {} edges",nodes.size(), edges.size());
         return new FlowGraphDTO(new ArrayList<>(nodes), new ArrayList<>(edges));
     }
 
@@ -67,7 +70,7 @@ public class GraphService {
             String name = person.get("name").asString("");
             Map<String, Object> data = Map.of("name", name);
             FlowNodeDTO flowNode = new FlowNodeDTO(id, name, "person", data, new FlowPositionDTO());
-            // Prevent duplicates
+            log.info("person node identified {}",flowNode);
             nodes.add(flowNode);
         }
     }
@@ -82,8 +85,8 @@ public class GraphService {
             String reverseEdgeId = tgtId + "_married_" + srcId;
             FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, "MARRIED_TO");
             FlowEdgeDTO reverseFlowEdge = new FlowEdgeDTO(reverseEdgeId, tgtId, srcId, "MARRIED_TO");
-            // Prevent duplicates
             if (!edges.contains(flowEdge) && !edges.contains(reverseFlowEdge)) {
+                log.info("MARRIED_TO edge identified {}",flowEdge);
                 edges.add(flowEdge);
             }
         }
@@ -101,7 +104,7 @@ public class GraphService {
             FlowEdgeDTO reverseFlowEdge = new FlowEdgeDTO(reverseEdgeId, tgtId, srcId, "PARENT_OF");
             // Prevent duplicates
             if (!edges.contains(flowEdge) && !edges.contains(reverseFlowEdge)) {
-                // System.out.println("parent flowEdge -> "+flowEdge);
+                log.info("PARENT_OF edge identified {}",flowEdge);
                 edges.add(flowEdge);
             }
         }

@@ -1,7 +1,7 @@
-build/
-.gradle/
-*.iml
-*.log
-*.zip
-out/
-.idea/
+build/        # ✅ Gradle build output (keep image small)
+.gradle/      # ✅ Gradle cache (not needed in image)
+*.iml         # ✅ IntelliJ IDEA project files (irrelevant for builds)
+*.log         # ✅ Log files (no need to copy them into image)
+*.zip         # ✅ Avoid uploading random zip archives
+out/          # ✅ Common Java output dir (esp. with IntelliJ)
+.idea/        # ✅ IntelliJ project settings (shouldn't go in image)

@@ -1,5 +1,6 @@
 package dev.anudeep.familytree.model;
 
+import dev.anudeep.familytree.dto.FlowEdgeDTO;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,7 @@ import org.springframework.data.neo4j.core.schema.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 @Node("Person")
 @Setter @Getter @AllArgsConstructor @NoArgsConstructor
@@ -36,4 +38,32 @@ public class Person {
     @Relationship(type = "BELONGS_TO", direction = Relationship.Direction.OUTGOING)
     private House house;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Person that)) return false;
+        return Objects.equals(elementId, that.elementId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(elementId);
+    }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "elementId='" + elementId + '\'' +
+                ", name='" + name + '\'' +
+                ", gender='" + gender + '\'' +
+                ", nickName='" + nickName + '\'' +
+                ", isAlive='" + isAlive + '\'' +
+                ", dob='" + dob + '\'' +
+                ", doe='" + doe + '\'' +
+                ", qualification='" + qualification + '\'' +
+                ", job='" + job + '\'' +
+                ", currLocation='" + currLocation + '\'' +
+                ", character='" + character + '\'' +
+                '}';
+    }
 }
