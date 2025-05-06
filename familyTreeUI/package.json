@@ -13,11 +13,11 @@
   "dependencies": {
     "@reduxjs/toolkit": "^2.7.0",
     "@xyflow/react": "^12.5.1",
+    "dagre": "^0.8.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-redux": "^9.2.0",
-    "react-router-dom": "^7.5.3",
-    "dagre":"^0.8.5"
+    "react-router-dom": "^7.5.3"
   },
   "devDependencies": {
     "@babel/core": "^7.27.1",
@@ -33,13 +33,13 @@
     "@vitejs/plugin-react": "^4.2.1",
     "babel-loader": "^10.0.0",
     "css-loader": "^7.1.2",
+    "dotenv": "^16.5.0",
     "eslint": "^8.56.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
     "html-webpack-plugin": "^5.6.3",
     "path": "^0.12.7",
-    "sass": "^1.86.3",
-    "sass-embedded": "^1.86.3",
+    "sass": "^1.87.0",
     "sass-loader": "^16.0.5",
     "style-loader": "^4.0.0",
     "typescript": "^5.3.3",

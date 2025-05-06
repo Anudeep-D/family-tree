@@ -1,18 +1,10 @@
-import {
-  ReactFlow,
-  Background,
-  MiniMap,
-  Controls,
-  addEdge,
-  OnConnect,
-  useEdgesState,
-  useNodesState,
-} from "@xyflow/react";
-import { useCallback } from "react";
 import "@xyflow/react/dist/style.css";
-import { AppNode, nodeTypes } from "@/types/nodeTypes";
-import { AppEdge, edgeTypes } from "@/types/edgeTypes";
-import { getNodesWithPositions } from "@/utils/nodePositions";
+import { AppNode } from "@/types/nodeTypes";
+import { AppEdge } from "@/types/edgeTypes";
+import { useGetGraphQuery } from "@/redux/queries/graph-endpoints";
+import { GraphFlow } from "./ReactFlow/GraphFlow";
+import { useEffect } from "react";
+
 // Sample custom nodes
 export const initialNodes: AppNode[] = [
   {
@@ -54,31 +46,20 @@ export const initialEdges: AppEdge[] = [
     targetHandle: "a",
     type: "labeled-edge",
     data: { label: "PARENT_OF" },
-  }
+  },
 ];
 const Home = () => {
-  const [nodes, ,onNodesChange] = useNodesState(getNodesWithPositions(initialNodes, initialEdges));
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const onConnect: OnConnect = useCallback(
-    (connection) => setEdges((edges) => addEdge(connection, edges)),
-    [setEdges]
-  );
-  return (
-    <ReactFlow
-      nodes={nodes}
-      nodeTypes={nodeTypes}
-      onNodesChange={onNodesChange}
-      edges={edges}
-      edgeTypes={edgeTypes}
-      onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
-      fitView
-    >
-      <Background />
-      <MiniMap />
-      <Controls />
-    </ReactFlow>
-  );
+  const { data, isFetching, isLoading, isError, error } = useGetGraphQuery({});
+  useEffect(() => {
+    if (isError) {
+      console.log("isError", error);
+    } else if (!isFetching && !isLoading) {
+      console.log(data);
+    } else {
+      console.log("isFetching: ", isFetching, " ,isLoading", isLoading);
+    }
+  }, [data, isFetching, isLoading, isError]);
+  return <GraphFlow initialEdges={initialEdges} initialNodes={initialNodes} />;
 };
 
 export default Home;

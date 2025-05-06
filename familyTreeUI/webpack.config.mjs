@@ -1,5 +1,7 @@
 // ESM-style imports
 import path from "path";
+import dotenv from "dotenv";
+import webpack from "webpack";
 import { fileURLToPath } from "url";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 
@@ -35,6 +37,15 @@ export const resolve = {
   },
 };
 
+// Load env vars from root-level .env
+const env = dotenv.config({ path: path.resolve(__dirname, "../.env") }).parsed;
+
+// Convert to Webpack-friendly format
+const envKeys = Object.keys(env).reduce((prev, next) => {
+  prev[`process.env.${next}`] = JSON.stringify(env[next]);
+  return prev;
+}, {});
+
 // Main Webpack configuration object
 export default {
   mode: mode,                 // Mode: development or production
@@ -67,7 +78,7 @@ export default {
             loader: "css-loader",
             options: { modules: true },     // Enable CSS Modules
           },
-          "sass-loader",                    // Compile SCSS to CSS
+          "sass-loader", // This will automatically use `sass` (JS Dart Sass)                 // Compile SCSS to CSS
         ],
       },
       {
@@ -87,6 +98,7 @@ export default {
     new HtmlWebpackPlugin({
       template: "./index.html",            // Base HTML template for the app
     }),
+    new webpack.DefinePlugin(envKeys),
   ],
 
   // Development server settings

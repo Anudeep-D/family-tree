@@ -1,0 +1,1 @@
+export const baseUrl = `${process.env.HOST_NAME}:${process.env.SPRING_PORT}`;
