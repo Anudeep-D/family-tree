@@ -2,8 +2,10 @@ import "@xyflow/react/dist/style.css";
 import { AppNode } from "@/types/nodeTypes";
 import { AppEdge } from "@/types/edgeTypes";
 import { useGetGraphQuery } from "@/redux/queries/graph-endpoints";
-import { GraphFlow } from "./ReactFlow/GraphFlow";
+import { GraphFlow } from "./GraphFlow/GraphFlow";
 import { useEffect } from "react";
+import { useFetchSessionUserQuery } from "@/redux/queries/auth-endpoints";
+import { useNavigate } from "react-router-dom";
 
 // Sample custom nodes
 export const initialNodes: AppNode[] = [
@@ -49,7 +51,28 @@ export const initialEdges: AppEdge[] = [
   },
 ];
 const Home = () => {
-  const { data, isFetching, isLoading, isError, error } = useGetGraphQuery({});
+  const {
+    data: user,
+    error: loginError,
+    isLoading: isLoginLoading,
+  } = useFetchSessionUserQuery();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isLoginLoading) {
+      if (!user) {
+        navigate("/login"); // 🔁 redirect if no valid session
+      }
+    }
+  }, [user, isLoginLoading]);
+
+  if (isLoginLoading) return <p>Loading...</p>;
+  if (loginError || !user) {
+    console.log("loginError",loginError);
+    navigate("/login");
+  }
+  
+  const { data, isFetching, isLoading, isError, error } = useGetGraphQuery({projectId:"projectId"});
   useEffect(() => {
     if (isError) {
       console.log("isError", error);
@@ -59,7 +82,8 @@ const Home = () => {
       console.log("isFetching: ", isFetching, " ,isLoading", isLoading);
     }
   }, [data, isFetching, isLoading, isError]);
-  return <GraphFlow initialEdges={initialEdges} initialNodes={initialNodes} />;
+
+  return <>{user ? <GraphFlow initialEdges={initialEdges} initialNodes={initialNodes} /> : navigate("/login")}</>;
 };
 
 export default Home;

@@ -15,7 +15,11 @@ import java.util.List;
  */
 @Configuration
 public class CorsConfig {
+    private final CorsProperties corsProperties;
 
+    public CorsConfig(CorsProperties corsProperties) {
+        this.corsProperties = corsProperties;
+    }
     /**
      * Defines the CORS policy applied to all endpoints (/**).
      *
@@ -26,7 +30,7 @@ public class CorsConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         // List of allowed origins - here it's configured to allow the React dev server
-        config.setAllowedOrigins(List.of("http://localhost:3000"));
+        config.setAllowedOrigins(corsProperties.getAllowedOrigins());
 
         // Allowed HTTP methods
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -36,6 +40,9 @@ public class CorsConfig {
 
         // Allow sending credentials like cookies, authorization headers, etc.
         config.setAllowCredentials(true);
+
+        // ✅ Optional: expose headers if frontend needs to read them
+        config.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
 
         // Register the CORS config to apply to all routes (/**)
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

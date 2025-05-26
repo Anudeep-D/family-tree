@@ -9,6 +9,8 @@ services:
     volumes:
       - ./familyTreeUI/dist:/usr/share/nginx/html  # Serve built React files from this directory
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro  # Mount custom Nginx config (read-only)
+    networks:
+      - backendnet
     depends_on:
       - backend                          # Wait for backend to start before this container starts
 
@@ -21,14 +23,21 @@ services:
       - "${SPRING_PORT}:8080"
     env_file:
       - .env                     # Map container's port 8080 to host port 8080
+    networks:
+      - backendnet
     environment:
       NEO4J_URI: ${NEO4J_URI}            # URI of the Neo4j service
       NEO4J_USERNAME: ${NEO4J_USERNAME}  # Username for Neo4j auth
       NEO4J_PASSWORD: ${NEO4J_PASSWORD}  # Password for Neo4j auth
       JWT_SECRET: ${JWT_SECRET}
       SPRING_PORT: ${SPRING_PORT}
+      SPRING_REDIS_HOST: familytree-redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_SESSION_TIMEOUT: ${REDIS_SESSION_TTL}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     depends_on:
-      - neo4j                            # Ensure Neo4j is up before backend
+      - neo4j  # Wait for Neo4j before starting
+      - redis  # Wait for Redis before starting
 
   neo4j:
     container_name: familytree-neo4j     # Name of the Neo4j database container
@@ -40,6 +49,27 @@ services:
       NEO4J_AUTH: "${NEO4J_USERNAME}/${NEO4J_PASSWORD}"   # Sets up Neo4j with username/password
     volumes:
       - neo4j-data:/data                 # Persist database data
+    networks:
+      - backendnet
+      
+  redis:
+    container_name: familytree-redis                # Redis cache for sessions
+    image: redis:7.2-alpine                # Lightweight Redis image
+    ports:
+      - "6379:6379"                      # Redis port
+    volumes:
+      - redis-data:/data
+    networks:
+      - backendnet
 
 volumes:
-  neo4j-data:                            # Named volume to persist Neo4j data
+  neo4j-data:  # Volume for Neo4j data
+  redis-data:  # Volume for Redis data
+
+networks:
+  backendnet:
+    driver: bridge
+
+command:
+  down:
+    options: "-rmi all"

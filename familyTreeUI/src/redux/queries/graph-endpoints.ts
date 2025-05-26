@@ -4,7 +4,8 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 export const graphApi = createApi({
   reducerPath: "graphApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `${baseUrl}/api/graph`,
+    baseUrl: `${baseUrl}/api/projects`,
+    credentials: "include", // ✅ Send cookies (including session ID)
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
@@ -14,9 +15,9 @@ export const graphApi = createApi({
   tagTypes: ["graphApi"],
   endpoints: (builder) => ({
     getGraph: builder.query({
-      query() {
+      query(args) {
         return {
-          url: `/`,
+          url: `/${args.projectId}/graph`,
         };
       },
       providesTags: ["graphApi"],
@@ -24,7 +25,7 @@ export const graphApi = createApi({
     getFamily: builder.query({
       query(args) {
         return {
-          url: `/${args.id}/family`,
+          url: `/${args.projectId}/graph/${args.id}/family`,
         };
       },
       providesTags: ["graphApi"],
@@ -32,7 +33,7 @@ export const graphApi = createApi({
     getFamilyTree: builder.query({
       query(args) {
         return {
-          url: `/${args.id}/familytree`,
+          url: `/${args.projectId}/graph/${args.id}/familytree`,
         };
       },
       providesTags: ["graphApi"],
