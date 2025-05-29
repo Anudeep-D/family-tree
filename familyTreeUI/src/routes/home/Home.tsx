@@ -6,6 +6,7 @@ import { GraphFlow } from "./GraphFlow/GraphFlow";
 import { useEffect } from "react";
 import { useFetchSessionUserQuery } from "@/redux/queries/auth-endpoints";
 import { useNavigate } from "react-router-dom";
+import { skipToken } from "@reduxjs/toolkit/query/react";
 
 // Sample custom nodes
 export const initialNodes: AppNode[] = [
@@ -51,39 +52,56 @@ export const initialEdges: AppEdge[] = [
   },
 ];
 const Home = () => {
+  const navigate = useNavigate();
   const {
     data: user,
     error: loginError,
     isLoading: isLoginLoading,
   } = useFetchSessionUserQuery();
-  const navigate = useNavigate();
+
+  const {
+    data: graphData,
+    isFetching: isGraphFetching,
+    isLoading: isGraphLoading,
+    isError: isGraphError,
+    error: graphError,
+  } = useGetGraphQuery(user && user.elementId ? { projectId: "projectId" } : skipToken);
 
   useEffect(() => {
-    if (!isLoginLoading) {
-      if (!user) {
-        navigate("/login"); // 🔁 redirect if no valid session
-      }
+    if (!isLoginLoading && (!user || loginError)) {
+      navigate("/login");
     }
-  }, [user, isLoginLoading]);
+  }, [user, isLoginLoading, loginError, navigate]);
 
-  if (isLoginLoading) return <p>Loading...</p>;
+  useEffect(() => {
+    if (isGraphError) {
+      console.log("Graph query error:", graphError);
+      // Potentially navigate to an error page or show an error message
+    }
+  }, [isGraphError, graphError, navigate]);
+
+  if (isLoginLoading) {
+    return <p>Loading session...</p>;
+  }
+
   if (loginError || !user) {
-    console.log("loginError",loginError);
-    navigate("/login");
+    return <p>Redirecting to login...</p>;
+  }
+
+  if (isGraphLoading || isGraphFetching) {
+    return <p>Loading graph data...</p>;
+  }
+
+  if (isGraphError) {
+    return <p>Error loading graph data. Please try again later.</p>;
   }
   
-  const { data, isFetching, isLoading, isError, error } = useGetGraphQuery({projectId:"projectId"});
-  useEffect(() => {
-    if (isError) {
-      console.log("isError", error);
-    } else if (!isFetching && !isLoading) {
-      console.log(data);
-    } else {
-      console.log("isFetching: ", isFetching, " ,isLoading", isLoading);
-    }
-  }, [data, isFetching, isLoading, isError]);
+  if (user && graphData) {
+    return <GraphFlow initialEdges={initialEdges} initialNodes={initialNodes} />;
+  }
 
-  return <>{user ? <GraphFlow initialEdges={initialEdges} initialNodes={initialNodes} /> : navigate("/login")}</>;
+  // Fallback case, though ideally covered by previous checks
+  return <p>Preparing your experience...</p>;
 };
 
 export default Home;

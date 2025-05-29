@@ -55,7 +55,7 @@ public class AuthController {
         if (user == null || user.getElementId() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Session expired");
         }
-        return ResponseEntity.ok(user.getElementId());
+        return ResponseEntity.ok().body(user);
     }
 
 }
