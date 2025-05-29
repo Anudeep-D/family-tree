@@ -19,12 +19,12 @@ public class CommonUtils {
         this.userProjectService = userProjectService;
     }
     public void accessCheck(HttpSession session, String projectId, Role[] rolesCheck){
-        String userId = (String) session.getAttribute("user");
-        if (userId == null) {
+        User user = (User) session.getAttribute("user");
+        if (user.getElementId() == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Session expired or not logged in");
         }
         if(projectId!=null && rolesCheck!=null){
-            Role role =  userProjectService.getRelationshipType(userId, projectId)
+            Role role =  userProjectService.getRelationshipType(user.getElementId(), projectId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "No access to this project"));
             Predicate<Role>  isRole = r -> r==role;
             if(Arrays.stream(rolesCheck).noneMatch(isRole))

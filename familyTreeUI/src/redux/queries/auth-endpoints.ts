@@ -9,14 +9,14 @@ export const authApi = createApi({
     credentials: "include", // send cookies for session
   }),
   endpoints: (builder) => ({
-    loginWithGoogle: builder.mutation<User, string>({
+    loginWithGoogle: builder.mutation<User, User>({
       query: (googleToken) => ({
         url: "/login",
         method: "POST",
         body: { token: googleToken },
       }),
     }),
-    fetchSessionUser: builder.query<string, void>({
+    fetchSessionUser: builder.query<User, void>({
       query: () => ({
         url: "/session",
         method: "GET",

@@ -36,7 +36,7 @@ public class ProjectController {
     @GetMapping("/")
     public List<Project> getProjects(HttpSession session) {
         commonUtils.accessCheck(session,null,null);
-        String userId = (String) session.getAttribute("user");
-        return userProjectService.getAllProjectsForUser(userId);
+        User user = (User) session.getAttribute("user");
+        return userProjectService.getAllProjectsForUser(user.getElementId());
     }
 }

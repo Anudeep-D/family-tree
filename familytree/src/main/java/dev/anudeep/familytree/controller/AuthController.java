@@ -23,21 +23,23 @@ import java.security.GeneralSecurityException;
 public class AuthController {
 
     private final UserService userService;
-    public AuthController(UserService userService){
-        this.userService= userService;
+
+    public AuthController(UserService userService) {
+        this.userService = userService;
     }
+
     @PostMapping("/login")
     public ResponseEntity<?> authenticateWithGoogle(@RequestBody TokenRequest tokenRequest,
-                                                    HttpServletRequest request) throws GeneralSecurityException, IOException {
+            HttpServletRequest request) throws GeneralSecurityException, IOException {
         User user = userService.processGoogleToken(tokenRequest.getToken());
         log.info("User Processed");
         // 💡 Invalidate old session and create a new one
-        // request.getSession().invalidate(); // destroys current session
-        // log.info("Session invalidated");
+        request.getSession().invalidate(); // destroys current session
+        log.info("Session invalidated");
         HttpSession newSession = request.getSession(true); // creates new session
         log.info("Created session ID: {}", newSession.getId());
-        newSession.setAttribute("user", user.getElementId());   // store user in session
-        log.info("Created session ID: {}", newSession.getAttribute("user"));
+        newSession.setAttribute("user", user); // store user in session
+        log.info("Created user: {}", newSession.getAttribute("user"));
         return ResponseEntity.ok().body(user);
     }
 
@@ -49,11 +51,11 @@ public class AuthController {
 
     @GetMapping("/session")
     public ResponseEntity<?> getSessionUser(HttpSession session) {
-        String userId = (String) session.getAttribute("user");
-        if (userId == null) {
+        User user = (User) session.getAttribute("user");
+        if (user == null || user.getElementId() == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Session expired");
         }
-        return ResponseEntity.ok(userId);
+        return ResponseEntity.ok(user.getElementId());
     }
 
 }
