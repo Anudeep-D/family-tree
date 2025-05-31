@@ -2,6 +2,8 @@ import { useLoginWithGoogleMutation } from "@/redux/queries/auth-endpoints";
 import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 
+import "./Login.scss";
+
 const LoginPage = () => {
   const [loginWithGoogle] = useLoginWithGoogleMutation();
   const navigate = useNavigate();
@@ -19,8 +21,8 @@ const LoginPage = () => {
   };
 
   return (
-    <div>
-      <h2>Login</h2>
+    <div className="login">
+      <h1>Login to FamilyTree</h1>
       <GoogleLogin onSuccess={handleLogin} onError={() => console.error("Google login failed")} />
     </div>
   );

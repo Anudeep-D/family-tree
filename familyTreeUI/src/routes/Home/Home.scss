@@ -1,0 +1,33 @@
+/* Home.scss — Chakra UI version with minimal custom styles */
+
+.home {
+  padding: 1rem;
+}
+
+.home__header {
+  margin-bottom: 1rem;
+}
+
+.home__table-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.home__bulk-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Optional: style the breadcrumb if not using Chakra's built-in one */
+.home__breadcrumb {
+  margin-bottom: 1rem;
+}
+
+/* Override checkbox alignment if needed */
+.chakra-checkbox__control {
+  margin-top: 2px;
+}

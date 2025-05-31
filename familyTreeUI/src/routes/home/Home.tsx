@@ -1,57 +1,65 @@
-import "@xyflow/react/dist/style.css";
-import { AppNode } from "@/types/nodeTypes";
-import { AppEdge } from "@/types/edgeTypes";
-import { useGetGraphQuery } from "@/redux/queries/graph-endpoints";
-import { GraphFlow } from "./GraphFlow/GraphFlow";
-import { useEffect } from "react";
-import { useFetchSessionUserQuery } from "@/redux/queries/auth-endpoints";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { skipToken } from "@reduxjs/toolkit/query/react";
+import {
+  Box,
+  Button,
+  Checkbox,
+  Container,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TextField,
+  Typography,
+  TableSortLabel,
+  TablePagination,
+  CircularProgress,
+} from "@mui/material";
+import { visuallyHidden } from "@mui/utils";
+import { useFetchSessionUserQuery } from "@/redux/queries/auth-endpoints";
+import Breadcrumb from "./Breadcrumb/Breadcrumb";
+import Navbar from "./NavBar/Navbar";
 
-// Sample custom nodes
-export const initialNodes: AppNode[] = [
-  {
-    id: "1",
-    type: "position-logger",
-    data: { label: "Root Node" },
-    position: { x: 100, y: 100 },
-  },
-  {
-    id: "2",
-    type: "position-logger",
-    data: { label: "Child Node" },
-    position: { x: 100, y: 100 },
-  },
-  {
-    id: "3",
-    type: "position-logger",
-    data: { label: "Sibling Node" },
-    position: { x: 100, y: 100 },
-  },
+type Order = "asc" | "desc";
+
+interface HeadCell {
+  id: keyof Project;
+  label: string;
+}
+
+interface Project {
+  id: string;
+  name: string;
+  access: string;
+}
+
+const headCells: readonly HeadCell[] = [
+  { id: "name", label: "Name" },
+  { id: "access", label: "Access" },
 ];
 
-// Sample custom edges
-export const initialEdges: AppEdge[] = [
-  {
-    id: "e1-2",
-    source: "1",
-    target: "2",
-    sourceHandle: "b",
-    targetHandle: "a",
-    type: "labeled-edge",
-    data: { label: "PARENT_OF" },
-  },
-  {
-    id: "e1-3",
-    source: "1",
-    target: "3",
-    sourceHandle: "b",
-    targetHandle: "a",
-    type: "labeled-edge",
-    data: { label: "PARENT_OF" },
-  },
-];
-const Home = () => {
+// Sort comparator
+function getComparator<Key extends keyof any>(
+  order: Order,
+  orderBy: Key
+): (a: { [key in Key]: string }, b: { [key in Key]: string }) => number {
+  return order === "desc"
+    ? (a, b) => b[orderBy].localeCompare(a[orderBy])
+    : (a, b) => a[orderBy].localeCompare(b[orderBy]);
+}
+
+export default function Home() {
+  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
+  const [filterRole, setFilterRole] = useState("");
+
   const navigate = useNavigate();
   const {
     data: user,
@@ -59,49 +67,216 @@ const Home = () => {
     isLoading: isLoginLoading,
   } = useFetchSessionUserQuery();
 
-  const {
-    data: graphData,
-    isFetching: isGraphFetching,
-    isLoading: isGraphLoading,
-    isError: isGraphError,
-    error: graphError,
-  } = useGetGraphQuery(user && user.elementId ? { projectId: "projectId" } : skipToken);
-
   useEffect(() => {
     if (!isLoginLoading && (!user || loginError)) {
       navigate("/login");
     }
   }, [user, isLoginLoading, loginError, navigate]);
 
-  useEffect(() => {
-    if (isGraphError) {
-      console.log("Graph query error:", graphError);
-      // Potentially navigate to an error page or show an error message
+  const allProjects = useMemo(
+    () =>
+      user
+        ? [
+            { id: "1", name: "Admin Project Alpha", access: "Admin" },
+            { id: "2", name: "Admin Project Beta", access: "Admin" },
+            { id: "3", name: "Editor Project Alpha", access: "Editor" },
+            { id: "4", name: "Editor Project Beta", access: "Editor" },
+            { id: "5", name: "Viewer Project Alpha", access: "Viewer" },
+            { id: "6", name: "Viewer Project Beta", access: "Viewer" },
+          ]
+        : [],
+    [user]
+  );
+
+  const [order, setOrder] = useState<Order>("asc");
+  const [orderBy, setOrderBy] = useState<keyof Project>("name");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const handleRequestSort = (
+    _event: React.MouseEvent<unknown>,
+    property: keyof Project
+  ) => {
+    const isAsc = orderBy === property && order === "asc";
+    setOrder(isAsc ? "desc" : "asc");
+    setOrderBy(property);
+  };
+
+  const handleChangePage = (_event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
+  const filteredProjects = useMemo(() => {
+    return allProjects
+      .filter(
+        (project) =>
+          (!search ||
+            project.name.toLowerCase().includes(search.toLowerCase())) &&
+          (!filterRole || project.access === filterRole)
+      )
+      .sort(getComparator(order, orderBy));
+  }, [allProjects, search, filterRole, order, orderBy]);
+
+  const toggleSelect = (id: string) => {
+    setSelectedProjectIds((prev) =>
+      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedProjectIds.length === filteredProjects.length) {
+      setSelectedProjectIds([]);
+    } else {
+      setSelectedProjectIds(filteredProjects.map((p) => p.id));
     }
-  }, [isGraphError, graphError, navigate]);
+  };
+
+  const handleDelete = () => {
+    console.log("Delete projects:", selectedProjectIds);
+  };
 
   if (isLoginLoading) {
-    return <p>Loading session...</p>;
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <CircularProgress />
+      </Box>
+    );
   }
 
-  if (loginError || !user) {
-    return <p>Redirecting to login...</p>;
-  }
+  return (
+    <Box>
+      <Navbar />
+      <Breadcrumb />
+      <Container sx={{ mt: 4 }}>
+        <Typography variant="h5" gutterBottom>
+          Welcome, {user?.name}
+        </Typography>
 
-  if (isGraphLoading || isGraphFetching) {
-    return <p>Loading graph data...</p>;
-  }
+        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 2 }}>
+          <TextField
+            label="Search projects"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            size="small"
+            sx={{ minWidth: 300 }}
+          />
+          <FormControl size="small" sx={{ minWidth: 200 }}>
+            <InputLabel>Filter by Role</InputLabel>
+            <Select
+              value={filterRole}
+              label="Filter by Role"
+              onChange={(e) => setFilterRole(e.target.value)}
+            >
+              <MenuItem value="">All</MenuItem>
+              <MenuItem value="Admin">Admin</MenuItem>
+              <MenuItem value="Editor">Editor</MenuItem>
+              <MenuItem value="Viewer">Viewer</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
 
-  if (isGraphError) {
-    return <p>Error loading graph data. Please try again later.</p>;
-  }
-  
-  if (user && graphData) {
-    return <GraphFlow initialEdges={initialEdges} initialNodes={initialNodes} />;
-  }
+        {selectedProjectIds.length > 0 && (
+          <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+            <Button variant="contained" color="error" onClick={handleDelete}>
+              Delete
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => setSelectedProjectIds([])}
+            >
+              Cancel
+            </Button>
+          </Box>
+        )}
 
-  // Fallback case, though ideally covered by previous checks
-  return <p>Preparing your experience...</p>;
-};
+        <TableContainer component={Paper}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    checked={
+                      selectedProjectIds.length ===
+                        filteredProjects.slice(
+                          page * rowsPerPage,
+                          page * rowsPerPage + rowsPerPage
+                        ).length && filteredProjects.length > 0
+                    }
+                    onChange={handleSelectAll}
+                    inputProps={{ "aria-label": "select all projects" }}
+                  />
+                </TableCell>
+                {headCells.map((headCell) => (
+                  <TableCell
+                    key={headCell.id}
+                    sortDirection={orderBy === headCell.id ? order : false}
+                  >
+                    <TableSortLabel
+                      active={orderBy === headCell.id}
+                      direction={orderBy === headCell.id ? order : "asc"}
+                      onClick={(event) => handleRequestSort(event, headCell.id)}
+                    >
+                      {headCell.label}
+                      {orderBy === headCell.id ? (
+                        <Box component="span" sx={visuallyHidden}>
+                          {order === "desc"
+                            ? "sorted descending"
+                            : "sorted ascending"}
+                        </Box>
+                      ) : null}
+                    </TableSortLabel>
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredProjects
+                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                .map((project) => (
+                  <TableRow key={project.id} hover>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={selectedProjectIds.includes(project.id)}
+                        onChange={() => toggleSelect(project.id)}
+                      />
+                    </TableCell>
+                    <TableCell>{project.name}</TableCell>
+                    <TableCell>{project.access}</TableCell>
+                  </TableRow>
+                ))}
+              {filteredProjects.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={3} align="center">
+                    No projects found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
 
-export default Home;
+          <TablePagination
+            rowsPerPageOptions={[5, 10, 25]}
+            component="div"
+            count={filteredProjects.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        </TableContainer>
+      </Container>
+    </Box>
+  );
+}
