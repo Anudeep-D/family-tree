@@ -1,0 +1,123 @@
+import { useLoginWithGoogleMutation, useFetchSessionUserQuery, useLogoutMutation } from '@/redux/queries/auth-endpoints';
+import { User } from '@/types/entityTypes';
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react'; 
+
+
+interface AuthContextType {
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  user: User | null;
+  login: (googleCredentialToken: string) => Promise<void>;
+  logout: () => Promise<void>; 
+  redirectPath: string | null;
+  setRedirectPath: (path: string | null) => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
+  const [localIsAuthenticated, setLocalIsAuthenticated] = useState<boolean>(false);
+  const [localUser, setLocalUser] = useState<User | null>(null);
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
+  
+  const [rtkLoginWithGoogle, { isLoading: isLoginMutationLoading }] = useLoginWithGoogleMutation();
+  const { 
+    data: sessionUser, 
+    error: sessionError, 
+    isLoading: isInitialSessionLoading,
+    isFetching: isSessionFetching, 
+    refetch: refetchSession 
+  } = useFetchSessionUserQuery();
+  const [rtkLogout, { isLoading: isLogoutMutationLoading }] = useLogoutMutation();
+
+  const contextIsLoading = isLoginMutationLoading || isInitialSessionLoading || isSessionFetching || isLogoutMutationLoading;
+
+  useEffect(() => {
+    if (isInitialSessionLoading || isSessionFetching) return;
+
+    if (sessionUser) {
+      setLocalUser(sessionUser);
+      setLocalIsAuthenticated(true);
+    } else if (sessionError) {
+      console.error('Session fetch error:', sessionError);
+      setLocalUser(null);
+      setLocalIsAuthenticated(false);
+    } else {
+      setLocalUser(null);
+      setLocalIsAuthenticated(false);
+    }
+  }, [sessionUser, sessionError, isInitialSessionLoading, isSessionFetching]);
+
+  const login = useCallback(async (googleCredentialToken: string) => {
+    try {
+      // Expect User object directly from the mutation, backend sets HttpOnly cookie
+      const user = await rtkLoginWithGoogle(googleCredentialToken as any).unwrap(); 
+      
+      // HttpOnly cookie is set by the backend and handled by the browser
+
+      setLocalUser(user); // Set user from the direct response
+      setLocalIsAuthenticated(true);
+      await refetchSession(); 
+    } catch (error) {
+      console.error('Login failed via RTK query:', error);
+      setLocalUser(null);
+      setLocalIsAuthenticated(false);
+      throw error;
+    }
+  }, [rtkLoginWithGoogle, refetchSession]);
+  
+  const logout = useCallback(async () => {
+    try {
+      await rtkLogout().unwrap(); 
+      // Backend clears HttpOnly cookie
+    } catch (error) {
+      console.error('RTK Logout mutation failed:', error);
+    } finally {
+      setLocalUser(null);
+      setLocalIsAuthenticated(false);
+      await refetchSession(); 
+    }
+  }, [rtkLogout, refetchSession]);
+
+  // Wrap setRedirectPath with useCallback (though useState setters are stable)
+  const stableSetRedirectPath = useCallback((path: string | null) => {
+    setRedirectPath(path);
+  }, []); 
+
+  useEffect(() => {
+    const handleAuthErrorLogout = () => {
+      logout(); 
+    };
+    window.addEventListener('auth-error-logout', handleAuthErrorLogout);
+    return () => {
+      window.removeEventListener('auth-error-logout', handleAuthErrorLogout);
+    };
+  }, [logout]);
+
+
+  return (
+    <AuthContext.Provider value={{ 
+        isAuthenticated: localIsAuthenticated, 
+        isLoading: contextIsLoading,
+        user: localUser, 
+        login, 
+        logout, 
+        redirectPath, 
+        setRedirectPath: stableSetRedirectPath 
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

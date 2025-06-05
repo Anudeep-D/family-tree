@@ -1,5 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Button,
@@ -20,10 +19,9 @@ import {
   Typography,
   TableSortLabel,
   TablePagination,
-  CircularProgress,
 } from "@mui/material";
 import { visuallyHidden } from "@mui/utils";
-import { useFetchSessionUserQuery } from "@/redux/queries/auth-endpoints";
+import { useAuth } from '../../hooks/useAuth'; // Added
 import Breadcrumb from "./Breadcrumb/Breadcrumb";
 import Navbar from "./NavBar/Navbar";
 
@@ -45,7 +43,6 @@ const headCells: readonly HeadCell[] = [
   { id: "access", label: "Access" },
 ];
 
-// Sort comparator
 function getComparator<Key extends keyof any>(
   order: Order,
   orderBy: Key
@@ -60,22 +57,11 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("");
 
-  const navigate = useNavigate();
-  const {
-    data: user,
-    error: loginError,
-    isLoading: isLoginLoading,
-  } = useFetchSessionUserQuery();
-
-  useEffect(() => {
-    if (!isLoginLoading && (!user || loginError)) {
-      navigate("/login");
-    }
-  }, [user, isLoginLoading, loginError, navigate]);
+  const { user } = useAuth(); // Get user from useAuth
 
   const allProjects = useMemo(
     () =>
-      user
+      user // User from useAuth now
         ? [
             { id: "1", name: "Admin Project Alpha", access: "Admin" },
             { id: "2", name: "Admin Project Beta", access: "Admin" },
@@ -85,7 +71,7 @@ export default function Home() {
             { id: "6", name: "Viewer Project Beta", access: "Viewer" },
           ]
         : [],
-    [user]
+    [user] // Dependency is now user from useAuth
   );
 
   const [order, setOrder] = useState<Order>("asc");
@@ -142,28 +128,17 @@ export default function Home() {
     console.log("Delete projects:", selectedProjectIds);
   };
 
-  if (isLoginLoading) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="100vh"
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
-
   return (
     <Box>
       <Navbar />
       <Breadcrumb />
       <Container sx={{ mt: 4 }}>
+        {/* Use user from useAuth */}
         <Typography variant="h5" gutterBottom>
-          Welcome, {user?.name}
+          Welcome, {user?.name || 'Guest'} 
         </Typography>
 
+        {/* Rest of the component remains the same */}
         <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 2 }}>
           <TextField
             label="Search projects"
