@@ -176,7 +176,7 @@ export default function Home() {
           </Box>
         )}
 
-        <TableContainer component={Paper}>
+        <TableContainer component={Paper} elevation={3} sx={{ mt: 2, mb: 2 }}>
           <Table size="small">
             <TableHead>
               <TableRow>

@@ -13,11 +13,6 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar__logo">FamilyTree</div>
-      <input
-        className="navbar__search"
-        type="text"
-        placeholder="Search projects..."
-      />
       <div className="navbar__actions">
         <button className="navbar__btn">🔔</button>
         <button className="navbar__btn">➕ New Project</button>

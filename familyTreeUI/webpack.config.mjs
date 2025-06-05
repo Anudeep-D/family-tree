@@ -38,10 +38,19 @@ export const resolve = {
 };
 
 // Load env vars from root-level .env
-const env = dotenv.config({ path: path.resolve(__dirname, "../.env") }).parsed;
+let env = {};
+try {
+  // Attempt to load .env file
+  const dotenvResult = dotenv.config({ path: path.resolve(__dirname, "../.env") });
+  if (dotenvResult.parsed) {
+    env = dotenvResult.parsed;
+  }
+} catch (e) {
+  console.warn("Could not load .env file. Proceeding with empty env.", e);
+}
 
 // Convert to Webpack-friendly format
-const envKeys = Object.keys(env).reduce((prev, next) => {
+const envKeys = Object.keys(env || {}).reduce((prev, next) => {
   prev[`process.env.${next}`] = JSON.stringify(env[next]);
   return prev;
 }, {});

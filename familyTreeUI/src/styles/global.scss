@@ -8,3 +8,10 @@ body {
     background-color: variables.$secondary-color;
     color: black;
 }
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}

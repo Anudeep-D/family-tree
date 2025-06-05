@@ -9,13 +9,17 @@ import "@styles/global.scss";
 import "@xyflow/react/dist/style.css";
 import { store } from "@/app/store";
 import { Provider } from "react-redux";
+import { ThemeProvider } from '@mui/material/styles';
+import theme from "@styles/theme";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Provider store={store}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <ThemeProvider theme={theme}>
+        <AuthProvider>
+          <App />
+        </AuthProvider>
+      </ThemeProvider>
     </Provider>
   </React.StrictMode>
 );
