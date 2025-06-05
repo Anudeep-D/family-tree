@@ -4,9 +4,9 @@
 
 body {
     margin: 0;
-    font-family: variables.$font-stack;
-    background-color: variables.$secondary-color;
-    color: black;
+    /* font-family: variables.$font-stack; */ /* Overridden by MUI theme & CssBaseline */
+    /* background-color: variables.$secondary-color; */ /* Overridden by MUI theme & CssBaseline */
+    /* color: black; */ /* Overridden by MUI theme & CssBaseline */
 }
 
 .loading-container {

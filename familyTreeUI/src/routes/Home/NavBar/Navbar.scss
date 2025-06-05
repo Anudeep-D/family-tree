@@ -1,47 +1,53 @@
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  background-color: #2d3748;
-  color: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-
-  &__logo {
-    font-size: 1.5rem;
-    font-weight: bold;
-  }
-
-  &__search {
-    flex: 1;
-    margin: 0 2rem;
-    padding: 0.5rem;
-    border-radius: 5px;
-    border: none;
-  }
-
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  &__btn, &__logout {
-    background: #4a5568;
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    cursor: pointer;
-
-    &:hover {
-      background-color: #5a667a;
-    }
-  }
-
-  &__profile {
-    background-color: #718096;
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-  }
+// .navbar or .navbar-mui (if using AppBar with this class)
+.navbar-mui { 
+  // display: flex; // AppBar is already flex
+  // justify-content: space-between; // Toolbar handles this
+  // align-items: center; // Toolbar handles this
+  // padding: 1rem 2rem; // AppBar/Toolbar have their own padding, adjust via sx if needed
+  // background-color: #2d3748; // Theme handles AppBar background
+  // color: #fff; // Theme handles AppBar text/icon color
+  // box-shadow: 0 2px 4px rgba(0,0,0,0.1); // Theme handles AppBar elevation
 }
+
+// &__logo (Typography component now)
+// .navbar__logo {
+//   font-size: 1.5rem; // Theme's Typography variant (h6) handles this
+//   font-weight: bold; // Theme's Typography variant handles this
+// }
+
+// &__search (InputBase or custom component - commented out in TSX)
+// .navbar__search {
+//   flex: 1;
+//   margin: 0 2rem;
+//   padding: 0.5rem;
+//   border-radius: 5px;
+//   border: none;
+// }
+
+// &__actions (Box or direct elements in Toolbar)
+// .navbar__actions {
+//   display: flex;
+//   align-items: center;
+//   gap: 1rem; // Use sx prop on Toolbar or Box for gap
+// }
+
+// &__btn, &__logout (Button components now)
+// .navbar__btn, .navbar__logout {
+//   background: #4a5568; // Theme handles Button background/color
+//   color: #fff; // Theme handles Button background/color
+//   border: none; // Buttons are borderless by default or themed
+//   padding: 0.5rem 1rem; // Theme/sx handles Button padding
+//   border-radius: 5px; // Theme handles Button border-radius
+//   cursor: pointer;
+
+//   &:hover {
+//     background-color: #5a667a; // Theme handles Button hover states
+//   }
+// }
+
+// &__profile (Button component now)
+// .navbar__profile {
+//   background-color: #718096; // Theme handles Button background/color
+//   padding: 0.5rem 1rem; // Theme/sx handles Button padding
+//   border-radius: 5px; // Theme handles Button border-radius
+// }

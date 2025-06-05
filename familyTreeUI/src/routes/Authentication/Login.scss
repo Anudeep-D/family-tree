@@ -1,3 +1,6 @@
+// Login.scss - Styles for the redesigned Login Page
+
+// Kept from previous version for the loading state
 .loading-container {
   display: flex;
   justify-content: center;
@@ -11,11 +14,28 @@
   flex-direction: column;
   align-items: center;
   justify-content: center; // This will center the Paper component vertically
-  min-height: 100vh; 
+  min-height: 100vh;
   padding: 1rem; // Some padding around the screen edges
+  // The background color will come from the theme's palette.background.default
+  // If you need to explicitly set it here and ensure theme variables are available in SCSS:
+  // background-color: var(--mui-palette-background-default, #f5f5f5); // Fallback if var not working
 }
 
-// if the GoogleLogin button needs specific container styling not achievable via sx:
+.login-page-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: "cover";
+  z-index: -1,
+}
+
+// Note: Most styling for Paper, Typography, and Button (GoogleLogin)
+// will be handled by Material UI's theme (theme.ts) and sx props.
+// Specific overrides or very custom styles can be added here if necessary.
+
+// For example, if the GoogleLogin button needs specific container styling not achievable via sx:
 // .google-login-wrapper { // If you wrap GoogleLogin in a div with this class
 //   margin-top: 16px;
 // }

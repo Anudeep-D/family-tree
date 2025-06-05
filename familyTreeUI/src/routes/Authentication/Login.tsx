@@ -56,48 +56,52 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="login-page-container">
-      <Container maxWidth="sm">
-        <Paper
-          elevation={3}
-          sx={{
-            p: 4,
-            mt: 8, // Margin top to push the paper down a bit
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          {/* Placeholder for an image or GIF */}
-          {/* e.g., <img src="/path-to-your-image.png" alt="Family Tree Illustration" style={{ marginBottom: '16px', width: '100px', height: '100px' }} /> */}
-
-          <Typography
-            variant="h4"
-            component="h1"
-            gutterBottom
-            sx={{ textAlign: "center" }}
+    <>
+      <img
+        src="/images/bg.png"
+        alt="Family Tree Illustration"
+        className="login-page-bg"
+      />
+      <div className="login-page-container">
+        <Container maxWidth="sm">
+          <Paper
+            elevation={3}
+            sx={{
+              p: 4,
+              mt: 8, // Margin top to push the paper down a bit
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
           >
-            Welcome to FamilyTreeApp!
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 3, textAlign: "center" }}>
-            Connect with your history. Build your family tree, share with loved
-            ones, and discover your roots.
-          </Typography>
+            <Typography
+              variant="h4"
+              component="h1"
+              gutterBottom
+              sx={{ textAlign: "center" }}
+            >
+              Welcome to FamilyTreeApp!
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 3, textAlign: "center" }}>
+              Connect with your history. Build your family tree, share with
+              loved ones, and discover your roots.
+            </Typography>
 
-          <Box sx={{ mt: 2 }}>
-            {" "}
-            {/* Added Box for margin around GoogleLogin */}
-            <GoogleLogin
-              onSuccess={handleLoginSuccess}
-              onError={handleLoginError}
-              // theme="filled_blue" // Example: Check documentation for available props
-              // shape="rectangular"
-              // width="280px"
-            />
-          </Box>
-        </Paper>
-      </Container>
-    </div>
+            <Box sx={{ mt: 2 }}>
+              {" "}
+              {/* Added Box for margin around GoogleLogin */}
+              <GoogleLogin
+                onSuccess={handleLoginSuccess}
+                onError={handleLoginError}
+                theme="filled_blue" // Example: Check documentation for available props
+                shape="rectangular"
+                width={280}
+              />
+            </Box>
+          </Paper>
+        </Container>
+      </div>
+    </>
   );
 };
 

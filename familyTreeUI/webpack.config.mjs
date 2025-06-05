@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import webpack from "webpack";
 import { fileURLToPath } from "url";
 import HtmlWebpackPlugin from "html-webpack-plugin";
-
+import CopyWebpackPlugin from "copy-webpack-plugin";
 // Determine if the build is for production
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
@@ -108,6 +108,11 @@ export default {
       template: "./index.html",            // Base HTML template for the app
     }),
     new webpack.DefinePlugin(envKeys),
+    new CopyWebpackPlugin({
+      patterns: [
+        { from: 'public', to: '.' }, // Copies public/ to dist/
+      ],
+    }),
   ],
 
   // Development server settings
