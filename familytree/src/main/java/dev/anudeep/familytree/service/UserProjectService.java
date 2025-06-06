@@ -9,15 +9,13 @@ import dev.anudeep.familytree.model.Role;
 import dev.anudeep.familytree.model.User;
 import dev.anudeep.familytree.repository.ProjectRepository;
 import dev.anudeep.familytree.repository.UserRepository;
+import dev.anudeep.familytree.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -41,9 +39,9 @@ public class UserProjectService {
     public Optional<Role> getRelationshipType(String userElementId, String projectElementId) {
         Optional<String> relation =  userRepo.findRelationshipBetweenUserAndProject(userElementId, projectElementId);
         if(relation.isPresent()){
-            if(relation.get().equalsIgnoreCase("ADMIN_FOR")) return Optional.of(Role.ADMIN);
-            if(relation.get().equalsIgnoreCase("EDITOR_FOR")) return Optional.of(Role.EDITOR);
-            if(relation.get().equalsIgnoreCase("VIEWER_FOR")) return Optional.of(Role.VIEWER);
+            if(relation.get().equalsIgnoreCase(Constants.ADMIN_REL)) return Optional.of(Role.ADMIN);
+            if(relation.get().equalsIgnoreCase(Constants.EDITOR_REL)) return Optional.of(Role.EDITOR);
+            if(relation.get().equalsIgnoreCase(Constants.VIEWER_REL)) return Optional.of(Role.VIEWER);
         }
         return Optional.empty();
     }
@@ -68,8 +66,8 @@ public class UserProjectService {
         return userRepo.save(new User(name, email, picture));
     }
 
-    public Project createProject(String name) {
-        return projectRepo.save(new Project(name));
+    public Project createProject(Project project) {
+        return projectRepo.save(project);
     }
 
     public void createRelationship(String userId, String projectId, String relationType) {

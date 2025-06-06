@@ -1,10 +1,10 @@
 package dev.anudeep.familytree.model;
 
+import dev.anudeep.familytree.utils.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
@@ -30,11 +30,11 @@ public class User implements Serializable {
     private String name;
     private String picture;
 
-    @Relationship(type = "ADMIN_FOR", direction = Relationship.Direction.OUTGOING)
+    @Relationship(type = Constants.ADMIN_REL, direction = Relationship.Direction.OUTGOING)
     private transient Set<Project> adminProjects = new HashSet<>();
-    @Relationship(type = "EDITOR_FOR", direction = Relationship.Direction.OUTGOING)
+    @Relationship(type = Constants.EDITOR_REL, direction = Relationship.Direction.OUTGOING)
     private transient Set<Project> editorProjects = new HashSet<>();
-    @Relationship(type = "VIEWER_FOR", direction = Relationship.Direction.OUTGOING)
+    @Relationship(type = Constants.VIEWER_REL, direction = Relationship.Direction.OUTGOING)
     private transient Set<Project> viewerProjects = new HashSet<>();
 
     public User(String email, String name, String picture) {

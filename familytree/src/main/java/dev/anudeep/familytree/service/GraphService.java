@@ -6,6 +6,7 @@ import dev.anudeep.familytree.dto.FlowNodeDTO;
 import dev.anudeep.familytree.dto.FlowPositionDTO;
 import dev.anudeep.familytree.model.Person;
 import dev.anudeep.familytree.repository.GraphRepository;
+import dev.anudeep.familytree.utils.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.neo4j.driver.types.Node;
 import org.neo4j.driver.types.Relationship;
@@ -86,16 +87,14 @@ public class GraphService {
     }
 
     public FlowGraphDTO getFamilyTree(String elementId) {
-        String cypher = """
-            MATCH (root:Person)
-            WHERE elementID(root) = $elementId
-            // Recursively get spouses and descendants for all generations
-            OPTIONAL MATCH (root)-[:MARRIED_TO]-(spouse:Person)
-            OPTIONAL MATCH (root)-[:PARENT_OF*1..]->(descendant:Person)
-            OPTIONAL MATCH (descendant)-[:MARRIED_TO]-(descendantSpouse:Person)
-            // Return all people and relationships
-            RETURN DISTINCT root, spouse, descendant, descendantSpouse
-        """;
+        String cypher = String.format("""
+                MATCH (root:Person)
+                WHERE elementID(root) = $elementId
+                OPTIONAL MATCH (root)-[:%s]-(spouse:Person)
+                OPTIONAL MATCH (root)-[:%s*1..]->(descendant:Person)
+                OPTIONAL MATCH (descendant)-[:%s]-(descendantSpouse:Person)
+                RETURN DISTINCT root, spouse, descendant, descendantSpouse
+            """, Constants.MARRIED_REL, Constants.PARENT_REL, Constants.MARRIED_REL);
         log.info("Cypher to fetch family tree:\n {}", cypher);
         Set<FlowNodeDTO> nodes = new HashSet<>();
         Set<FlowEdgeDTO> edges = new HashSet<>();
@@ -138,8 +137,8 @@ public class GraphService {
             String tgtId = nb.elementId();
             String edgeId = srcId + "_married_" + tgtId;
             String reverseEdgeId = tgtId + "_married_" + srcId;
-            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, "MARRIED_TO");
-            FlowEdgeDTO reverseFlowEdge = new FlowEdgeDTO(reverseEdgeId, tgtId, srcId, "MARRIED_TO");
+            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, Constants.MARRIED_REL);
+            FlowEdgeDTO reverseFlowEdge = new FlowEdgeDTO(reverseEdgeId, tgtId, srcId, Constants.MARRIED_REL);
             if (!edges.contains(flowEdge) && !edges.contains(reverseFlowEdge)) {
                 log.info("MARRIED_TO edge identified {}",flowEdge);
                 edges.add(flowEdge);
@@ -155,8 +154,8 @@ public class GraphService {
             String tgtId = nb.elementId();
             String edgeId = srcId + "_parent_" + tgtId;
             String reverseEdgeId = tgtId + "_parent_" + srcId;
-            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, "PARENT_OF");
-            FlowEdgeDTO reverseFlowEdge = new FlowEdgeDTO(reverseEdgeId, tgtId, srcId, "PARENT_OF");
+            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, Constants.PARENT_REL);
+            FlowEdgeDTO reverseFlowEdge = new FlowEdgeDTO(reverseEdgeId, tgtId, srcId, Constants.PARENT_REL);
             // Prevent duplicates
             if (!edges.contains(flowEdge) && !edges.contains(reverseFlowEdge)) {
                 log.info("PARENT_OF edge identified {}",flowEdge);

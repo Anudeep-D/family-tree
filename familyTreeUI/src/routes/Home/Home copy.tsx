@@ -1,7 +1,7 @@
 import "@xyflow/react/dist/style.css";
 import { AppNode } from "@/types/nodeTypes";
 import { AppEdge } from "@/types/edgeTypes";
-import { useGetGraphQuery } from "@/redux/queries/graph-endpoints";
+import { useGetGraphQuery } from "@/redux/queries/project-endpoints";
 import { GraphFlow } from "./GraphFlow/GraphFlow";
 import { useEffect } from "react";
 import { useFetchSessionUserQuery } from "@/redux/queries/auth-endpoints";

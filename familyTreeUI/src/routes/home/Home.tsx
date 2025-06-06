@@ -19,11 +19,14 @@ import {
   Typography,
   TableSortLabel,
   TablePagination,
+  Skeleton,
+  Alert,
 } from "@mui/material";
 import { visuallyHidden } from "@mui/utils";
-import { useAuth } from '../../hooks/useAuth'; // Added
+import { useAuth } from "../../hooks/useAuth"; // Added
 import Breadcrumb from "./Breadcrumb/Breadcrumb";
 import Navbar from "./NavBar/Navbar";
+import { useGetProjectsQuery } from "@/redux/queries/project-endpoints";
 
 type Order = "asc" | "desc";
 
@@ -58,21 +61,12 @@ export default function Home() {
   const [filterRole, setFilterRole] = useState("");
 
   const { user } = useAuth(); // Get user from useAuth
-
-  const allProjects = useMemo(
-    () =>
-      user // User from useAuth now
-        ? [
-            { id: "1", name: "Admin Project Alpha", access: "Admin" },
-            { id: "2", name: "Admin Project Beta", access: "Admin" },
-            { id: "3", name: "Editor Project Alpha", access: "Editor" },
-            { id: "4", name: "Editor Project Beta", access: "Editor" },
-            { id: "5", name: "Viewer Project Alpha", access: "Viewer" },
-            { id: "6", name: "Viewer Project Beta", access: "Viewer" },
-          ]
-        : [],
-    [user] // Dependency is now user from useAuth
-  );
+  const {
+    data: allProjects,
+    error: projectsError,
+    isLoading: isProjectsLoading,
+    isFetching: isProjectsFetching,
+  } = useGetProjectsQuery();
 
   const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState<keyof Project>("name");
@@ -100,6 +94,7 @@ export default function Home() {
   };
 
   const filteredProjects = useMemo(() => {
+    if (!allProjects) return [];
     return allProjects
       .filter(
         (project) =>
@@ -135,7 +130,7 @@ export default function Home() {
       <Container sx={{ mt: 4 }}>
         {/* Use user from useAuth */}
         <Typography variant="h5" gutterBottom>
-          Welcome, {user?.name || 'Guest'} 
+          Welcome, {user?.name || "Guest"}
         </Typography>
 
         {/* Rest of the component remains the same */}
@@ -175,9 +170,11 @@ export default function Home() {
             </Button>
           </Box>
         )}
-
+        {projectsError && (
+          <Alert severity="error">Failed to fetch projects</Alert>
+        )}
         <TableContainer component={Paper} elevation={3} sx={{ mt: 2, mb: 2 }}>
-          <Table size="small">
+          <Table size="medium">
             <TableHead>
               <TableRow>
                 <TableCell padding="checkbox">
@@ -217,26 +214,35 @@ export default function Home() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredProjects
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((project) => (
-                  <TableRow key={project.id} hover>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        checked={selectedProjectIds.includes(project.id)}
-                        onChange={() => toggleSelect(project.id)}
-                      />
-                    </TableCell>
-                    <TableCell>{project.name}</TableCell>
-                    <TableCell>{project.access}</TableCell>
-                  </TableRow>
-                ))}
-              {filteredProjects.length === 0 && (
+              {isProjectsFetching || isProjectsLoading ? (
                 <TableRow>
                   <TableCell colSpan={3} align="center">
-                    No projects found.
+                    <Skeleton variant="text" width="100%" height={20} />
                   </TableCell>
                 </TableRow>
+              ) : filteredProjects.length > 0 ? (
+                filteredProjects
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map((project) => (
+                    <TableRow key={project.id} hover>
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={selectedProjectIds.includes(project.id)}
+                          onChange={() => toggleSelect(project.id)}
+                        />
+                      </TableCell>
+                      <TableCell>{project.name}</TableCell>
+                      <TableCell>{project.access}</TableCell>
+                    </TableRow>
+                  ))
+              ) : (
+                filteredProjects.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={3} align="center">
+                      No projects found.
+                    </TableCell>
+                  </TableRow>
+                )
               )}
             </TableBody>
           </Table>

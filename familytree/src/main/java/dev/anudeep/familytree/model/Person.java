@@ -1,6 +1,7 @@
 package dev.anudeep.familytree.model;
 
 import dev.anudeep.familytree.dto.FlowEdgeDTO;
+import dev.anudeep.familytree.utils.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,13 +30,13 @@ public class Person {
     private String currLocation;
     private String character; //temporary or optional
 
-    @Relationship(type = "PARENT_OF", direction = Relationship.Direction.OUTGOING)
+    @Relationship(type = Constants.PARENT_REL, direction = Relationship.Direction.OUTGOING)
     private List<Person> children;
 
-    @Relationship(type = "MARRIED_TO", direction = Relationship.Direction.OUTGOING)
+    @Relationship(type = Constants.MARRIED_REL, direction = Relationship.Direction.OUTGOING)
     private List<Person> partners;
 
-    @Relationship(type = "BELONGS_TO", direction = Relationship.Direction.OUTGOING)
+    @Relationship(type = Constants.BELONGS_REL, direction = Relationship.Direction.OUTGOING)
     private House house;
 
     @Override

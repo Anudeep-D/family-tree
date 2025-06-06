@@ -8,3 +8,14 @@ export type User = {
   editorProjects?: any[];
   viewerProjects?: any[];
 };
+
+
+export type Project = {
+  id: string;
+  elementId?: string;
+  name: string;
+  desc?: string;
+  createdBy?: User;
+  createdAt?: Date;
+  access: string;
+};
