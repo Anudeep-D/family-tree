@@ -2,38 +2,38 @@ import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
-    mode: "light",
+    mode: "dark",
     primary: {
-      main: "#4285F4", // Google Blue
-      light: "#8AB4F8",
-      dark: "#1a73e8",
-      contrastText: "#fff",
+      main: '#1A237E', // Indigo 900
+      light: '#534BAE', // Lighter shade for Indigo 900
+      dark: '#000051', // Darker shade for Indigo 900
+      contrastText: '#fff',
     },
     secondary: {
-      main: "#DB4437", // Google Red
-      light: "#F28B82",
-      dark: "#C53929",
-      contrastText: "#fff",
+      main: '#00ACC1', // Cyan 600
+      light: '#5DDEF4', // Lighter shade for Cyan 600
+      dark: '#007C91', // Darker shade for Cyan 600
+      contrastText: '#000', // Text might need to be dark for this vibrant teal
     },
     error: {
-      main: "#EA4335",
+      main: "#EA4335", // Keep or adjust if needed for dark theme
     },
     warning: {
-      main: "#FBBC05",
+      main: "#FBBC05", // Keep or adjust if needed for dark theme
     },
     info: {
-      main: "#34A853", // Google Green
+      main: "#34A853", // Google Green, consider a lighter shade for dark mode if needed
     },
     success: {
-      main: "#0F9D58",
+      main: "#0F9D58", // Keep or adjust if needed for dark theme
     },
     background: {
-      default: "#FAFAFA",
-      paper: "#FFFFFF",
+      default: '#121212',
+      paper: '#1E1E1E',
     },
     text: {
-      primary: "#202124",
-      secondary: "#5f6368",
+      primary: '#E0E0E0',
+      secondary: '#B0B0B0',
     },
   },
   typography: {
@@ -67,7 +67,7 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: "#FAFAFA",
+          backgroundColor: '#121212', // Match new background.default
         },
       },
     },
@@ -78,33 +78,34 @@ const theme = createTheme({
       },
       styleOverrides: {
         colorPrimary: {
-          backgroundColor: "#ffffff",
-          color: "#1f1f1f",
+          backgroundColor: '#1E1E1E', // Use paper background or another dark color
+          color: '#E0E0E0', // Use new text.primary
         },
       },
     },
     MuiCard: {
       defaultProps: {
-        elevation: 2,
+        elevation: 2, // Keep or adjust elevation for dark theme
       },
       styleOverrides: {
         root: {
           borderRadius: 16,
-          boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.05)",
+          // boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.05)", // Original shadow, might need adjustment
+          backgroundColor: '#1E1E1E', // Use new paper background
         },
       },
     },
     MuiPaper: {
       defaultProps: {
-        elevation: 3,
+        elevation: 3, // Keep or adjust elevation
       },
       styleOverrides: {
         root: {
           borderRadius: 16,
-          backdropFilter: "blur(8px)",
-          backgroundColor: "rgba(255, 255, 255, 0.6)",
-          boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-          border: "1px solid rgba(255, 255, 255, 0.3)",
+          // backdropFilter: "blur(8px)", // Remove or adjust for dark theme, glassmorphism might not fit
+          backgroundColor: '#1E1E1E', // Use new paper background
+          // boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)", // Remove or adjust, less prominent shadows in dark
+          // border: "1px solid rgba(255, 255, 255, 0.3)", // Remove or adjust border
         },
       },
     },
@@ -120,11 +121,12 @@ const theme = createTheme({
           fontWeight: 600,
         },
         containedPrimary: {
-          background: "linear-gradient(45deg, #4285F4, #34A853)",
-          color: "#fff",
-          boxShadow: "0px 4px 10px rgba(66, 133, 244, 0.3)",
+          // Example: Darker gradient for the new primary
+          background: "linear-gradient(45deg, #1A237E, #000051)",
+          color: "#fff", // contrastText for primary
+          boxShadow: "0px 4px 10px rgba(26, 35, 126, 0.5)", // Adjusted shadow for the new primary
           "&:hover": {
-            background: "linear-gradient(45deg, #357ae8, #2e7d32)",
+            background: "linear-gradient(45deg, #000051, #1A237E)", // Slightly different gradient on hover
           },
         },
       },
@@ -133,11 +135,11 @@ const theme = createTheme({
     MuiTypography: {
       styleOverrides: {
         h4: {
-          color: "#1a1a1a",
+          color: '#E0E0E0', // Use new text.primary
           fontWeight: 700,
         },
         body1: {
-          color: "#333333",
+          color: '#E0E0E0', // Use new text.primary
         },
       },
     },
@@ -162,13 +164,13 @@ const theme = createTheme({
     MuiTableCell: {
       styleOverrides: {
         head: {
-          backgroundColor: "#F1F3F4",
+          backgroundColor: '#1E1E1E', // Dark background for table head
           fontWeight: 600,
-          color: "#202124",
+          color: '#E0E0E0', // Use new text.primary
         },
         root: {
           padding: "12px 16px",
-          borderBottom: "1px solid #E0E0E0",
+          borderBottom: "1px solid #303030", // Darker border for dark theme
         },
       },
     },
@@ -176,7 +178,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           "&:hover": {
-            backgroundColor: "#f5f5f5",
+            backgroundColor: "#2A2A2A", // Slightly lighter than paper for hover
           },
         },
       },

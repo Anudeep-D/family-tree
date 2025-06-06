@@ -65,6 +65,7 @@ const LoginPage = () => {
       <div className="login-page-container">
         <Container maxWidth="sm">
           <Paper
+            className="login-paper"
             elevation={3}
             sx={{
               p: 4,
@@ -88,13 +89,11 @@ const LoginPage = () => {
             </Typography>
 
             <Box sx={{ mt: 2 }}>
-              {" "}
-              {/* Added Box for margin around GoogleLogin */}
               <GoogleLogin
                 onSuccess={handleLoginSuccess}
                 onError={handleLoginError}
-                theme="filled_blue" // Example: Check documentation for available props
-                shape="rectangular"
+                theme="filled_blue"
+                shape="pill"
                 width={280}
               />
             </Box>

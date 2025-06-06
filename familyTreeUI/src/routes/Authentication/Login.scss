@@ -27,9 +27,24 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  object-fit: "cover";
-  z-index: -1,
+  object-fit: cover;
+  z-index: -1;
 }
+
+.login-paper {
+  background: rgba(255, 255, 255, 0.1) !important; /* Slight white tint */
+  border-radius: 20px !important;
+  backdrop-filter: blur(12px) !important;;
+  -webkit-backdrop-filter: blur(12px) !important;;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;;
+  color: white !important;;
+
+  h1, p {
+    color: black !important;; /* Ensure text stands out on blurred background */
+  }
+}
+
 
 // Note: Most styling for Paper, Typography, and Button (GoogleLogin)
 // will be handled by Material UI's theme (theme.ts) and sx props.
