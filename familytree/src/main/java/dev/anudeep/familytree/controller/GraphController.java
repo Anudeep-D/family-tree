@@ -42,7 +42,7 @@ public class GraphController {
             @PathVariable String projectId,
             HttpSession session
     ) {
-        commonUtils.accessCheck(session,projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
         try {
             log.info("GraphController: Fetching the complete graph");
             return graphService.getGraph();
@@ -60,7 +60,7 @@ public class GraphController {
             @Parameter(description = "elementId of the person to retrieve family of person", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String elementId,
             HttpSession session) {
-        commonUtils.accessCheck(session,projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("GraphController: Fetching immediate family of a person by elementId {}", elementId);
         return graphService.getFamily(elementId);
     }
@@ -75,7 +75,7 @@ public class GraphController {
             @Parameter(description = "ElementId of the person to retrieve family tree of person", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String elementId,
             HttpSession session) {
-        commonUtils.accessCheck(session,projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("Requesting family tree for Person {}", elementId);
         // ✅ You can now use `role` to allow/disallow operations
         return graphService.getFamilyTree(elementId);

@@ -1,7 +1,6 @@
 package dev.anudeep.familytree.repository;
 
 
-import dev.anudeep.familytree.model.Person;
 import dev.anudeep.familytree.model.Project;
 import dev.anudeep.familytree.model.User;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
@@ -11,6 +10,10 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends Neo4jRepository<User, String> {
+    // Find users
+    @Query("MATCH (p:User) RETURN p {.*, elementId: elementId(p) } AS person")
+    List<User> findUsers();
+
     // Find user
     @Query("MATCH (p:User) WHERE elementId(p) = $elementId RETURN p {.*, elementId: elementId(p) } AS person")
     Optional<User> findByElementId(String elementId);

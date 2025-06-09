@@ -1,0 +1,33 @@
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+
+.closeIcon {
+  color: #888;
+}
+
+.modalBody {
+  .userRow {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    .roleSelect {
+      min-width: 150px;
+    }
+  }
+
+  .addUserBtn {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+.modalActions {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #eee;
+}

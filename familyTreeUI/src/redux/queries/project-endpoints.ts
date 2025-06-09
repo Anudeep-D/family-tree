@@ -1,4 +1,5 @@
 import { baseUrl } from "@/constants/constants";
+import { Role } from "@/types/common";
 import { Project } from "@/types/entityTypes";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
@@ -32,7 +33,7 @@ export const projectApi = createApi({
     }),
     createProject: builder.mutation<Project, Project>({
       query: (project) => ({
-        url: "/",
+        url: "/create",
         method: "POST",
         body: {
           name: project.name,
@@ -42,7 +43,30 @@ export const projectApi = createApi({
         },
       }),
     }),
+    addUsersToProject: builder.mutation<
+      void,
+      {
+        projectId: string;
+        users: {
+          elementId: string;
+          role: Role;
+        }[];
+      }
+    >({
+      query: (args) => ({
+        url: `/${args.projectId}/addusers`,
+        method: "POST",
+        body: {
+          users: args.users,
+        },
+      }),
+    }),
   }),
 });
 
-export const { useGetProjectQuery, useGetProjectsQuery, useCreateProjectMutation } = projectApi;
+export const {
+  useGetProjectQuery,
+  useGetProjectsQuery,
+  useCreateProjectMutation,
+  useAddUsersToProjectMutation,
+} = projectApi;

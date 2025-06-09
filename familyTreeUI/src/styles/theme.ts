@@ -4,16 +4,16 @@ const theme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: '#1A237E', // Indigo 900
-      light: '#534BAE', // Lighter shade for Indigo 900
-      dark: '#000051', // Darker shade for Indigo 900
-      contrastText: '#fff',
+      main: "#1A237E", // Indigo 900
+      light: "#534BAE", // Lighter shade for Indigo 900
+      dark: "#000051", // Darker shade for Indigo 900
+      contrastText: "#fff",
     },
     secondary: {
-      main: '#00ACC1', // Cyan 600
-      light: '#5DDEF4', // Lighter shade for Cyan 600
-      dark: '#007C91', // Darker shade for Cyan 600
-      contrastText: '#000', // Text might need to be dark for this vibrant teal
+      main: "#00ACC1", // Cyan 600
+      light: "#5DDEF4", // Lighter shade for Cyan 600
+      dark: "#007C91", // Darker shade for Cyan 600
+      contrastText: "#000", // Text might need to be dark for this vibrant teal
     },
     error: {
       main: "#EA4335", // Keep or adjust if needed for dark theme
@@ -28,12 +28,12 @@ const theme = createTheme({
       main: "#0F9D58", // Keep or adjust if needed for dark theme
     },
     background: {
-      default: '#121212',
-      paper: '#1E1E1E',
+      default: "#121212",
+      paper: "#1E1E1E",
     },
     text: {
-      primary: '#E0E0E0',
-      secondary: '#B0B0B0',
+      primary: "#E0E0E0",
+      secondary: "#B0B0B0",
     },
   },
   typography: {
@@ -67,7 +67,7 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: '#121212', // Match new background.default
+          backgroundColor: "#121212", // Match new background.default
         },
       },
     },
@@ -78,8 +78,8 @@ const theme = createTheme({
       },
       styleOverrides: {
         colorPrimary: {
-          backgroundColor: '#1E1E1E', // Use paper background or another dark color
-          color: '#E0E0E0', // Use new text.primary
+          backgroundColor: "#1E1E1E", // Use paper background or another dark color
+          color: "#E0E0E0", // Use new text.primary
         },
       },
     },
@@ -91,7 +91,7 @@ const theme = createTheme({
         root: {
           borderRadius: 16,
           // boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.05)", // Original shadow, might need adjustment
-          backgroundColor: '#1E1E1E', // Use new paper background
+          backgroundColor: "#1E1E1E", // Use new paper background
         },
       },
     },
@@ -103,7 +103,7 @@ const theme = createTheme({
         root: {
           borderRadius: 16,
           // backdropFilter: "blur(8px)", // Remove or adjust for dark theme, glassmorphism might not fit
-          backgroundColor: '#1E1E1E', // Use new paper background
+          backgroundColor: "#1E1E1E", // Use new paper background
           // boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)", // Remove or adjust, less prominent shadows in dark
           // border: "1px solid rgba(255, 255, 255, 0.3)", // Remove or adjust border
         },
@@ -122,24 +122,27 @@ const theme = createTheme({
         },
         containedPrimary: {
           // Example: Darker gradient for the new primary
-          background: "linear-gradient(45deg, #1A237E, #000051)",
+          background: "linear-gradient(45deg, #266798, #000051)",
           color: "#fff", // contrastText for primary
           boxShadow: "0px 4px 10px rgba(26, 35, 126, 0.5)", // Adjusted shadow for the new primary
           "&:hover": {
-            background: "linear-gradient(45deg, #000051, #1A237E)", // Slightly different gradient on hover
+            background: "linear-gradient(45deg, #000051, #266798)", // Slightly different gradient on hover
           },
         },
+        disableElevation: {
+            color:"#a0a4a7"
+        }
       },
     },
 
     MuiTypography: {
       styleOverrides: {
         h4: {
-          color: '#E0E0E0', // Use new text.primary
+          color: "#E0E0E0", // Use new text.primary
           fontWeight: 700,
         },
         body1: {
-          color: '#E0E0E0', // Use new text.primary
+          color: "#E0E0E0", // Use new text.primary
         },
       },
     },
@@ -151,22 +154,19 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 8,
-        },
-      },
-    },
-    MuiOutlinedInput: {
-      styleOverrides: {
-        root: {
-          borderRadius: 10,
+          backgroundColor: "#333333",
+          input: {
+            color: "#E0E0E0",
+          },
         },
       },
     },
     MuiTableCell: {
       styleOverrides: {
         head: {
-          backgroundColor: '#1E1E1E', // Dark background for table head
+          backgroundColor: "#1E1E1E", // Dark background for table head
           fontWeight: 600,
-          color: '#E0E0E0', // Use new text.primary
+          color: "#E0E0E0", // Use new text.primary
         },
         root: {
           padding: "12px 16px",
@@ -186,6 +186,75 @@ const theme = createTheme({
     MuiSelect: {
       defaultProps: {
         variant: "outlined",
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          backgroundColor: "#2A2A2A",
+          color: "#ffffff",
+          borderRadius: 16,
+          padding: "24px",
+          boxShadow: "0 0 20px rgba(0,0,0,0.4)",
+        },
+      },
+    },
+    MuiAutocomplete: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#333333",
+          borderRadius: 8,
+        },
+        inputRoot: {
+          color: "#fff",
+        },
+        popupIndicator: {
+          color: "#E0E0E0",
+        },
+      },
+    },
+    MuiMenuItem: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#2A2A2A",
+          color: "#E0E0E0",
+          "&:hover": {
+            backgroundColor: "#3a3a3a",
+          },
+          "&[aria-selected='true']": {
+            backgroundColor: "#1A237E",
+            color: "#fff",
+          },
+        },
+      },
+    },
+    MuiFormLabel: {
+      styleOverrides: {
+        root: {
+          color: "#B0B0B0",
+          "&.Mui-focused": {
+            color: "#E0E0E0",
+          },
+        },
+      },
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        notchedOutline: {
+          borderColor: "#555",
+        },
+        root: {
+          borderRadius: 10,
+          "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#888",
+          },
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#00ACC1",
+          },
+        },
+        input: {
+          color: "#E0E0E0",
+        },
       },
     },
   },

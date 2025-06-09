@@ -11,11 +11,11 @@ export type User = {
 
 
 export type Project = {
-  id: string;
+  id?: string;
   elementId?: string;
   name: string;
   desc?: string;
-  createdBy?: User;
+  createdBy?: string;
   createdAt?: Date;
-  access: string;
+  access?: string;
 };

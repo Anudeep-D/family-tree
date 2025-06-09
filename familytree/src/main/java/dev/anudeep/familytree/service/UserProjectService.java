@@ -11,12 +11,14 @@ import dev.anudeep.familytree.repository.ProjectRepository;
 import dev.anudeep.familytree.repository.UserRepository;
 import dev.anudeep.familytree.utils.Constants;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserProjectService {
@@ -25,15 +27,15 @@ public class UserProjectService {
     private final Neo4jClient neo4jClient;
 
     public Optional<User> getUserByElementId(String elementId) {
-        return userRepo.findAll().stream()
-                .filter(u -> elementId.equals(u.getElementId()))
-                .findFirst();
+        return userRepo.findByElementId(elementId);
+    }
+
+    public List<User> getUsers() {
+        return userRepo.findUsers();
     }
 
     public Optional<Project> getProjectByElementId(String elementId) {
-        return projectRepo.findAll().stream()
-                .filter(p -> elementId.equals(p.getElementId()))
-                .findFirst();
+        return projectRepo.findByElementId(elementId);
     }
 
     public Optional<Role> getRelationshipType(String userElementId, String projectElementId) {
@@ -70,11 +72,18 @@ public class UserProjectService {
         return projectRepo.save(project);
     }
 
+    public Project getProjectByDetails(String name, String createdAt, String createdBy){
+        return projectRepo.findProjectByDetails(name, createdAt, createdBy);
+    }
+
     public void createRelationship(String userId, String projectId, String relationType) {
         neo4jClient.query(String.format("""
-            MATCH (u:User), (p:Project)
-            WHERE elementId(u) = $userId AND elementId(p) = $projectId
+            MATCH (u:User)
+            WHERE elementId(u) = $userId
+            MATCH (p:Project)
+            WHERE elementId(p) = $projectId
             MERGE (u)-[:%s]->(p)
         """, relationType)).bindAll(Map.of("userId", userId, "projectId", projectId)).run();
     }
+
 }

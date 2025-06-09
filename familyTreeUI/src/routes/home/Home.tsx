@@ -27,6 +27,7 @@ import { useAuth } from "../../hooks/useAuth"; // Added
 import Breadcrumb from "./Breadcrumb/Breadcrumb";
 import Navbar from "./NavBar/Navbar";
 import { useGetProjectsQuery } from "@/redux/queries/project-endpoints";
+import { Project } from "@/types/entityTypes";
 
 type Order = "asc" | "desc";
 
@@ -35,24 +36,27 @@ interface HeadCell {
   label: string;
 }
 
-interface Project {
-  id: string;
-  name: string;
-  access: string;
-}
-
 const headCells: readonly HeadCell[] = [
   { id: "name", label: "Name" },
   { id: "access", label: "Access" },
 ];
 
-function getComparator<Key extends keyof any>(
-  order: Order,
+export function getComparator<Key extends keyof Project>(
+  order: "asc" | "desc",
   orderBy: Key
-): (a: { [key in Key]: string }, b: { [key in Key]: string }) => number {
-  return order === "desc"
-    ? (a, b) => b[orderBy].localeCompare(a[orderBy])
-    : (a, b) => a[orderBy].localeCompare(b[orderBy]);
+): (a: Project, b: Project) => number {
+  return (a: Project, b: Project) => {
+    const aVal = a[orderBy];
+    const bVal = b[orderBy];
+
+    // Handle undefined safely
+    if (aVal === undefined) return 1;
+    if (bVal === undefined) return -1;
+
+    if (aVal < bVal) return order === "asc" ? -1 : 1;
+    if (aVal > bVal) return order === "asc" ? 1 : -1;
+    return 0;
+  };
 }
 
 export default function Home() {
@@ -115,7 +119,11 @@ export default function Home() {
     if (selectedProjectIds.length === filteredProjects.length) {
       setSelectedProjectIds([]);
     } else {
-      setSelectedProjectIds(filteredProjects.map((p) => p.id));
+      setSelectedProjectIds(
+        filteredProjects
+          .filter((p) => Boolean(p.elementId))
+          .map((p) => p.elementId!)
+      );
     }
   };
 
@@ -227,8 +235,8 @@ export default function Home() {
                     <TableRow key={project.id} hover>
                       <TableCell padding="checkbox">
                         <Checkbox
-                          checked={selectedProjectIds.includes(project.id)}
-                          onChange={() => toggleSelect(project.id)}
+                          checked={selectedProjectIds.includes(project.elementId!)}
+                          onChange={() => toggleSelect(project.elementId!)}
                         />
                       </TableCell>
                       <TableCell>{project.name}</TableCell>

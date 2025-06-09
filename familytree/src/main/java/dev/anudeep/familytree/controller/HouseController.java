@@ -34,7 +34,7 @@ public class HouseController {
             @PathVariable String elementId,
             HttpSession session) {
 
-        commonUtils.accessCheck(session,projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("HouseController: Fetching house elementId {}", elementId);
         return houseService.getHouseById(elementId);
     }
@@ -43,7 +43,7 @@ public class HouseController {
     @Operation(summary = "Create a new house")
     public House createHouse(@Parameter(description = "Project Id of a project", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
                                  @PathVariable String projectId,@RequestBody House house, HttpSession session) {
-        commonUtils.accessCheck(session,projectId,new Role[] {Role.EDITOR, Role.ADMIN});
+        commonUtils.accessCheck(projectId,new Role[] {Role.EDITOR, Role.ADMIN});
         log.info("HouseController: Creating house {}", house);
         return houseService.createHouse(house);
     }

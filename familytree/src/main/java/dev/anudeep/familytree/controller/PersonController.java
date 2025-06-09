@@ -37,7 +37,7 @@ public class PersonController {
             @Parameter(description = "elementId of the person to retrieve", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String elementId,
             HttpSession session) {
-        commonUtils.accessCheck(session,projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("PersonController: Fetching person with elementId {}", elementId);
         return ResponseEntity.ok(personService.getPersonById(elementId));
     }
@@ -49,7 +49,7 @@ public class PersonController {
             @PathVariable String projectId,
             @RequestBody Person person,
             HttpSession session) {
-        commonUtils.accessCheck(session,projectId,new Role[] {Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(projectId,new Role[] {Role.ADMIN, Role.EDITOR});
         log.info("PersonController: Creating person {}", person);
         return personService.createPerson(person);
     }
@@ -62,7 +62,7 @@ public class PersonController {
             @Parameter(description = "elementId of the person to retrieve partners of", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String elementId,
             HttpSession session) {
-        commonUtils.accessCheck(session,projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("PersonController: Fetching partners of a person with elementId {}", elementId);
         return personService.getPartners(elementId);
     }
@@ -75,7 +75,7 @@ public class PersonController {
             @Parameter(description = "elementId of the person to retrieve children of", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String elementId,
             HttpSession session) {
-        commonUtils.accessCheck(session,projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("PersonController: Fetching children of a person with elementId {}", elementId);
         return personService.getChildren(elementId);
     }
@@ -87,7 +87,7 @@ public class PersonController {
             @PathVariable String projectId,
             @Parameter(description = "elementId of the person to retrieve siblings of person", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String elementId,HttpSession session) {
-        commonUtils.accessCheck(session,projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("PersonController: Fetching siblings of a person with elementId {}", elementId);
         return personService.getSiblings(elementId);
     }
@@ -100,7 +100,7 @@ public class PersonController {
             @Parameter(description = "elementId of the person to retrieve person's house belongs to", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String elementId,
             HttpSession session) {
-        commonUtils.accessCheck(session,projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("PersonController: Fetching house of a person with elementId {}", elementId);
         return personService.getHouse(elementId);
     }
