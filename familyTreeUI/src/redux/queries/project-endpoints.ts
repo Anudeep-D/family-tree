@@ -56,9 +56,7 @@ export const projectApi = createApi({
       query: (args) => ({
         url: `/${args.projectId}/addusers`,
         method: "POST",
-        body: {
-          users: args.users,
-        },
+        body: args.users,
       }),
     }),
   }),

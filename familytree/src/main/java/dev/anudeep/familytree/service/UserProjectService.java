@@ -41,10 +41,12 @@ public class UserProjectService {
     public Optional<Role> getRelationshipType(String userElementId, String projectElementId) {
         Optional<String> relation =  userRepo.findRelationshipBetweenUserAndProject(userElementId, projectElementId);
         if(relation.isPresent()){
+            log.info("Relationship for User {}  project {} is {}", userElementId, projectElementId, relation.get());
             if(relation.get().equalsIgnoreCase(Constants.ADMIN_REL)) return Optional.of(Role.ADMIN);
             if(relation.get().equalsIgnoreCase(Constants.EDITOR_REL)) return Optional.of(Role.EDITOR);
             if(relation.get().equalsIgnoreCase(Constants.VIEWER_REL)) return Optional.of(Role.VIEWER);
         }
+        log.info("No Relationship found for User {}  project {}", userElementId, projectElementId);
         return Optional.empty();
     }
 

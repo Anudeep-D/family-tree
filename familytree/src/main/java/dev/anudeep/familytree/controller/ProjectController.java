@@ -67,6 +67,7 @@ public class ProjectController {
     @Operation(summary = "Add users to project")
     public ResponseEntity<?> addUsersToProject(@Parameter(description = "elementId of the project", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:72")
                                          @PathVariable String elementId, @RequestBody List<RoleAssignmentRequest> users) { // HttpSession removed
+        log.info("addusers:project {}", elementId);
         commonUtils.accessCheck(elementId, new Role[]{Role.ADMIN}); // Example: if creating projects needs a general role
         log.info("ProjectController: Users count {} adding to project {}", users.size(), elementId);
         users.forEach((user) -> {

@@ -15,7 +15,7 @@ public interface UserRepository extends Neo4jRepository<User, String> {
     List<User> findUsers();
 
     // Find user
-    @Query("MATCH (p:User) WHERE elementId(p) = $elementId RETURN p {.*, elementId: elementId(p) } AS person")
+    @Query("MATCH (p:User) WHERE elementId(p) = $elementId RETURN p {.*, elementId: elementId(p) } AS user")
     Optional<User> findByElementId(String elementId);
 
     // Find user by email
@@ -25,14 +25,14 @@ public interface UserRepository extends Neo4jRepository<User, String> {
     @Query("""
         MATCH (u:User)-[r]->(p:Project)
         WHERE elementId(u) = $userId
-        RETURN p
+        RETURN p {.*, elementId: elementId(p) } AS project
     """)
     List<Project> findAllProjectsForUser(String userId);
 
     @Query("""
         MATCH (u:User)-[r:$relationship]->(p:Project)
         WHERE elementId(u) = $userId
-        RETURN p
+        RETURN p {.*, elementId: elementId(p) } AS project
     """)
     List<Project> findProjectsByRelationship(String userId, String relationship);
 
