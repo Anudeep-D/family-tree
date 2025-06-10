@@ -1,5 +1,6 @@
 import { AppEdge, edgeTypes } from "@/types/edgeTypes";
 import { AppNode, nodeTypes } from "@/types/nodeTypes";
+import { getLayoutedElements } from "@/utils/layout";
 import {
   useNodesState,
   useEdgesState,
@@ -19,8 +20,12 @@ export const GraphFlow: FC<GraphFlowProps> = ({
   initialNodes,
   initialEdges,
 }) => {
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const { nodes: initNodes, edges: initEdges } = getLayoutedElements(
+    initialNodes,
+    initialEdges
+  );
+  const [nodes, , onNodesChange] = useNodesState(initNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initEdges);
   const onConnect: OnConnect = useCallback(
     (connection) => setEdges((edges) => addEdge(connection, edges)),
     [setEdges]

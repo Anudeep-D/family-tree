@@ -35,17 +35,18 @@ public class GraphController {
         this.commonUtils=commonUtils;
     }
 
-    @GetMapping("/")
+    @GetMapping
     @Operation(summary = "Get full graph")
     public FlowGraphDTO getGraph(
             @Parameter(description = "Project Id of a project", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String projectId,
             HttpSession session
     ) {
+        log.info("GraphController: entered complete graph mode");
         commonUtils.accessCheck(projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
         try {
             log.info("GraphController: Fetching the complete graph");
-            return graphService.getGraph();
+            return graphService.getGraph(projectId);
         } catch (Exception e) {
             log.error("Failed to fetch full graph", e);  // log stack trace
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error generating graph", e);

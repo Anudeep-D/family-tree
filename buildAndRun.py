@@ -1,6 +1,7 @@
 import os
 import subprocess
 import shutil
+from datetime import datetime
 
 # Set paths
 frontend_dir = "./familyTreeUI"
@@ -31,7 +32,9 @@ def main():
     clean_old_build()
     build_frontend()
     restart_containers()
-    print("\n✅ All done! Frontend should now serve the fresh build.")
+    now = datetime.now()
+    formatted = now.strftime("%d %b %Y, %I:%M %p")
+    print("\n✅ All done @ "+formatted)
 
 if __name__ == "__main__":
     main()

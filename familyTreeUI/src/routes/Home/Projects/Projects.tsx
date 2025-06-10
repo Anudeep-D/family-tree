@@ -81,7 +81,7 @@ const Projects: React.FC<ProjectsProps> = ({ setSelectedProject }) => {
   const [order, setOrder] = useState<Order>("asc");
   const [orderBy, setOrderBy] = useState<keyof Project>("name");
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const handleRequestSort = (
     _event: React.MouseEvent<unknown>,
@@ -240,8 +240,8 @@ const Projects: React.FC<ProjectsProps> = ({ setSelectedProject }) => {
               filteredProjects
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((project) => (
-                  <TableRow key={project.id} hover>
-                    <TableCell padding="checkbox">
+                  <TableRow key={project.elementId} hover>
+                    <TableCell key={`${project.elementId}-checkbox`} padding="checkbox">
                       <Checkbox
                         checked={selectedProjectIds.includes(
                           project.elementId!
@@ -249,7 +249,7 @@ const Projects: React.FC<ProjectsProps> = ({ setSelectedProject }) => {
                         onChange={() => toggleSelect(project.elementId!)}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell key={`${project.elementId}-name`}>
                       <Link
                         component="button"
                         onClick={() => setSelectedProject(project)}
@@ -257,10 +257,10 @@ const Projects: React.FC<ProjectsProps> = ({ setSelectedProject }) => {
                         {project.name}
                       </Link>
                     </TableCell>
-                    <TableCell>{project.desc ?? "-"}</TableCell>
-                    <TableCell>{project.access}</TableCell>
-                    <TableCell>{project.createdBy}</TableCell>
-                    <TableCell>{project.createdAt ?? "-"}</TableCell>
+                    <TableCell key={`${project.elementId}-desc`}>{project.desc ?? "-"}</TableCell>
+                    <TableCell key={`${project.elementId}-role`}>{project.access}</TableCell>
+                    <TableCell key={`${project.elementId}-createdBy`}>{project.createdBy}</TableCell>
+                    <TableCell key={`${project.elementId}-createdAt`}>{project.createdAt ?? "-"}</TableCell>
                   </TableRow>
                 ))
             ) : (
@@ -276,7 +276,7 @@ const Projects: React.FC<ProjectsProps> = ({ setSelectedProject }) => {
         </Table>
 
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
+          rowsPerPageOptions={[10, 50, 100]}
           component="div"
           count={filteredProjects.length}
           rowsPerPage={rowsPerPage}

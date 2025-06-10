@@ -34,7 +34,7 @@ export default function Home() {
         </Breadcrumbs>
       </Box>
       {selectedProject ? (
-        <Tree />
+        <Tree project={selectedProject} />
       ) : (
         <Projects setSelectedProject={setSelectedProject} />
       )}

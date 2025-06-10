@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.Objects;
 
 @Component
@@ -19,12 +20,15 @@ public class FlowEdgeDTO {
     private String target;
     private String label;
     private String type = "default";
+    private Map<String, Object> data;
 
-    public FlowEdgeDTO(String id, String source, String target, String label) {
+    public FlowEdgeDTO(String id, String source, String target, String label, Map<String, Object> data) {
         this.id = id;
         this.source = source;
         this.target = target;
         this.label = label;
+        this.type = label;
+        this.data =data;
     }
 
     @Override

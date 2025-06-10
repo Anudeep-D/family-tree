@@ -1,4 +1,6 @@
 import { baseUrl } from "@/constants/constants";
+import { AppEdge } from "@/types/edgeTypes";
+import { AppNode } from "@/types/nodeTypes";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const graphApi = createApi({
@@ -14,7 +16,10 @@ export const graphApi = createApi({
   }),
   tagTypes: ["graphApi"],
   endpoints: (builder) => ({
-    getGraph: builder.query({
+    getGraph: builder.query<
+      { nodes: AppNode[]; edges: AppEdge[] },
+      { projectId: string }
+    >({
       query(args) {
         return {
           url: `/${args.projectId}/graph`,

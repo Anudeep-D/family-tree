@@ -1,0 +1,25 @@
+.house-node {
+  padding: 12px;
+  background: #1e88e5;
+  color: white;
+  border-radius: 10px;
+  width: 180px;
+  text-align: center;
+  border: 2px solid #90caf9;
+
+  .sigil {
+    font-style: italic;
+    font-size: 0.85em;
+  }
+
+  .words {
+    font-size: 0.9em;
+    margin-top: 4px;
+    font-weight: bold;
+  }
+
+  .hometown, .gods {
+    font-size: 0.75em;
+    margin-top: 4px;
+  }
+}

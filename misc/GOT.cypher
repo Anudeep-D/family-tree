@@ -72,6 +72,7 @@ MERGE (robbina:Person {name: "Robbina Arryn", gender: "female", nickName: "Robbi
 MERGE (harrold:Person {name: "Harrold Arryn", gender: "male", nickName: "Harrold", isAlive: true, character: "neutral"})
 MERGE (gregor:Person {name: "Gregor Clegane", gender: "male", isAlive: false, character: "bad", nickName: "The Mountain"})
 MERGE (sandor:Person {name: "Sandor Clegane", gender: "male", isAlive: false, character: "neutral", nickName: "The Hound"})
+
 // --- Create/Merge BELONGS_TO relationships ---
 MERGE (joffrey)-[:BELONGS_TO]->(lannister)
 MERGE (tommen)-[:BELONGS_TO]->(lannister)

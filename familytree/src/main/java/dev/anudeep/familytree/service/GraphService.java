@@ -33,20 +33,21 @@ public class GraphService {
     @Autowired
     private Neo4jClient neo4jClient;
 
-    public FlowGraphDTO getGraph() {
+    public FlowGraphDTO getGraph(String projectId) {
         Set<FlowNodeDTO> nodes = new HashSet<>();
         Set<FlowEdgeDTO> edges = new HashSet<>();
-        String cypher = """
-            MATCH (n)
-            OPTIONAL MATCH (n)-[r]->(m)
+        String cypher = String.format("""
+            MATCH (p:Person)-[:%s]->(proj:Project)
+            WHERE elementId(proj) = $projectId
+            OPTIONAL MATCH (n)-[r:%s|%s|%s]->(m)
             RETURN n, r, m
-        """;
+            """,Constants.PART_OF,Constants.MARRIED_REL, Constants.PARENT_REL, Constants.BELONGS_REL);
         AtomicInteger line= new AtomicInteger(1);
-        neo4jClient.query(cypher).fetch()
+        neo4jClient.query(cypher).bind(projectId).to("projectId").fetch()
                 .all()
                 .forEach(row -> {
                     log.info("Row fetched {}", line.getAndIncrement());
-                    Node node = (Node) row.get("n");
+                    Node node = (Node) row.get("p");
                     Node target = (Node) row.get("m");
                     Relationship rel = (Relationship) row.get("r");
                     addNode(node,nodes);
@@ -78,7 +79,8 @@ public class GraphService {
             String srcId = relation.startNodeElementId();
             String tgtId = relation.endNodeElementId();
             String edgeId = relation.elementId();
-            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, relation.type());
+            Map<String, Object> data = Map.of("label", relation.type());
+            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, relation.type(),data);
             if (!edges.contains(flowEdge)) {
                 log.info("edge identified {}",flowEdge);
                 edges.add(flowEdge);
@@ -137,8 +139,9 @@ public class GraphService {
             String tgtId = nb.elementId();
             String edgeId = srcId + "_married_" + tgtId;
             String reverseEdgeId = tgtId + "_married_" + srcId;
-            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, Constants.MARRIED_REL);
-            FlowEdgeDTO reverseFlowEdge = new FlowEdgeDTO(reverseEdgeId, tgtId, srcId, Constants.MARRIED_REL);
+            Map<String, Object> data = Map.of("label", Constants.MARRIED_REL);
+            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, Constants.MARRIED_REL,data);
+            FlowEdgeDTO reverseFlowEdge = new FlowEdgeDTO(reverseEdgeId, tgtId, srcId, Constants.MARRIED_REL,data);
             if (!edges.contains(flowEdge) && !edges.contains(reverseFlowEdge)) {
                 log.info("MARRIED_TO edge identified {}",flowEdge);
                 edges.add(flowEdge);
@@ -154,8 +157,9 @@ public class GraphService {
             String tgtId = nb.elementId();
             String edgeId = srcId + "_parent_" + tgtId;
             String reverseEdgeId = tgtId + "_parent_" + srcId;
-            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, Constants.PARENT_REL);
-            FlowEdgeDTO reverseFlowEdge = new FlowEdgeDTO(reverseEdgeId, tgtId, srcId, Constants.PARENT_REL);
+            Map<String, Object> data = Map.of("label", Constants.PARENT_REL);
+            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, Constants.PARENT_REL, data);
+            FlowEdgeDTO reverseFlowEdge = new FlowEdgeDTO(reverseEdgeId, tgtId, srcId, Constants.PARENT_REL, data);
             // Prevent duplicates
             if (!edges.contains(flowEdge) && !edges.contains(reverseFlowEdge)) {
                 log.info("PARENT_OF edge identified {}",flowEdge);
