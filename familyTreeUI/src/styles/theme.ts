@@ -4,7 +4,7 @@ const theme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#1A237E", // Indigo 900
+      main: "#0070E0", // Indigo 900
       light: "#534BAE", // Lighter shade for Indigo 900
       dark: "#000051", // Darker shade for Indigo 900
       contrastText: "#fff",

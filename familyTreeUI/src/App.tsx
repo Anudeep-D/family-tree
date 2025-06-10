@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import Home from "./routes/Home/Home";
-import LoginPage from "./routes/Authentication/Login";
-import PrivateRoute from "./routes/Authentication/PrivateRoute";
+import Home from "@routes/Home/Home";
+import LoginPage from "@routes/Authentication/Login";
+import PrivateRoute from "@routes/Authentication/PrivateRoute";
+import Tree from "@routes/Home/Tree/Tree";
 
 const clientId = `${process.env.GOOGLE_CLIENT_ID}`;
 
