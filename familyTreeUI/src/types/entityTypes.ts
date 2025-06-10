@@ -16,6 +16,6 @@ export type Project = {
   name: string;
   desc?: string;
   createdBy?: string;
-  createdAt?: Date;
+  createdAt?: string;
   access?: string;
 };

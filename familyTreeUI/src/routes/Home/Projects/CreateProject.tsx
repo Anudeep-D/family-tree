@@ -81,7 +81,7 @@ const CreateProject = ({ open, onClose }: Props) => {
     createProjectMutation({
       name: name,
       desc: description,
-      createdAt: new Date(),
+      createdAt: (new Date()).toISOString(),
     });
   };
   const handleAddUser = () => {

@@ -15,8 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Tag(name = "Projects API", description = "Endpoints for projects related")
@@ -34,14 +36,19 @@ public class ProjectController {
     }
 
     @GetMapping("/")
-    public List<Project> getProjects() { // HttpSession removed
+    public ResponseEntity<?> getProjects() { // HttpSession removed
         log.info("ProjectController: get projects");
-        commonUtils.accessCheck(null, null); // Perform basic authentication check via commonUtils
-
         User currentUser = commonUtils.getCurrentAuthenticatedUser(); // Get the authenticated user
-
         log.info("ProjectController: access check passed for user: {}", currentUser.getEmail());
-        return userProjectService.getAllProjectsForUser(currentUser.getElementId());
+        List<Project> allProjects = userProjectService.getAllProjectsForUser(currentUser.getElementId());
+        allProjects.forEach((project) -> {
+            project.setAccess(Constants.getRoleForRel(project.getAccess()));
+            project.setCreatedAt(DateTimeUtil.readableDate(project.getCreatedAt()));
+            Optional<User> creator = userProjectService.getUserByElementId(project.getCreatedBy());
+            creator.ifPresent(user -> project.setCreatedBy(String.format("%s (%s)", user.getName(), user.getEmail())));
+            log.info("Project  {}", project);
+        });
+        return ResponseEntity.ok().body(allProjects);
     }
 
     @PostMapping("/create")

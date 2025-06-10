@@ -2,6 +2,8 @@ package dev.anudeep.familytree.utils;
 
 import dev.anudeep.familytree.model.Role;
 
+import java.util.Objects;
+
 public class Constants {
     // User, Project relationships
     private Constants(){};
@@ -19,6 +21,13 @@ public class Constants {
         if(role==Role.ADMIN) return ADMIN_REL;
         if(role==Role.EDITOR) return EDITOR_REL;
         if(role==Role.VIEWER) return VIEWER_REL;
+        return null;
+    }
+
+    public static String getRoleForRel(String rel){
+        if(Objects.equals(rel, ADMIN_REL)) return Role.ADMIN.toValue();
+        if(Objects.equals(rel, EDITOR_REL)) return Role.EDITOR.toValue();
+        if(Objects.equals(rel, VIEWER_REL)) return Role.VIEWER.toValue();
         return null;
     }
 }

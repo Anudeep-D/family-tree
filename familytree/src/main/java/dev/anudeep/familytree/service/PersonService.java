@@ -44,9 +44,4 @@ public class PersonService {
         log.info("Fetching siblings of a person with elementId {}", elementId);
         return repository.findSiblings(elementId);
     }
-
-    public House getHouse(String elementId) {
-        log.info("Fetching house of a person with elementId {}", elementId);
-        return repository.findHouse(elementId).orElseThrow(() -> new EntityNotFoundException("House with elementId " + elementId + " not found"));
-    }
 }

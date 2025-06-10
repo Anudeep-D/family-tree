@@ -38,7 +38,10 @@ interface HeadCell {
 
 const headCells: readonly HeadCell[] = [
   { id: "name", label: "Name" },
-  { id: "access", label: "Access" },
+  { id: "desc", label: "Description" },
+  { id: "access", label: "Role" },
+  { id: "createdBy", label: "Created by" },
+  { id: "createdAt", label: "Created at" },
 ];
 
 export function getComparator<Key extends keyof Project>(
@@ -97,13 +100,22 @@ export default function Home() {
     setPage(0);
   };
 
+  const isSearchTermInProject = (project: Project) => {
+    if (!search) return true;
+    return (
+      project.name.toLowerCase().includes(search.toLowerCase()) ||
+      project.desc?.toLowerCase().includes(search.toLowerCase()) ||
+      project.access?.toLowerCase().includes(search.toLowerCase()) ||
+      project.createdBy?.toLowerCase().includes(search.toLowerCase())
+    );
+  };
+
   const filteredProjects = useMemo(() => {
     if (!allProjects) return [];
     return allProjects
       .filter(
         (project) =>
-          (!search ||
-            project.name.toLowerCase().includes(search.toLowerCase())) &&
+          isSearchTermInProject(project) &&
           (!filterRole || project.access === filterRole)
       )
       .sort(getComparator(order, orderBy));
@@ -235,12 +247,17 @@ export default function Home() {
                     <TableRow key={project.id} hover>
                       <TableCell padding="checkbox">
                         <Checkbox
-                          checked={selectedProjectIds.includes(project.elementId!)}
+                          checked={selectedProjectIds.includes(
+                            project.elementId!
+                          )}
                           onChange={() => toggleSelect(project.elementId!)}
                         />
                       </TableCell>
                       <TableCell>{project.name}</TableCell>
+                      <TableCell>{project.desc ?? "-"}</TableCell>
                       <TableCell>{project.access}</TableCell>
+                      <TableCell>{project.createdBy}</TableCell>
+                      <TableCell>{project.createdAt ?? "-"}</TableCell>
                     </TableRow>
                   ))
               ) : (

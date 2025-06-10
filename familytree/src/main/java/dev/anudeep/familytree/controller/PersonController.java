@@ -4,6 +4,7 @@ import dev.anudeep.familytree.controller.common.CommonUtils;
 import dev.anudeep.familytree.model.House;
 import dev.anudeep.familytree.model.Person;
 import dev.anudeep.familytree.model.Role;
+import dev.anudeep.familytree.service.HouseService;
 import dev.anudeep.familytree.service.PersonService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -23,9 +24,11 @@ import java.util.List;
 public class PersonController {
 
     private final PersonService personService;
+    private final HouseService houseService;
     private final CommonUtils commonUtils;
-    public PersonController(PersonService personService,CommonUtils commonUtils) {
+    public PersonController(PersonService personService,HouseService houseService, CommonUtils commonUtils) {
         this.personService = personService;
+        this.houseService = houseService;
         this.commonUtils = commonUtils;
     }
 
@@ -102,7 +105,7 @@ public class PersonController {
             HttpSession session) {
         commonUtils.accessCheck(projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("PersonController: Fetching house of a person with elementId {}", elementId);
-        return personService.getHouse(elementId);
+        return houseService.getHouse(elementId);
     }
 
 }

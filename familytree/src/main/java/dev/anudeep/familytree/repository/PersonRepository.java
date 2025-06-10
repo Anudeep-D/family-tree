@@ -27,9 +27,5 @@ public interface PersonRepository extends Neo4jRepository<Person, String> {
     // Find siblings (undirected relationship)
     @Query("MATCH (p:Person)-[:" + Constants.PARENT_REL + "]-(sibling:Person) WHERE elementId(p) = $elementId RETURN DISTINCT sibling  {.*, elementId: elementId(sibling) } AS sibling")
     List<Person> findSiblings(String elementId);
-
-    // Find house (directed relationship)
-    @Query("MATCH (p:Person)-[:" + Constants.BELONGS_REL + "]->(house:House) WHERE elementId(p) = $elementId RETURN  DISTINCT house  {.*, elementId: elementId(house) } AS house")
-    Optional<House> findHouse(String elementId);
 }
 

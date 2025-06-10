@@ -1,9 +1,5 @@
 package dev.anudeep.familytree.service;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
 import dev.anudeep.familytree.model.Project;
 import dev.anudeep.familytree.model.Role;
 import dev.anudeep.familytree.model.User;
@@ -12,7 +8,6 @@ import dev.anudeep.familytree.repository.UserRepository;
 import dev.anudeep.familytree.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.stereotype.Service;
 
@@ -51,11 +46,11 @@ public class UserProjectService {
     }
 
     public List<Project> getAllProjectsForUser(String userElementId) {
-        return userRepo.findAllProjectsForUser(userElementId);
+        return projectRepo.findAllProjectsForUser(userElementId);
     }
 
     public List<Project> getProjectsForUserByType(String userElementId, String type) {
-        return userRepo.findProjectsByRelationship(userElementId, type);
+        return projectRepo.findProjectsByRelationship(userElementId, type);
     }
 
     public List<User> getUsersForProject(String projectElementId) {
@@ -70,8 +65,8 @@ public class UserProjectService {
         return userRepo.save(new User(name, email, picture));
     }
 
-    public Project createProject(Project project) {
-        return projectRepo.save(project);
+    public void createProject(Project project) {
+        projectRepo.save(project);
     }
 
     public Project getProjectByDetails(String name, String createdAt, String createdBy){

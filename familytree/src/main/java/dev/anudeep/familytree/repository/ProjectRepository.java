@@ -35,4 +35,18 @@ public interface ProjectRepository extends Neo4jRepository<Project, String> {
         RETURN p {.*, elementId: elementId(p) } AS project
     """)
     Project findProjectByDetails(String name, String createdAt, String createdBy);
+
+    @Query("""
+        MATCH (u:User)-[r]->(p:Project)
+        WHERE elementId(u) = $userId
+        RETURN p {.*, elementId: elementId(p), access: type(r) } AS project
+    """)
+    List<Project> findAllProjectsForUser(String userId);
+
+    @Query("""
+        MATCH (u:User)-[r:$relationship]->(p:Project)
+        WHERE elementId(u) = $userId
+        RETURN p {.*, elementId: elementId(p) } AS project
+    """)
+    List<Project> findProjectsByRelationship(String userId, String relationship);
 }

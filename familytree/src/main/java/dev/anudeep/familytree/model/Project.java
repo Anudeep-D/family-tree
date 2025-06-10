@@ -26,8 +26,10 @@ public class Project implements Serializable {
     private String elementId;
     private String name;
     private String desc;
-    private Date createdAt;
+    private String createdAt;
     private String createdBy;
+    private transient String access;
+
     @Relationship(type = Constants.ADMIN_REL, direction = Relationship.Direction.INCOMING)
     private transient Set<User> adminUsers = new HashSet<>();
     @Relationship(type = Constants.EDITOR_REL, direction = Relationship.Direction.INCOMING)
@@ -35,13 +37,10 @@ public class Project implements Serializable {
     @Relationship(type = Constants.VIEWER_REL, direction = Relationship.Direction.INCOMING)
     private transient Set<User> viewerUsers = new HashSet<>();
 
-    public Project(String name, String desc, Date createdAt, String createdBy){
+    public Project(String name, String desc, String createdAt, String createdBy){
         this.name=name;
         this.desc = desc;
-        if(createdAt!=null)
-            this.createdAt = createdAt;
-        else
-            this.createdAt = new Date();
+        this.createdAt = (String) Objects.requireNonNullElseGet(createdAt, Date::new);
         this.createdBy = createdBy;
     }
 
