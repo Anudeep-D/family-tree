@@ -9,7 +9,7 @@ import {
   Container,
 } from "@mui/material";
 import React from "react";
-import FlowCanvas from "../GraphFlow/GraphFlow";
+import FlowCanvas from "./GraphFlow/GraphFlow";
 export type TreeProps = {
   project: Project;
 };

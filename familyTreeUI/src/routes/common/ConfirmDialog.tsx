@@ -24,6 +24,10 @@ export type ConfirmDialogProps = {
   message?: string;
 };
 
+export type ConfirmProps = Pick<
+  ConfirmDialogProps,
+  "open" | "title" | "message" | "type" | "action"
+>;
 export default function ConfirmDialog({
   open,
   onClose,

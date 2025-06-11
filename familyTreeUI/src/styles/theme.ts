@@ -64,6 +64,11 @@ const theme = createTheme({
     borderRadius: 12,
   },
   components: {
+    MuiContainer: {
+      defaultProps: {
+        maxWidth: false,
+      },
+    },
     MuiCssBaseline: {
       styleOverrides: {
         body: {
@@ -132,8 +137,8 @@ const theme = createTheme({
         },
         outlinedPrimary: {
           borderRadius: 10,
-          padding: "5px 10px",   
-          fontSize: "0.7rem", 
+          padding: "5px 10px",
+          fontSize: "0.7rem",
           background: "linear-gradient(135deg, #1e3c72, #2a5298)",
           color: "#fff",
           boxShadow:
