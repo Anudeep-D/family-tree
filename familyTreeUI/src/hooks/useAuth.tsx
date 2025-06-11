@@ -21,6 +21,7 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
   const [localIsAuthenticated, setLocalIsAuthenticated] = useState<boolean>(false);
+  const [localIsLoading, setLocalIsLoading] = useState<boolean>(true);
   const [localUser, setLocalUser] = useState<User | null>(null);
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
   
@@ -37,15 +38,17 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
   const contextIsLoading = isLoginMutationLoading || isInitialSessionLoading || isSessionFetching || isLogoutMutationLoading;
 
   useEffect(() => {
-    if (isInitialSessionLoading || isSessionFetching) return;
+    if (contextIsLoading) return;
 
     if (sessionUser) {
       setLocalUser(sessionUser);
       setLocalIsAuthenticated(true);
+      setLocalIsLoading(false);
     } else if (sessionError) {
       console.error('Session fetch error:', sessionError);
       setLocalUser(null);
       setLocalIsAuthenticated(false);
+      setLocalIsLoading(false);
     } else {
       setLocalUser(null);
       setLocalIsAuthenticated(false);
@@ -54,6 +57,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
 
   const login = useCallback(async (googleCredentialToken: string) => {
     try {
+      setLocalIsLoading(true);
       // Expect User object directly from the mutation, backend sets HttpOnly cookie
       const user = await rtkLoginWithGoogle(googleCredentialToken as any).unwrap(); 
       
@@ -61,17 +65,20 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
 
       setLocalUser(user); // Set user from the direct response
       setLocalIsAuthenticated(true);
+      setLocalIsLoading(false);
       await refetchSession(); 
     } catch (error) {
       console.error('Login failed via RTK query:', error);
       setLocalUser(null);
       setLocalIsAuthenticated(false);
+      setLocalIsLoading(false);
       throw error;
     }
   }, [rtkLoginWithGoogle, refetchSession]);
   
   const logout = useCallback(async () => {
     try {
+      setLocalIsLoading(true);
       await rtkLogout().unwrap(); 
       // Backend clears HttpOnly cookie
     } catch (error) {
@@ -79,6 +86,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
     } finally {
       setLocalUser(null);
       setLocalIsAuthenticated(false);
+      setLocalIsLoading(false);
       await refetchSession(); 
     }
   }, [rtkLogout, refetchSession]);
@@ -102,7 +110,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
   return (
     <AuthContext.Provider value={{ 
         isAuthenticated: localIsAuthenticated, 
-        isLoading: contextIsLoading,
+        isLoading: localIsLoading,
         user: localUser, 
         login, 
         logout, 

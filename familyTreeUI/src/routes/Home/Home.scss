@@ -1,6 +1,6 @@
 .breadcrumbs-container {
   margin: 16px 24px !important;
-  padding: 8px 0 !important;
+  padding: 8px 16px !important;
   display: flex !important;
   align-items: center !important;
   font-size: 0.95rem !important;
@@ -11,8 +11,11 @@
 
 .breadcrumb-link {
   font-weight: 500 !important;
+  font-size: 14px !important;
   color: #90caf9 !important;
   cursor: pointer !important;
+  display: flex !important; 
+  align-items: center !important;
 
   &:hover {
     color: #bbdefb !important;
@@ -23,6 +26,7 @@
 .breadcrumb-current {
   color: #e0e0e0 !important;
   font-weight: 600 !important;
+  font-size: 14px !important;
 }
 
 // Home.scss - MUI Table enhancements

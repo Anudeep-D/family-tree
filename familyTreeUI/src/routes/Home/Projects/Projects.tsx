@@ -62,10 +62,10 @@ export function getComparator<Key extends keyof Project>(
 }
 
 export type ProjectsProps = {
-  setSelectedProject: (project: Project | undefined) => void;
+  handleProjectSelection: (project: Project) => void;
 };
 
-const Projects: React.FC<ProjectsProps> = ({ setSelectedProject }) => {
+const Projects: React.FC<ProjectsProps> = ({ handleProjectSelection }) => {
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("");
@@ -252,7 +252,7 @@ const Projects: React.FC<ProjectsProps> = ({ setSelectedProject }) => {
                     <TableCell key={`${project.elementId}-name`}>
                       <Link
                         component="button"
-                        onClick={() => setSelectedProject(project)}
+                        onClick={() => handleProjectSelection(project!)}
                       >
                         {project.name}
                       </Link>

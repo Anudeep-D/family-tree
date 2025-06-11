@@ -21,7 +21,7 @@ const Tree: React.FC<TreeProps> = ({ project }) => {
     isLoading: isGraphLoading,
     isError: isGraphError,
     error: graphError,
-  } = useGetGraphQuery({ projectId: project.elementId! });
+  } = useGetGraphQuery({ projectId: project.elementId! }, { skip: !project });
 
   if (isGraphFetching || isGraphLoading)
     return (

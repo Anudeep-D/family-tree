@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth"; // Adjust path if useAuth is elsewhere
 import { Box, CircularProgress } from "@mui/material";
-import '@styles/global.scss';
+import "@styles/global.scss";
 
 interface PrivateRouteProps {
   children: JSX.Element;
@@ -11,6 +11,12 @@ interface PrivateRouteProps {
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading, setRedirectPath } = useAuth();
   const location = useLocation();
+
+  useEffect(() => {
+    if (!isAuthenticated && !isLoading) {
+      setRedirectPath(location.pathname + location.search);
+    }
+  }, [isAuthenticated, isLoading, location, setRedirectPath]);
 
   if (isLoading) {
     // Optional: Show a loading spinner or a blank page while checking auth
@@ -22,10 +28,8 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
     );
   }
 
-  if (!isAuthenticated) {
-    // Store the current path to redirect back after login
-    setRedirectPath(location.pathname + location.search);
-    // Redirect to the login page
+  if (!isAuthenticated && !isLoading) {
+    console.log("isAuthenticated",isAuthenticated);
     return <Navigate to="/login" replace />;
   }
 

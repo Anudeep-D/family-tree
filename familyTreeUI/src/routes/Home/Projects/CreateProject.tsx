@@ -25,6 +25,8 @@ import {
   useAddUsersToProjectMutation,
 } from "@/redux/queries/project-endpoints";
 import { Role } from "@/types/common";
+import { useNavigate } from "react-router-dom";
+import { Project } from "@/types/entityTypes";
 
 type AssignedUser = {
   elementId: string;
@@ -41,7 +43,10 @@ const CreateProject = ({ open, onClose }: Props) => {
   const [description, setDescription] = useState("");
   const [users, setUsers] = useState<AssignedUser[]>([]);
   const [callAddUsers, setCallAddUsers] = useState(false);
-
+  const navigate = useNavigate();
+  const handleProjectSelection = (projectId: string) => {
+    navigate(`/projects/${encodeURIComponent(projectId)}`);
+  };
   const [
     createProjectMutation,
     {
@@ -81,7 +86,7 @@ const CreateProject = ({ open, onClose }: Props) => {
     createProjectMutation({
       name: name,
       desc: description,
-      createdAt: (new Date()).toISOString(),
+      createdAt: new Date().toISOString(),
     });
   };
   const handleAddUser = () => {
@@ -97,19 +102,23 @@ const CreateProject = ({ open, onClose }: Props) => {
     onSubmit({ name, description });
     setName("");
     setDescription("");
-    if (users.length === 0) onClose();
-    else setCallAddUsers(true);
+    if (users.length === 0) {
+      onClose();
+    } else setCallAddUsers(true);
   };
 
   useEffect(() => {
-    if (callAddUsers && newProject) {
-      addUsersToProjectMutation({
-        projectId: newProject.elementId!,
-        users: users,
-      });
-      setUsers([]);
-      setCallAddUsers(false);
-      onClose();
+    if (newProject) {
+      if (callAddUsers) {
+        addUsersToProjectMutation({
+          projectId: newProject.elementId!,
+          users: users,
+        });
+        setUsers([]);
+        setCallAddUsers(false);
+        onClose();
+      }
+      handleProjectSelection(newProject.elementId!);
     }
   }, [callAddUsers, newProject]);
 

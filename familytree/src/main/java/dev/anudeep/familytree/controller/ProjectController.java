@@ -35,6 +35,15 @@ public class ProjectController {
         this.commonUtils = commonUtils;
     }
 
+    @GetMapping("/{elementId}")
+    public ResponseEntity<?> getProject(@Parameter(description = "elementId of the project", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:72")
+                                            @PathVariable String elementId) { // HttpSession removed
+        log.info("ProjectController: get project");
+        commonUtils.accessCheck(elementId,null); // Example: if creating projects needs a general role
+        Optional<Project> project = userProjectService.getProjectByElementId(elementId);
+        return ResponseEntity.ok().body(project.orElseThrow());
+    }
+
     @GetMapping("/")
     public ResponseEntity<?> getProjects() { // HttpSession removed
         log.info("ProjectController: get projects");
