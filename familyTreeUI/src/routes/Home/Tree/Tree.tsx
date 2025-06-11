@@ -1,9 +1,15 @@
 import { useGetGraphQuery } from "@/redux/queries/graph-endpoints";
 import { Project } from "@/types/entityTypes";
 import { getErrorMessage } from "@/utils/common";
-import { Alert, AlertTitle, CircularProgress, Container } from "@mui/material";
+import {
+  Alert,
+  AlertTitle,
+  Box,
+  CircularProgress,
+  Container,
+} from "@mui/material";
 import React from "react";
-import { GraphFlow } from "../GraphFlow/GraphFlow";
+import FlowCanvas from "../GraphFlow/GraphFlow";
 export type TreeProps = {
   project: Project;
 };
@@ -17,7 +23,12 @@ const Tree: React.FC<TreeProps> = ({ project }) => {
     error: graphError,
   } = useGetGraphQuery({ projectId: project.elementId! });
 
-  if (isGraphFetching || isGraphLoading) return <CircularProgress />;
+  if (isGraphFetching || isGraphLoading)
+    return (
+      <Box className="loading-container">
+        <CircularProgress />
+      </Box>
+    );
   if (isGraphError)
     return (
       <Alert severity="error">
@@ -26,15 +37,11 @@ const Tree: React.FC<TreeProps> = ({ project }) => {
       </Alert>
     );
   return (
-    <Container sx={{ height: '85vh', width: '100%', maxWidth:'100% !important' }}>
-      {graphData?.nodes && graphData?.nodes.length > 0 ? (
-        <GraphFlow
-          initialNodes={graphData.nodes}
-          initialEdges={graphData.edges}
-        />
-      ) : (
-        "no graph present"
-      )}
+    <Container sx={{ maxWidth: "100% !important" }}>
+      <FlowCanvas
+        initialNodes={graphData?.nodes ?? []}
+        initialEdges={graphData?.edges ?? []}
+      />
     </Container>
   );
 };
