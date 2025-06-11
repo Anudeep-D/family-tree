@@ -41,6 +41,7 @@ const Tree: React.FC<TreeProps> = ({ project }) => {
       <FlowCanvas
         initialNodes={graphData?.nodes ?? []}
         initialEdges={graphData?.edges ?? []}
+        project={project}
       />
     </Container>
   );

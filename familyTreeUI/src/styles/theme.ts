@@ -115,10 +115,11 @@ const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: 30,
+          borderRadius: 15,
           textTransform: "none",
           padding: "10px 24px",
           fontWeight: 600,
+          transition: "all 0.3s ease",
         },
         containedPrimary: {
           // Example: Darker gradient for the new primary
@@ -129,9 +130,29 @@ const theme = createTheme({
             background: "linear-gradient(45deg, #000051, #266798)", // Slightly different gradient on hover
           },
         },
+        outlinedPrimary: {
+          borderRadius: 10,
+          padding: "5px 10px",   
+          fontSize: "0.7rem", 
+          background: "linear-gradient(135deg, #1e3c72, #2a5298)",
+          color: "#fff",
+          boxShadow:
+            "0 4px 12px rgba(42, 82, 152, 0.6), inset 0 0 8px rgba(255,255,255,0.1)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          backdropFilter: "blur(4px)",
+          "&:hover": {
+            background: "linear-gradient(135deg, #2a5298, #1e3c72)",
+            boxShadow:
+              "0 6px 16px rgba(42, 82, 152, 0.8), inset 0 0 10px rgba(255,255,255,0.2)",
+            transform: "scale(1.03)",
+          },
+          "&:active": {
+            transform: "scale(0.98)",
+          },
+        },
         disableElevation: {
-            color:"#a0a4a7"
-        }
+          color: "#a0a4a7",
+        },
       },
     },
 

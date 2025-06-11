@@ -26,13 +26,13 @@ export const Options: React.FC<OptionsProps> = ({ addNode }) => {
     >
       {Object.keys(nodeTypes).map((type) => (
         <Button
-          variant="contained"
+          variant="outlined"
           size="small"
           key={type}
           draggable
           onDragStart={(event) => onDragStart(event, type)}
         >
-          {type} Node
+          Add {type}
         </Button>
       ))}
     </Box>

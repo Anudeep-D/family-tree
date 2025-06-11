@@ -2,6 +2,7 @@ import { AppEdge, edgeTypes } from "@/types/edgeTypes";
 import { AppNode, nodeTypes } from "@/types/nodeTypes";
 import { getLayoutedElements } from "@/utils/layout";
 import { Box, Button } from "@mui/material";
+import { SaveTwoTone, Restore, DeleteTwoTone } from "@mui/icons-material";
 import {
   useNodesState,
   useEdgesState,
@@ -14,16 +15,31 @@ import {
   ReactFlowProvider,
   useReactFlow,
 } from "@xyflow/react";
-import { FC, useCallback, useRef } from "react";
+import { FC, useCallback, useRef, useState } from "react";
 import { Options } from "../Options/Options";
 
 import "./GraphFlow.scss";
+import ConfirmDialog, {
+  ConfirmDialogProps,
+} from "@/routes/common/ConfirmDialog";
+import { Project } from "@/types/entityTypes";
 
 type GraphFlowProps = {
   initialNodes: AppNode[];
   initialEdges: AppEdge[];
+  project: Project;
 };
-const GraphFlow: FC<GraphFlowProps> = ({ initialNodes, initialEdges }) => {
+type ConfirmProps = Pick<
+  ConfirmDialogProps,
+  "open" | "title" | "message" | "type" | "action"
+>;
+
+const GraphFlow: FC<GraphFlowProps> = ({ initialNodes, initialEdges, project }) => {
+  //ConfirmDialog related
+  const [dialogOpen, setDialogOpen] = useState<ConfirmProps>({ open: false });
+  const handleConfirmation = () => {
+    console.log(dialogOpen);
+  };
   const { nodes: initNodes, edges: initEdges } = getLayoutedElements(
     initialNodes,
     initialEdges
@@ -97,23 +113,60 @@ const GraphFlow: FC<GraphFlowProps> = ({ initialNodes, initialEdges }) => {
           <Box className="flow-save-buttons">
             <Button
               size="small"
-              variant="contained"
-              color="error"
-              onClick={() => console.log("Discard clicked")}
+              variant="text"
+              onClick={() =>
+                setDialogOpen({
+                  open: true,
+                  type: "error",
+                  action: "Delete",
+                  title: `Delete project ${project.elementId}`,
+                  message:
+                    "Are you sure you want to delete this project? This action cannot be undone.",
+                })
+              }
             >
-              Discard 
+              <DeleteTwoTone fontSize="small" color="error" />
             </Button>
             <Button
               size="small"
-              variant="contained"
-              color="success"
-              onClick={() => console.log("Save clicked")}
+              variant="text"
+              onClick={() =>
+                setDialogOpen({
+                  open: true,
+                  type:"warning",
+                  action: "Reset",
+                  title: `Reset project ${project.name}`,
+                  message:
+                    "Are you sure you want to reset this project to original? This action cannot be undone.",
+                })
+              }
             >
-              Save
+              <Restore fontSize="small" color="action" />
+            </Button>
+            <Button
+              size="small"
+              variant="text"
+              onClick={() =>
+                setDialogOpen({
+                  open: true,
+                  type:"primary",
+                  action: "Save",
+                  title: `Save project ${project.elementId}`,
+                  message:
+                    "Are you sure you want to save this project?",
+                })
+              }
+            >
+              <SaveTwoTone fontSize="small" color="primary" />
             </Button>
           </Box>
         </ReactFlow>
       </Box>
+      <ConfirmDialog
+        onClose={() => setDialogOpen({ open: false })}
+        onConfirm={handleConfirmation}
+        {...dialogOpen}
+      />
     </Box>
   );
 };
