@@ -2,19 +2,14 @@ import * as React from "react";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
-import FileCopyIcon from "@mui/icons-material/FileCopyOutlined";
-import SaveIcon from "@mui/icons-material/Save";
-import PrintIcon from "@mui/icons-material/Print";
-import ShareIcon from "@mui/icons-material/Share";
-import { ListTwoTone } from "@mui/icons-material";
-import { IconButton } from "@mui/material";
+import { FilterAltTwoTone, ListTwoTone, SearchTwoTone, SmartToyTwoTone, SortTwoTone } from "@mui/icons-material";
 import "./Options.scss";
 
 const actions = [
-  { icon: <FileCopyIcon />, name: "Copy" },
-  { icon: <SaveIcon />, name: "Save" },
-  { icon: <PrintIcon />, name: "Print" },
-  { icon: <ShareIcon />, name: "Share" },
+  { icon: <SortTwoTone sx={{ color: "#e040fb" }} />, name: "Sort" },
+  { icon: <FilterAltTwoTone sx={{ color: "#64ffda" }} />, name: "Filter" },
+  { icon: <SearchTwoTone sx={{ color: "#ffd54f" }} />, name: "Search" },
+  { icon: <SmartToyTwoTone sx={{ color: "#82b1ff" }} />, name: "Chat" },
 ];
 
 export const Options = () => {

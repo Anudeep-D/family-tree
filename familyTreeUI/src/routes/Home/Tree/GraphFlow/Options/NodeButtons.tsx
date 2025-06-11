@@ -33,7 +33,7 @@ export const NodeButtons: React.FC<NodeButtonsProps> = ({ addNode }) => {
             draggable
             onDragStart={(event) => onDragStart(event, type)}
           >
-            Add {type}
+            {type}
           </Button>
         ))}
       </Box>
