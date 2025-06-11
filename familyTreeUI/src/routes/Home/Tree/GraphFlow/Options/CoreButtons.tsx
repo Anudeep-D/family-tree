@@ -2,6 +2,7 @@ import { ConfirmProps } from "@/routes/common/ConfirmDialog";
 import { Project } from "@/types/entityTypes";
 import { DeleteTwoTone, Restore, SaveTwoTone } from "@mui/icons-material";
 import { Box, Tooltip, IconButton } from "@mui/material";
+import { Options } from "./Options";
 import "./CoreButtons.scss"
 
 type CoreButtonsProps = {
@@ -11,6 +12,7 @@ type CoreButtonsProps = {
 export const CoreButtons: React.FC<CoreButtonsProps> = ({ setDialogOpen, project }) => {
   return (
     <Box className="flow-save-buttons">
+      <Options />
       <Tooltip title="Delete">
         <IconButton
           aria-label="delete"
