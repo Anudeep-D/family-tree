@@ -7,7 +7,6 @@ import {
   useEdgesState,
   OnConnect,
   addEdge,
-  addNode,
   ReactFlow,
   Background,
   MiniMap,
@@ -98,7 +97,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
         nds.map((node) => (node.id === editingNode?.id ? curNode : node))
       );
     } else if (dialogMode === "new") {
-      setEdges((nds) => addNode(curNode, nds)); 
+      setNodes((nds) => nds.concat(curNode));
     }
     onNodeDialogClose();
   };
