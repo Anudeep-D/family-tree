@@ -1,4 +1,4 @@
-import { AppEdge, edgeTypes } from "@/types/edgeTypes";
+import { AppEdge, Edges, edgeTypes } from "@/types/edgeTypes";
 import { AppNode, Nodes, nodeTypes } from "@/types/nodeTypes";
 import { getLayoutedElements } from "@/utils/layout";
 import { Box } from "@mui/material";
@@ -21,6 +21,7 @@ import { CoreButtons } from "./Options/CoreButtons";
 
 import "./GraphFlow.scss";
 import { Project } from "@/types/entityTypes";
+import { EdgeDialog } from "./EdgeDialog/EdgeDialog";
 
 type GraphFlowProps = {
   initialNodes: AppNode[];
@@ -39,10 +40,16 @@ const GraphFlow: FC<GraphFlowProps> = ({
   );
   const [nodes, setNodes, onNodesChange] = useNodesState(initNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initEdges);
+  const [prevNodes, setPrevNodes] = useState<AppNode[]>(initNodes);
+  const [prevEdges, setPrevEdges] = useState<AppEdge[]>(initEdges);
   const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
   const { screenToFlowPosition } = useReactFlow();
   const onConnect: OnConnect = useCallback(
-    (connection) => setEdges((edges) => addEdge(connection, edges)),
+    (connection) => {
+      console.log(connection);
+      setNewEdge({ id: `${Date.now()}-new`, ...connection });
+      setEdgeDialogMode("new");
+    },
     [setEdges]
   );
 
@@ -60,7 +67,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
         y: event.clientY - bounds.top,
       });
       setPendingNodeDrop({ type, position });
-      setDialogMode("new");
+      setNodeDialogMode("new");
     },
     [setNodes]
   );
@@ -71,9 +78,9 @@ const GraphFlow: FC<GraphFlowProps> = ({
   }, []);
 
   //Node Dialog related
-  const [dialogMode, setDialogMode] = useState<"new" | "edit" | undefined>(
-    undefined
-  );
+  const [nodeDialogMode, setNodeDialogMode] = useState<
+    "new" | "edit" | undefined
+  >(undefined);
   const [editingNode, setEditingNode] = useState<AppNode | undefined>(
     undefined
   );
@@ -88,18 +95,70 @@ const GraphFlow: FC<GraphFlowProps> = ({
   const onNodeDialogClose = () => {
     setEditingNode(undefined);
     setPendingNodeDrop(undefined);
-    setDialogMode(undefined);
+    setNodeDialogMode(undefined);
   };
 
   const onNodeDialogSubmit = (curNode: AppNode) => {
-    if (dialogMode === "edit") {
+    if (nodeDialogMode === "edit") {
       setNodes((nds) =>
-        nds.map((node) => (node.id === editingNode?.id ? curNode : node))
+        nds.map((node) => (node.id === curNode?.id ? curNode : node))
       );
-    } else if (dialogMode === "new") {
+    } else if (nodeDialogMode === "new") {
       setNodes((nds) => nds.concat(curNode));
     }
     onNodeDialogClose();
+  };
+
+  //Edge Dialog related
+  const [edgeDialogMode, setEdgeDialogMode] = useState<
+    "new" | "edit" | undefined
+  >(undefined);
+  const [editingEdge, setEditingEdge] = useState<AppEdge | undefined>(
+    undefined
+  );
+  const [newEdge, setNewEdge] = useState<AppEdge | undefined>(undefined);
+
+  const onEdgeDialogClose = () => {
+    setEdgeDialogMode(undefined);
+    setEditingEdge(undefined);
+    setNewEdge(undefined);
+  };
+
+  const handleEdgeSubmit = (type: Edges, data: Record<string, string>) => {
+    if (edgeDialogMode === "edit") {
+      const currentEdge: AppEdge = {
+        ...editingEdge!,
+        type: type,
+        data: {
+          ...editingEdge!.data,
+          ...data,
+        },
+      };
+      setEdges((eds) =>
+        eds.map((edge) => (edge.id === currentEdge?.id ? currentEdge : edge))
+      );
+    }
+    if (edgeDialogMode === "new") {
+      console.log(newEdge);
+      const currentEdge: AppEdge = newEdge!;
+      currentEdge.type = type;
+      currentEdge.id = `${newEdge!.type}-${Date.now()}-new`;
+      currentEdge.data = { ...newEdge!.data, ...data };
+      setEdges((eds) => addEdge(currentEdge!, eds));
+    }
+    onEdgeDialogClose();
+  };
+
+  //Core actions
+  const handleReset = () => {
+    setEdges(prevEdges);
+    setNodes(prevNodes);
+  };
+  const handleSave = () => {
+    console.log("save");
+  };
+  const handleDelete = () => {
+    console.log("delete");
   };
   return (
     <Box display="flex" height="85vh" width="100vw">
@@ -119,10 +178,12 @@ const GraphFlow: FC<GraphFlowProps> = ({
           onConnect={onConnect}
           onNodeDoubleClick={(_event, node) => {
             setEditingNode(node);
-            setDialogMode("edit");
+            setNodeDialogMode("edit");
           }}
           onEdgeDoubleClick={(_event, edge) => {
             console.log("edge clicked", edge);
+            setEditingEdge(edge);
+            setEdgeDialogMode("edit");
           }}
           fitView
         >
@@ -132,13 +193,32 @@ const GraphFlow: FC<GraphFlowProps> = ({
           <NodeButtons
             onClose={onNodeDialogClose}
             onSubmit={onNodeDialogSubmit}
-            dialogMode={dialogMode}
+            dialogMode={nodeDialogMode}
             editingNode={editingNode}
             pendingNodeDrop={pendingNodeDrop}
           />
-          <CoreButtons project={project} />
+          <CoreButtons
+            project={project}
+            handleReset={handleReset}
+            handleSave={handleSave}
+            handleDelete={handleDelete}
+          />
         </ReactFlow>
       </Box>
+      {edgeDialogMode && (
+        <EdgeDialog
+          open={Boolean(edgeDialogMode)}
+          onClose={onEdgeDialogClose}
+          mode={edgeDialogMode ? edgeDialogMode : "new"}
+          type={
+            edgeDialogMode === "edit"
+              ? (editingEdge?.type as Edges | undefined)
+              : undefined
+          }
+          initialData={editingEdge?.data}
+          onSubmit={(type, data) => handleEdgeSubmit(type, data)}
+        />
+      )}
     </Box>
   );
 };

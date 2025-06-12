@@ -147,6 +147,7 @@ const CreateProject = ({ open, onClose }: Props) => {
         </Typography>
         {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
         <TextField
+          required
           label="Project Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -198,11 +199,11 @@ const CreateProject = ({ open, onClose }: Props) => {
                     );
                   }}
                   renderInput={(params) => (
-                    <TextField {...params} label="User Email" fullWidth />
+                    <TextField required {...params} label="User Email" fullWidth />
                   )}
                   fullWidth
                 />
-                <FormControl className="roleSelect">
+                <FormControl className="roleSelect" required>
                   <InputLabel>Role</InputLabel>
                   <Select
                     value={user.role}

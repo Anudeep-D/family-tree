@@ -8,12 +8,29 @@ import { useState } from "react";
 
 type CoreButtonsProps = {
   project: Project;
+  handleReset: () => void;
+  handleSave: () => void;
+  handleDelete: () => void;
 };
-export const CoreButtons: React.FC<CoreButtonsProps> = ({ project }) => {
+export const CoreButtons: React.FC<CoreButtonsProps> = ({
+  project,
+  handleReset,
+  handleSave,
+  handleDelete,
+}) => {
   //ConfirmDialog related
   const [dialogOpen, setDialogOpen] = useState<ConfirmProps>({ open: false });
   const handleConfirmation = () => {
-    console.log(dialogOpen);
+    if (dialogOpen.action === "Reset") {
+      handleReset();
+    }
+    if (dialogOpen.action === "Save") {
+      handleSave();
+    }
+    if (dialogOpen.action === "Delete") {
+      handleDelete();
+    }
+    setDialogOpen({ open: false });
   };
   return (
     <Box className="flow-save-buttons">

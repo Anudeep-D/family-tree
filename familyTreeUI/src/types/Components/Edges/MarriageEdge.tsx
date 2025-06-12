@@ -1,8 +1,9 @@
 import { type Edge, getBezierPath, type EdgeProps, BaseEdge, EdgeLabelRenderer } from "@xyflow/react";
 
-export type MarriageEdge = Edge<{ label: string }, "MARRIED_TO">;
 import './RelationEdge.scss';
+import { Edges } from "@/types/edgeTypes";
 
+export type MarriageEdge = Edge<{ label: string }, Edges.MARRIED_TO>;
 const MarriageEdge = ({
   id,
   sourceX,

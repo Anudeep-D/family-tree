@@ -9,13 +9,13 @@ import {
   TextField,
   Grid,
 } from "@mui/material";
-import { NodeDataMap, nodeFieldTemplates, Nodes } from "@/types/nodeTypes";
+import { nodeFieldTemplates, Nodes } from "@/types/nodeTypes";
 
 type NodeDialogProps = {
   mode: "new" | "edit";
   open: boolean;
   onClose: () => void;
-  onSubmit: (type: Nodes, data: Record<string, string>) => void;
+  onSubmit: (data: Record<string, string>) => void;
   type?: Nodes;
   initialData?: Record<string, string>;
 };
@@ -46,7 +46,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
   };
 
   const handleSubmit = () => {
-    onSubmit(type, formState ?? {});
+    onSubmit(formState ?? {});
   };
 
   return (
@@ -67,6 +67,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
           {fields?.map((key) => (
             <Grid sx={{ gridColumn: "span 6" }} key={key}>
               <TextField
+                required={key === "name"}
                 label={key}
                 value={formState ? formState[key] : ""}
                 onChange={(e) => handleChange(key, e.target.value)}
@@ -77,7 +78,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button variant="outlined" onClick={onClose}>
+        <Button variant="text" onClick={onClose}>
           Cancel
         </Button>
         <Button variant="contained" onClick={handleSubmit}>

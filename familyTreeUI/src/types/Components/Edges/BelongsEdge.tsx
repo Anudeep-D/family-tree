@@ -1,7 +1,8 @@
 import { type Edge, getBezierPath, type EdgeProps, BaseEdge, EdgeLabelRenderer } from "@xyflow/react";
-
-export type BelongsEdge = Edge<{ label: string }, "BELONGS_TO">;
+import { Edges } from "@/types/edgeTypes";
 import './RelationEdge.scss';
+
+export type BelongsEdge = Edge<{ label: string }, Edges.BELONGS_TO>;
 
 const BelongsEdge = ({
   id,

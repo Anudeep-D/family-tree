@@ -36,7 +36,7 @@ export const NodeButtons: React.FC<NodeButtonsProps> = ({
     event.dataTransfer.effectAllowed = "move";
   };
 
-  const handleSubmit = (type: Nodes, data: Record<string, string>) => {
+  const handleSubmit = (data: Record<string, string>) => {
     let currentNode: AppNode | undefined;
     if (dialogMode === "edit") {
       currentNode = {
@@ -49,7 +49,7 @@ export const NodeButtons: React.FC<NodeButtonsProps> = ({
     }
     if (dialogMode === "new") {
       currentNode = {
-        id: `${type}-${Date.now()}-new`,
+        id: `${pendingNodeDrop!.type}-${Date.now()}-new`,
         type: pendingNodeDrop!.type,
         position: pendingNodeDrop!.position,
         data: data,
@@ -97,7 +97,7 @@ export const NodeButtons: React.FC<NodeButtonsProps> = ({
             : pendingNodeDrop?.type
         }
         initialData={editingNode?.data}
-        onSubmit={(type, data) => handleSubmit(type, data)}
+        onSubmit={(data) => handleSubmit(data)}
       />}
     </Box>
   );

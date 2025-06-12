@@ -1,8 +1,8 @@
 import { type Edge, getBezierPath, type EdgeProps, BaseEdge, EdgeLabelRenderer } from "@xyflow/react";
-
-export type ParentEdge = Edge<{ label: string }, "PARENT_OF">;
 import './RelationEdge.scss';
+import { Edges } from "@/types/edgeTypes";
 
+export type ParentEdge = Edge<{ label: string }, Edges.PARENT_OF>;
 const ParentEdge = ({
   id,
   sourceX,
