@@ -7,7 +7,7 @@ export const nodeTypes = {
   'House': HouseNode,
   // Add any of your custom nodes here!
 } satisfies NodeTypes;
-
+export type NodeTypeKey = keyof typeof nodeTypes;
 
 export type BaseNode = Node<
   {

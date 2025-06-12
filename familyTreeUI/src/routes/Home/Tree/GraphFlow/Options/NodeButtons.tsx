@@ -1,7 +1,15 @@
-import { AppNode, nodeTypes } from "@/types/nodeTypes";
-import { Box, Button, Tooltip } from "@mui/material";
+import { AppNode, nodeTypes, NodeTypeKey } from "@/types/nodeTypes";
+import { Box, IconButton, Tooltip } from "@mui/material";
 
 import "./NodeButtons.scss";
+import { Diversity3TwoTone, Person2TwoTone } from "@mui/icons-material";
+import { ReactNode } from "react";
+
+
+const typeToIcon: Record<NodeTypeKey, ReactNode> = {
+  Person: <Person2TwoTone fontSize="large" color="primary" />,
+  House: <Diversity3TwoTone fontSize="large" color="success" />,
+};
 type NodeButtonsProps = {
   addNode: (nodes: AppNode) => void;
 };
@@ -12,7 +20,6 @@ export const NodeButtons: React.FC<NodeButtonsProps> = ({ addNode }) => {
   };
 
   return (
-    <Tooltip title="Drag to add node">
       <Box
         className="flow-node-buttons"
         sx={{
@@ -26,17 +33,18 @@ export const NodeButtons: React.FC<NodeButtonsProps> = ({ addNode }) => {
         }}
       >
         {Object.keys(nodeTypes).map((type) => (
-          <Button
-            variant="outlined"
-            size="small"
-            key={type}
-            draggable
-            onDragStart={(event) => onDragStart(event, type)}
-          >
-            {type}
-          </Button>
+          <Tooltip title={`Drag to add a new ${type} node to the canvas`}>
+            <IconButton
+              aria-label="delete"
+              size="small"
+              key={type}
+              draggable
+              onDragStart={(event) => onDragStart(event, type)}
+            >
+              {typeToIcon[type as NodeTypeKey]}
+            </IconButton>
+          </Tooltip>
         ))}
       </Box>
-    </Tooltip>
   );
 };

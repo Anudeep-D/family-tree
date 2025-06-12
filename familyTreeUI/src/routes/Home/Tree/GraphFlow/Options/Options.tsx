@@ -2,12 +2,20 @@ import * as React from "react";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
-import { FilterAltTwoTone, ListTwoTone, SearchTwoTone, SmartToyTwoTone, SortTwoTone } from "@mui/icons-material";
+import {
+  ListTwoTone,
+  ManageAccountsTwoTone,
+  SearchTwoTone,
+  SmartToyTwoTone,
+  SortTwoTone,
+  TuneTwoTone,
+} from "@mui/icons-material";
 import "./Options.scss";
 
 const actions = [
+  { icon: <ManageAccountsTwoTone sx={{ color: "#82b1ff" }} />, name: "Access" },
   { icon: <SortTwoTone sx={{ color: "#e040fb" }} />, name: "Sort" },
-  { icon: <FilterAltTwoTone sx={{ color: "#64ffda" }} />, name: "Filter" },
+  { icon: <TuneTwoTone sx={{ color: "#64ffda" }} />, name: "Filter" },
   { icon: <SearchTwoTone sx={{ color: "#ffd54f" }} />, name: "Search" },
   { icon: <SmartToyTwoTone sx={{ color: "#82b1ff" }} />, name: "Chat" },
 ];
