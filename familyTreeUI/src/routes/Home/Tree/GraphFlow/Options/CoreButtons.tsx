@@ -1,15 +1,20 @@
-import { ConfirmProps } from "@/routes/common/ConfirmDialog";
+import ConfirmDialog, { ConfirmProps } from "@/routes/common/ConfirmDialog";
 import { Project } from "@/types/entityTypes";
 import { DeleteTwoTone, Restore, SaveTwoTone } from "@mui/icons-material";
 import { Box, Tooltip, IconButton } from "@mui/material";
 import { Options } from "./Options";
-import "./CoreButtons.scss"
+import "./CoreButtons.scss";
+import { useState } from "react";
 
 type CoreButtonsProps = {
-  setDialogOpen: (confirm: ConfirmProps) => void;
   project: Project;
 };
-export const CoreButtons: React.FC<CoreButtonsProps> = ({ setDialogOpen, project }) => {
+export const CoreButtons: React.FC<CoreButtonsProps> = ({ project }) => {
+  //ConfirmDialog related
+  const [dialogOpen, setDialogOpen] = useState<ConfirmProps>({ open: false });
+  const handleConfirmation = () => {
+    console.log(dialogOpen);
+  };
   return (
     <Box className="flow-save-buttons">
       <Options />
@@ -66,6 +71,11 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({ setDialogOpen, project
           <SaveTwoTone fontSize="small" color="primary" />
         </IconButton>
       </Tooltip>
+      <ConfirmDialog
+        onClose={() => setDialogOpen({ open: false })}
+        onConfirm={handleConfirmation}
+        {...dialogOpen}
+      />
     </Box>
   );
 };

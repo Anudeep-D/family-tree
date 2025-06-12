@@ -1,5 +1,5 @@
 import { AppEdge, edgeTypes } from "@/types/edgeTypes";
-import { AppNode, nodeTypes } from "@/types/nodeTypes";
+import { AppNode, Nodes, nodeTypes } from "@/types/nodeTypes";
 import { getLayoutedElements } from "@/utils/layout";
 import { Box } from "@mui/material";
 import {
@@ -7,21 +7,21 @@ import {
   useEdgesState,
   OnConnect,
   addEdge,
+  addNode,
   ReactFlow,
   Background,
   MiniMap,
   Controls,
   ReactFlowProvider,
   useReactFlow,
+  XYPosition,
 } from "@xyflow/react";
 import { FC, useCallback, useRef, useState } from "react";
 import { NodeButtons } from "./Options/NodeButtons";
 import { CoreButtons } from "./Options/CoreButtons";
 
 import "./GraphFlow.scss";
-import ConfirmDialog, { ConfirmProps } from "@/routes/common/ConfirmDialog";
 import { Project } from "@/types/entityTypes";
-
 
 type GraphFlowProps = {
   initialNodes: AppNode[];
@@ -34,11 +34,6 @@ const GraphFlow: FC<GraphFlowProps> = ({
   initialEdges,
   project,
 }) => {
-  //ConfirmDialog related
-  const [dialogOpen, setDialogOpen] = useState<ConfirmProps>({ open: false });
-  const handleConfirmation = () => {
-    console.log(dialogOpen);
-  };
   const { nodes: initNodes, edges: initEdges } = getLayoutedElements(
     initialNodes,
     initialEdges
@@ -52,30 +47,21 @@ const GraphFlow: FC<GraphFlowProps> = ({
     [setEdges]
   );
 
-  const addNode = (node: AppNode) => {
-    setNodes([...nodes, node]);
-  };
-
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
 
-      const type = event.dataTransfer.getData("application/reactflow");
-      if (!type) return;
+      const raw = event.dataTransfer.getData("application/reactflow");
 
+      if (!raw) return;
+      const { type } = JSON.parse(raw);
       const bounds = reactFlowWrapper.current!.getBoundingClientRect();
       const position = screenToFlowPosition({
         x: event.clientX - bounds.left,
         y: event.clientY - bounds.top,
       });
-      const newNode: AppNode = {
-        id: `${type}-${Date.now()}-new`,
-        type,
-        position,
-        data: { label: `${type} Node` },
-      };
-
-      setNodes((prev) => [...prev, newNode]);
+      setPendingNodeDrop({ type, position });
+      setDialogMode("new");
     },
     [setNodes]
   );
@@ -85,6 +71,37 @@ const GraphFlow: FC<GraphFlowProps> = ({
     event.dataTransfer.dropEffect = "move";
   }, []);
 
+  //Node Dialog related
+  const [dialogMode, setDialogMode] = useState<"new" | "edit" | undefined>(
+    undefined
+  );
+  const [editingNode, setEditingNode] = useState<AppNode | undefined>(
+    undefined
+  );
+  const [pendingNodeDrop, setPendingNodeDrop] = useState<
+    | {
+        type: Nodes;
+        position: XYPosition;
+      }
+    | undefined
+  >(undefined);
+
+  const onNodeDialogClose = () => {
+    setEditingNode(undefined);
+    setPendingNodeDrop(undefined);
+    setDialogMode(undefined);
+  };
+
+  const onNodeDialogSubmit = (curNode: AppNode) => {
+    if (dialogMode === "edit") {
+      setNodes((nds) =>
+        nds.map((node) => (node.id === editingNode?.id ? curNode : node))
+      );
+    } else if (dialogMode === "new") {
+      setEdges((nds) => addNode(curNode, nds)); 
+    }
+    onNodeDialogClose();
+  };
   return (
     <Box display="flex" height="85vh" width="100vw">
       <Box
@@ -101,22 +118,28 @@ const GraphFlow: FC<GraphFlowProps> = ({
           edgeTypes={edgeTypes}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          onDrop={onDrop}
-          onDragOver={onDragOver}
+          onNodeDoubleClick={(_event, node) => {
+            setEditingNode(node);
+            setDialogMode("edit");
+          }}
+          onEdgeDoubleClick={(_event, edge) => {
+            console.log("edge clicked", edge);
+          }}
           fitView
         >
           <Background />
           <MiniMap />
           <Controls />
-          <NodeButtons addNode={addNode} />
-          <CoreButtons project={project} setDialogOpen={setDialogOpen} />
+          <NodeButtons
+            onClose={onNodeDialogClose}
+            onSubmit={onNodeDialogSubmit}
+            dialogMode={dialogMode}
+            editingNode={editingNode}
+            pendingNodeDrop={pendingNodeDrop}
+          />
+          <CoreButtons project={project} />
         </ReactFlow>
       </Box>
-      <ConfirmDialog
-        onClose={() => setDialogOpen({ open: false })}
-        onConfirm={handleConfirmation}
-        {...dialogOpen}
-      />
     </Box>
   );
 };

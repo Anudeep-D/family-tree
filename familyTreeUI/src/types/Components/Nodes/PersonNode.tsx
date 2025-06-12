@@ -1,20 +1,11 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import type { Node } from "@xyflow/react";
 import "./PersonNode.scss";
+import { NodeDataMap, Nodes } from "@/types/nodeTypes";
 
-export type PersonNode = Node<
-  {
-    name: string;
-    label: string;
-    isAlive: string;
-    nickName: string;
-    gender: string;
-    character: string;
-  },
-  "Person"
->;
+export type PersonNode = Node<NodeDataMap[Nodes.Person], Nodes.Person>;
 
-const PersonNode= ({ data }: NodeProps<PersonNode>) => {
+const PersonNode = ({ data }: NodeProps<PersonNode>) => {
   return (
     <div className={`person-node ${data.isAlive ? "alive" : "deceased"}`}>
       <strong>{data.name}</strong>
@@ -26,6 +17,6 @@ const PersonNode= ({ data }: NodeProps<PersonNode>) => {
       <Handle type="source" position={Position.Bottom} />
     </div>
   );
-}
+};
 
 export default PersonNode;

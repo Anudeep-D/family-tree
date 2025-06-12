@@ -1,29 +1,23 @@
-import React, { useState } from "react";
-import { useLogoutMutation } from "@/redux/queries/auth-endpoints";
+import { useState } from "react";
 import {
   AppBar,
   Toolbar,
   Typography,
   Button,
   IconButton,
-  InputBase,
   Box,
+  Badge,
 } from "@mui/material";
 import {
   Add as AddIcon,
   Notifications as NotificationsIcon,
-  AccountCircle,
 } from "@mui/icons-material";
 import "./Navbar.scss"; // Keep for layout styles if necessary, or remove if all handled by MUI
 import CreateProject from "../Projects/CreateProject";
+import Account from "./Account";
 
 export default function Navbar() {
-  const [logout] = useLogoutMutation();
-  const [openProject, setOpenProject]= useState(false);
-  const handleLogout = async () => {
-    await logout();
-    window.location.href = "/login"; // Consider using useNavigate for internal routing
-  };
+  const [openProject, setOpenProject] = useState(false);
 
   return (
     <>
@@ -40,9 +34,6 @@ export default function Navbar() {
           {/* <InputBase placeholder="Search…" sx={{ color: 'inherit', ml: 2, flex: 1 }} /> */}
           <Box sx={{ flexGrow: 1 }} />{" "}
           {/* This Box will push actions to the right */}
-          <IconButton color="inherit" aria-label="notifications">
-            <NotificationsIcon />
-          </IconButton>
           <Button
             onClick={() => setOpenProject(true)}
             color="inherit"
@@ -50,18 +41,15 @@ export default function Navbar() {
           >
             New Project
           </Button>
-          <Button color="inherit" startIcon={<AccountCircle />}>
-            My Profile
-          </Button>
-          <Button color="inherit" onClick={handleLogout}>
-            Logout
-          </Button>
+          <IconButton color="inherit" aria-label="notifications">
+            <Badge color="secondary" badgeContent={0}>
+              <NotificationsIcon />
+            </Badge>
+          </IconButton>
+          <Account />
         </Toolbar>
       </AppBar>
-      <CreateProject
-       open={openProject}
-       onClose={()=>setOpenProject(false)}
-       />
+      <CreateProject open={openProject} onClose={() => setOpenProject(false)} />
     </>
   );
 }
