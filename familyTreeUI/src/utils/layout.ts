@@ -39,6 +39,7 @@ export function getLayoutedElements(
         x: nodeWithPosition.x - nodeWidth / 2,
         y: nodeWithPosition.y - nodeHeight / 2,
       },
+      selectable: true,
     };
   });
 
@@ -47,6 +48,7 @@ export function getLayoutedElements(
     ...edge,
     sourceHandle: direction === "TB" ? "b1" : "r1",
     targetHandle: direction === "TB" ? "t1" : "l1",
+    selectable: true,
   }));
 
   return { nodes: updatedNodes, edges: updatedEdges };
