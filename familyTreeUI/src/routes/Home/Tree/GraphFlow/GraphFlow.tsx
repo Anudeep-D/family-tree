@@ -207,6 +207,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
             dialogMode={nodeDialogMode}
             editingNode={editingNode}
             pendingNodeDrop={pendingNodeDrop}
+            projectId={project.elementId!} // Pass project.id as projectId
           />
           <CoreButtons
             project={project}

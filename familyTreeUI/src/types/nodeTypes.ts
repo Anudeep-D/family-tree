@@ -14,6 +14,7 @@ export const nodeFieldTemplates = {
     nickName: "",
     gender: "",
     character: "",
+    imageUrl: "", // Added field
   },
   [Nodes.House]: {
     name: "",

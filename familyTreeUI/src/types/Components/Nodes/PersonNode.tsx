@@ -7,29 +7,64 @@ import { useState } from "react"; // Import useState
 export type PersonNode = Node<NodeDataMap[Nodes.Person], Nodes.Person>;
 
 const PersonNode = ({ data }: NodeProps<PersonNode>) => {
-  const [isHovered, setIsHovered] = useState(false); // Add isHovered state
+  const [isHovered, setIsHovered] = useState(false);
 
-  return (
-    <div
-      className={`person-node ${data.isAlive ? "alive" : "deceased"}`}
-      onMouseEnter={() => setIsHovered(true)} // Set isHovered to true on mouse enter
-      onMouseLeave={() => setIsHovered(false)} // Set isHovered to false on mouse leave
-    >
-      <strong>{data.name}</strong>
-      <div className="nickname">({data.nickName})</div>
-      {isHovered && ( // Conditionally render extra content
-        <>
-          <div className="gender">{data.gender}</div>
-          <div className={`character ${data.character}`}>{data.character}</div>
-        </>
-      )}
-
-      <Handle id="l1" type="target" position={Position.Left} />
-      <Handle id="r1" type="source" position={Position.Right} />
-      <Handle id="t1" type="target" position={Position.Top} />
-      <Handle id="b1"  type="source" position={Position.Bottom} />
-    </div>
-  );
+  if (data.imageUrl) {
+    console.log("imageUrl",data.imageUrl);
+    return (
+      <div
+        className={`person-node ${data.isAlive ? "alive" : "deceased"} has-image ${
+          isHovered ? "hovered" : ""
+        }`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        style={{ backgroundImage: `url(${data.imageUrl})` }}
+      >
+        <div className="node-content">
+          {!isHovered && <strong className="person-name-on-image">{data.name}</strong>}
+          {isHovered && (
+            <div className="details-overlay">
+              <strong>{data.name}</strong>
+              {data.nickName && <div className="nickname">({data.nickName})</div>}
+              {data.gender && <div className="gender">{data.gender}</div>}
+              {data.character && <div className={`character ${data.character}`}>{data.character}</div>}
+              {/* Add any other fields that should be visible on hover, e.g., data.dob, data.dod if they exist */}
+            </div>
+          )}
+        </div>
+        <Handle id="l1" type="target" position={Position.Left} />
+        <Handle id="r1" type="source" position={Position.Right} />
+        <Handle id="t1" type="target" position={Position.Top} />
+        <Handle id="b1" type="source" position={Position.Bottom} />
+      </div>
+    );
+  } else {
+    // Current rendering logic for no image
+    return (
+      <div
+        className={`person-node ${data.isAlive ? "alive" : "deceased"} ${
+          isHovered ? "hovered" : "" // Added hovered class for consistency if needed by SCSS later
+        }`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div className="node-content"> {/* Added node-content wrapper for consistency */}
+          <strong>{data.name}</strong>
+          {data.nickName && <div className="nickname">({data.nickName})</div>}
+          {isHovered && (
+            <>
+              {data.gender && <div className="gender">{data.gender}</div>}
+              {data.character && <div className={`character ${data.character}`}>{data.character}</div>}
+            </>
+          )}
+        </div>
+        <Handle id="l1" type="target" position={Position.Left} />
+        <Handle id="r1" type="source" position={Position.Right} />
+        <Handle id="t1" type="target" position={Position.Top} />
+        <Handle id="b1" type="source" position={Position.Bottom} />
+      </div>
+    );
+  }
 };
 
 export default PersonNode;
