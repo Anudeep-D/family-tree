@@ -176,14 +176,25 @@ const GraphFlow: FC<GraphFlowProps> = ({
           edgeTypes={edgeTypes}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onNodeClick={(_event, node) => {
+            console.log("show node's extra info",node);
+          }}
           onNodeDoubleClick={(_event, node) => {
             setEditingNode(node);
             setNodeDialogMode("edit");
           }}
+          onNodeContextMenu={(_event, node) => {
+            console.log("show node's context info",node);
+          }}
+          onEdgeClick={(_event, edge) => {
+            console.log("show edge's extra info",edge);
+          }}
           onEdgeDoubleClick={(_event, edge) => {
-            console.log("edge clicked", edge);
             setEditingEdge(edge);
             setEdgeDialogMode("edit");
+          }}
+          onEdgeContextMenu={(_event, edge) => {
+            console.log("show edge's context info",edge);
           }}
           fitView
         >
