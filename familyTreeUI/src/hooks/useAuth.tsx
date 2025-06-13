@@ -13,6 +13,12 @@ import {
   useCallback,
 } from "react";
 
+// Define the new SessionData interface
+interface SessionData {
+  user: User;
+  idToken: string | null;
+}
+
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -60,20 +66,28 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
   useEffect(() => {
     if (contextIsLoading) return;
 
-    if (sessionUser) {
-      setLocalUser(sessionUser);
+    // Adjust to use SessionData type for sessionUser
+    const currentSessionUser = sessionUser as SessionData | undefined;
+
+    if (currentSessionUser && currentSessionUser.user) {
+      setLocalUser(currentSessionUser.user);
+      setIdToken(currentSessionUser.idToken || null);
       setLocalIsAuthenticated(true);
       setLocalIsLoading(false);
     } else if (sessionError) {
       console.error("Session fetch error:", sessionError);
       setLocalUser(null);
+      setIdToken(null);
       setLocalIsAuthenticated(false);
       setLocalIsLoading(false);
     } else {
+      // This case handles when sessionUser is null and no error (e.g., initial state or after logout)
       setLocalUser(null);
+      setIdToken(null);
       setLocalIsAuthenticated(false);
+      setLocalIsLoading(false); // Ensure loading is set to false
     }
-  }, [sessionUser, sessionError, isInitialSessionLoading, isSessionFetching]);
+  }, [sessionUser, sessionError, isInitialSessionLoading, isSessionFetching, contextIsLoading]);
 
   const login = useCallback(
     async (googleCredentialToken: string) => {

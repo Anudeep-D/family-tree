@@ -1,6 +1,12 @@
 import { baseUrl } from "@/constants/constants";
-import { User } from "@/types/entityTypes";
+import { User } from "@/types/entityTypes"; // Adjust path as needed
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+
+// Define the new response type for the session endpoint
+interface SessionResponse {
+  user: User;
+  idToken: string | null;
+}
 
 export const authApi = createApi({
   reducerPath: "authApi",
@@ -16,7 +22,7 @@ export const authApi = createApi({
         body: { token: googleToken },
       }),
     }),
-    fetchSessionUser: builder.query<User, void>({
+    fetchSessionUser: builder.query<SessionResponse, void>({
       query: () => ({
         url: "/session",
         method: "GET",

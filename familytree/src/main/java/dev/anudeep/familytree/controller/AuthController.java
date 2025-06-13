@@ -2,6 +2,7 @@ package dev.anudeep.familytree.controller;
 
 import dev.anudeep.familytree.controller.common.CommonUtils;
 import dev.anudeep.familytree.dto.TokenRequest;
+import dev.anudeep.familytree.dto.UserSessionDetailsDTO;
 import dev.anudeep.familytree.model.User; // Your custom User model
 import dev.anudeep.familytree.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -60,6 +61,8 @@ public class AuthController {
 
         // Store the SecurityContext in the new session for Spring Security to find
         newSession.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, securityContext);
+        newSession.setAttribute("idToken", tokenRequest.getToken());
+        log.info("Stored idToken in session: {}", tokenRequest.getToken());
 
         // Optionally, store your custom user object if needed elsewhere
         // newSession.setAttribute("user", user);
@@ -79,12 +82,15 @@ public class AuthController {
     }
 
     @GetMapping("/session")
-    public ResponseEntity<?> getSessionUser(HttpSession session) {
+    public ResponseEntity<UserSessionDetailsDTO> getSessionUser(HttpSession session) {
+        String idToken = (String) session.getAttribute("idToken");
+        log.info("Retrieved idToken from session: {}", idToken);
         User currentUser = commonUtils.getCurrentAuthenticatedUser();
         if (currentUser == null || currentUser.getElementId() == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Session expired");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
-        return ResponseEntity.ok().body(currentUser);
+        UserSessionDetailsDTO sessionDetails = new UserSessionDetailsDTO(currentUser, idToken);
+        return ResponseEntity.ok(sessionDetails);
     }
 
 }
