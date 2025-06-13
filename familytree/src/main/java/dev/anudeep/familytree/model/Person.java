@@ -29,6 +29,7 @@ public class Person {
     private String job;
     private String currLocation;
     private String character; //temporary or optional
+    private String imageUrl;
 
     @Relationship(type = Constants.PARENT_REL, direction = Relationship.Direction.OUTGOING)
     private List<Person> children;
