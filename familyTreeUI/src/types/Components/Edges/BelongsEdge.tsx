@@ -25,7 +25,7 @@ const BelongsEdge = ({
 
   return (
     <>
-      <BaseEdge className={`edge-${data?.label?.toLowerCase()}`} id={id} path={edgePath} style={{ stroke: '#999', strokeWidth: 2 }} />
+      <BaseEdge id={id} path={edgePath} className="edge-belongs" style={{ stroke: 'var(--belongs-stroke-color)', strokeWidth: 'var(--belongs-stroke-width)', strokeDasharray: 'var(--belongs-stroke-dasharray)' }} />
       <EdgeLabelRenderer>
         <div
           className={`edge-label ${data?.label?.toLowerCase()}`}

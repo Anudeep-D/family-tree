@@ -9,3 +9,28 @@
     background-color: #2e7d32;
   }
 }
+
+.edge-marriage {
+  --marriage-stroke-color: #1ac8f0;
+  --marriage-stroke-width: 3px;
+  /* stroke: blue; */
+  /* stroke-width: 3; */
+}
+
+.edge-parent {
+  --parent-stroke-color: #03ff68;
+  --parent-stroke-width: 2px;
+  --parent-stroke-dasharray: 5, 5;
+  /* stroke: green; */
+  /* stroke-width: 2; */
+  /* stroke-dasharray: 5, 5; */
+}
+
+.edge-belongs {
+  --belongs-stroke-color: #ffe830;
+  --belongs-stroke-width: 2px;
+  --belongs-stroke-dasharray: 2, 2;
+  /* stroke: gray; */
+  /* stroke-width: 2; */
+  /* stroke-dasharray: 2, 2; */
+}

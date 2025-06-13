@@ -24,7 +24,7 @@ const ParentEdge = ({
 
   return (
     <>
-      <BaseEdge className={`edge-${data?.label?.toLowerCase()}`} id={id} path={edgePath} style={{ stroke: '#999', strokeWidth: 2 }} />
+      <BaseEdge id={id} path={edgePath} className="edge-parent" style={{ stroke: 'var(--parent-stroke-color)', strokeWidth: 'var(--parent-stroke-width)', strokeDasharray: 'var(--parent-stroke-dasharray)' }} />
       <EdgeLabelRenderer>
         <div
           className={`edge-label ${data?.label?.toLowerCase()}`}

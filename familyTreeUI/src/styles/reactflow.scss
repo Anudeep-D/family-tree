@@ -4,7 +4,7 @@
 
 $xy-theme-selected: #f57dbd;
 $xy-theme-hover: #c5c5c5;
-$xy-theme-edge-hover: black;
+$xy-theme-edge-hover: rgb(255, 12, 12);
 $xy-theme-color-focus: #e8e8e8;
 
 $xy-node-border-default: 1px solid #ededed;
@@ -102,7 +102,7 @@ $color-disabled: #76797e;
   &.selectable {
     &:hover .react-flow__edge-path,
     &.selected .react-flow__edge-path {
-      stroke: var(--xy-theme-edge-hover);
+      stroke: var(--xy-theme-edge-hover) !important;
     }
   }
 }

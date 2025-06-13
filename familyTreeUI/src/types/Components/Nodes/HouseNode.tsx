@@ -2,17 +2,28 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import type { Node } from "@xyflow/react";
 import "./HouseNode.scss";
 import { NodeDataMap } from "@/types/nodeTypes";
+import { useState } from "react"; // Import useState
 
 export type HouseNode = Node<NodeDataMap["House"], "House">;
 
 const HouseNode = ({ data }: NodeProps<HouseNode>) => {
+  const [isHovered, setIsHovered] = useState(false); // Add isHovered state
+
   return (
-    <div className="house-node">
+    <div
+      className="house-node"
+      onMouseEnter={() => setIsHovered(true)} // Set isHovered to true on mouse enter
+      onMouseLeave={() => setIsHovered(false)} // Set isHovered to false on mouse leave
+    >
       <strong>{data.name}</strong>
       <div className="sigil">{data.sigil}</div>
       <div className="words">"{data.words}"</div>
-      <div className="hometown">🏡 {data.hometown}</div>
-      <div className="gods">🙏 {data.gods}</div>
+      {isHovered && ( // Conditionally render extra content
+        <>
+          <div className="hometown">🏡 {data.hometown}</div>
+          <div className="gods">🙏 {data.gods}</div>
+        </>
+      )}
 
       <Handle id="l1" type="target" position={Position.Left} />
       <Handle id="r1" type="source" position={Position.Right} />

@@ -25,7 +25,7 @@ const MarriageEdge = ({
 
   return (
     <>
-      <BaseEdge  className={`edge-${data?.label?.toLowerCase()}`} id={id} path={edgePath} style={{ stroke: '#999', strokeWidth: 2 }} />
+      <BaseEdge id={id} path={edgePath} className="edge-marriage" style={{ stroke: 'var(--marriage-stroke-color)', strokeWidth: 'var(--marriage-stroke-width)' }} />
       <EdgeLabelRenderer>
         <div
           className={`edge-label ${data?.label?.toLowerCase()}`}

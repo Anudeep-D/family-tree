@@ -1,11 +1,17 @@
 .house-node {
-  padding: 12px;
+  padding: 20px; /* Increased padding for better content fit */
   background: #1e88e5;
   color: white;
-  border-radius: 10px;
-  width: 180px;
+  border-radius: 50%; /* Make it circular */
+  width: 170px; /* Fixed width */
+  height: 170px; /* Fixed height, equal to width */
+  display: flex; /* For centering content */
+  flex-direction: column; /* Stack content vertically */
+  justify-content: center; /* Center content vertically */
+  align-items: center; /* Center content horizontally */
   text-align: center;
   border: 2px solid #90caf9;
+  transition: height 0.3s ease; /* Smooth transition for height changes */
 
   .sigil {
     font-style: italic;
@@ -20,6 +26,6 @@
 
   .hometown, .gods {
     font-size: 0.75em;
-    margin-top: 4px;
+    margin-top: 5px; /* Add margin for spacing */
   }
 }
