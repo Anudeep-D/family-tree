@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useGetTreesQuery } from "@/redux/queries/tree-endpoints";
 import { Tree } from "@/types/entityTypes"; // Changed
+import ConfirmDialog, { ConfirmProps } from "@/routes/common/ConfirmDialog";
 import {
   Container,
   Typography,
@@ -27,6 +28,7 @@ import {
 } from "@mui/material";
 import { visuallyHidden } from "@mui/utils";
 import React, { useMemo, useState } from "react";
+import { Role } from "@/types/common";
 
 type Order = "asc" | "desc";
 
@@ -82,6 +84,7 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => { // Changed
   const [orderBy, setOrderBy] = useState<keyof Tree>("name"); // Changed
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [dialogOpen, setDialogOpen] = useState<ConfirmProps>({ open: false });
 
   const handleRequestSort = (
     _event: React.MouseEvent<unknown>,
@@ -143,8 +146,47 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => { // Changed
   };
 
   const handleDelete = () => {
-    console.log("Delete trees:", selectedTreeIds); // Changed
+    if (!allTrees) return;
+
+    const selectedTrees = allTrees.filter((tree) => selectedTreeIds.includes(tree.elementId!));
+    const deletableTrees = selectedTrees.filter((tree) => tree.access === Role.Admin);
+    const skippedTrees = selectedTrees.filter((tree) => tree.access !== Role.Admin);
+
+    let message = "";
+    if (deletableTrees.length > 0) {
+      message += `Are you sure you want to delete the following trees: ${deletableTrees.map((t) => t.name).join(", ")}?`;
+    }
+    if (skippedTrees.length > 0) {
+      message += `\nThe following trees will be skipped due to insufficient permissions: ${skippedTrees.map((t) => t.name).join(", ")}.`;
+    }
+
+    if (deletableTrees.length === 0 && skippedTrees.length > 0) {
+      setDialogOpen({
+        open: true,
+        title: "Deletion Skipped",
+        message: `The following trees will be skipped due to insufficient permissions: ${skippedTrees.map((t) => t.name).join(", ")}. No trees will be deleted.`,
+        action: "OK",
+      });
+    } else if (deletableTrees.length > 0) {
+      setDialogOpen({
+        open: true,
+        title: "Confirm Deletion",
+        message,
+        action: "Delete",
+      });
+    }
   };
+
+  const handleConfirmDelete = () => {
+    if (!allTrees) return;
+    const deletableTrees = allTrees.filter(
+      (tree) => selectedTreeIds.includes(tree.elementId!) && tree.access === Role.Admin
+    );
+    console.log("Deleting trees:", deletableTrees);
+    // Actual delete API call will be handled later
+    setDialogOpen({ open: false });
+  };
+
   return (
     <Container sx={{ mt: 4 }}>
       {/* Use user from useAuth */}
@@ -285,6 +327,11 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => { // Changed
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
       </TableContainer>
+      <ConfirmDialog
+        {...dialogOpen}
+        onClose={() => setDialogOpen({ open: false })}
+        onConfirm={handleConfirmDelete}
+      />
     </Container>
   );
 };

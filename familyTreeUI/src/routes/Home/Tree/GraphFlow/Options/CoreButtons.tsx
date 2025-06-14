@@ -5,6 +5,8 @@ import { Box, Tooltip, IconButton } from "@mui/material";
 import { Options } from "./Options";
 import "./CoreButtons.scss";
 import { useState } from "react";
+import { Role } from "@/types/common";
+// const VIEWER_ACCESS = "Viewer"; // Not explicitly used in this component's logic for button rendering but good for consistency
 
 type CoreButtonsProps = {
   tree: Tree;
@@ -35,24 +37,26 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
   return (
     <Box className="flow-save-buttons">
       <Options />
-      <Tooltip title="Delete">
-        <IconButton
-          aria-label="delete"
-          size="small"
-          onClick={() =>
-            setDialogOpen({
-              open: true,
-              type: "error",
-              action: "Delete",
-              title: `Delete tree ${tree.elementId}`,
-              message:
-                "Are you sure you want to delete this tree? This action cannot be undone.",
-            })
-          }
-        >
-          <DeleteTwoTone fontSize="small" color="error" />
-        </IconButton>
-      </Tooltip>
+      {tree.access === Role.Admin && (
+        <Tooltip title="Delete">
+          <IconButton
+            aria-label="delete"
+            size="small"
+            onClick={() =>
+              setDialogOpen({
+                open: true,
+                type: "error",
+                action: "Delete",
+                title: `Delete tree ${tree.elementId}`,
+                message:
+                  "Are you sure you want to delete this tree? This action cannot be undone.",
+              })
+            }
+          >
+            <DeleteTwoTone fontSize="small" color="error" />
+          </IconButton>
+        </Tooltip>
+      )}
       <Tooltip title="Reset">
         <IconButton
           size="small"
@@ -71,23 +75,25 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
           <Restore fontSize="small" color="action" />
         </IconButton>
       </Tooltip>
-      <Tooltip title="Save">
-        <IconButton
-          size="small"
-          aria-label="save"
-          onClick={() =>
-            setDialogOpen({
-              open: true,
-              type: "primary",
-              action: "Save",
-              title: `Save tree ${tree.elementId}`,
-              message: "Are you sure you want to save this tree?",
-            })
-          }
-        >
-          <SaveTwoTone fontSize="small" color="primary" />
-        </IconButton>
-      </Tooltip>
+      {(tree.access === Role.Admin || tree.access === Role.Editor) && (
+        <Tooltip title="Save">
+          <IconButton
+            size="small"
+            aria-label="save"
+            onClick={() =>
+              setDialogOpen({
+                open: true,
+                type: "primary",
+                action: "Save",
+                title: `Save tree ${tree.elementId}`,
+                message: "Are you sure you want to save this tree?",
+              })
+            }
+          >
+            <SaveTwoTone fontSize="small" color="primary" />
+          </IconButton>
+        </Tooltip>
+      )}
       <ConfirmDialog
         onClose={() => setDialogOpen({ open: false })}
         onConfirm={handleConfirmation}

@@ -33,6 +33,11 @@ public class UserTreeService {
         return treeRepo.findByElementId(elementId);
     }
 
+
+    public Optional<Tree> getTreeWithAccess(String userId, String treeId) {
+        return treeRepo.findUserAccessforTree(userId, treeId);
+    }
+
     public Optional<Role> getRelationshipType(String userElementId, String treeElementId) {
         Optional<String> relation =  userRepo.findRelationshipBetweenUserAndTree(userElementId, treeElementId);
         if(relation.isPresent()){

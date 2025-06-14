@@ -22,6 +22,7 @@ import { CoreButtons } from "./Options/CoreButtons";
 import "./GraphFlow.scss";
 import { Tree } from "@/types/entityTypes";
 import { EdgeDialog } from "./EdgeDialog/EdgeDialog";
+import { Role } from "@/types/common";
 
 type GraphFlowProps = {
   initialNodes: AppNode[];
@@ -34,6 +35,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
   initialEdges,
   tree,
 }) => {
+  const isViewer = tree.access === Role.Viewer;
   const { nodes: initNodes, edges: initEdges } = getLayoutedElements(
     initialNodes,
     initialEdges
@@ -175,40 +177,50 @@ const GraphFlow: FC<GraphFlowProps> = ({
           edges={edges}
           edgeTypes={edgeTypes}
           onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onNodeClick={(_event, node) => {
+          onConnect={isViewer ? undefined : onConnect}
+          onNodeClick={isViewer ? undefined : (_event, node) => {
             console.log("show node's extra info",node);
           }}
-          onNodeDoubleClick={(_event, node) => {
+          onNodeDoubleClick={isViewer ? undefined : (_event, node) => {
             setEditingNode(node);
             setNodeDialogMode("edit");
           }}
-          onNodeContextMenu={(_event, node) => {
+          onNodeContextMenu={isViewer ? undefined : (_event, node) => {
             console.log("show node's context info",node);
           }}
-          onEdgeClick={(_event, edge) => {
+          onEdgeClick={isViewer ? undefined : (_event, edge) => {
             console.log("show edge's extra info",edge);
           }}
-          onEdgeDoubleClick={(_event, edge) => {
+          onEdgeDoubleClick={isViewer ? undefined : (_event, edge) => {
             setEditingEdge(edge);
             setEdgeDialogMode("edit");
           }}
-          onEdgeContextMenu={(_event, edge) => {
+          onEdgeContextMenu={isViewer ? undefined : (_event, edge) => {
             console.log("show edge's context info",edge);
           }}
           fitView
+          nodesDraggable={!isViewer}
+          nodesConnectable={!isViewer}
+          nodesFocusable={!isViewer}
+          edgesFocusable={!isViewer}
+          zoomOnDoubleClick={!isViewer}
+          zoomOnScroll={!isViewer}
+          panOnDrag={!isViewer}
+          proOptions={{ hideAttribution: true }}
         >
           <Background />
           <MiniMap />
           <Controls />
-          <NodeButtons
-            onClose={onNodeDialogClose}
-            onSubmit={onNodeDialogSubmit}
-            dialogMode={nodeDialogMode}
-            editingNode={editingNode}
-            pendingNodeDrop={pendingNodeDrop}
-            treeId={tree.elementId!} // Pass tree.id as treeId
-          />
+          {!isViewer && (
+            <NodeButtons
+              onClose={onNodeDialogClose}
+              onSubmit={onNodeDialogSubmit}
+              dialogMode={nodeDialogMode}
+              editingNode={editingNode}
+              pendingNodeDrop={pendingNodeDrop}
+              treeId={tree.elementId!} // Pass tree.id as treeId
+            />
+          )}
           <CoreButtons
             tree={tree}
             handleReset={handleReset}

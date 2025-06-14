@@ -17,6 +17,13 @@ public interface TreeRepository extends Neo4jRepository<Tree, String> {
 
     @Query("""
         MATCH (u:User)-[r]->(t:Tree)
+        WHERE elementId(u) = $userId AND elementId(t) = $treeId
+        RETURN t {.*, elementId: elementId(t), access: type(r) } AS tree
+    """)
+    Optional<Tree> findUserAccessforTree(String userId, String treeId);
+
+    @Query("""
+        MATCH (u:User)-[r]->(t:Tree)
         WHERE elementId(t) = $treeElementId
         RETURN u {.*, elementId: elementId(u) } AS users, type(r) as access
     """)

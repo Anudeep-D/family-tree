@@ -1,3 +1,5 @@
+import { Role } from "./common";
+
 export type User = {
   id?: string;
   elementId?: string;
@@ -9,7 +11,6 @@ export type User = {
   viewerTrees?: any[];
 };
 
-
 export type Tree = { // Renamed from Tree
   id?: string;
   elementId?: string;
@@ -17,5 +18,5 @@ export type Tree = { // Renamed from Tree
   desc?: string;
   createdBy?: string;
   createdAt?: string;
-  access?: string;
+  access?: Role; // Updated type
 };

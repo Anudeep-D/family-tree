@@ -39,8 +39,14 @@ public class TreeController {
     public ResponseEntity<?> getTree(@Parameter(description = "elementId of the tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:72")
                                      @PathVariable String elementId) { // HttpSession removed
         log.info("TreeController: get tree");
+        User currentUser = commonUtils.getCurrentAuthenticatedUser();
         commonUtils.accessCheck(elementId,null); // Example: if creating trees needs a general role
-        Optional<Tree> tree = userTreeService.getTreeByElementId(elementId);
+        Optional<Tree> tree = userTreeService.getTreeWithAccess(currentUser.getElementId(),elementId);
+        if(tree.isPresent()){
+            Tree localTree = tree.get();
+            localTree.setAccess(Constants.getRoleForRel(localTree.getAccess()));
+            return ResponseEntity.ok().body(localTree);
+        }
         return ResponseEntity.ok().body(tree.orElseThrow());
     }
 
