@@ -10,7 +10,7 @@ import {
 export type ConfirmDialogProps = {
   open: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm?: () => void;
   type?:
     | "inherit"
     | "primary"
@@ -26,7 +26,7 @@ export type ConfirmDialogProps = {
 
 export type ConfirmProps = Pick<
   ConfirmDialogProps,
-  "open" | "title" | "message" | "type" | "action"
+  "open" | "title" | "message" | "type" | "action" | "onConfirm"
 >;
 export default function ConfirmDialog({
   open,

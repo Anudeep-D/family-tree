@@ -7,9 +7,11 @@ import dev.anudeep.familytree.model.Role;
 import dev.anudeep.familytree.model.User;
 import dev.anudeep.familytree.service.UserTreeService;
 import dev.anudeep.familytree.utils.Constants;
+import dev.anudeep.familytree.dto.DeleteMultipleTreesRequestDto;
 import dev.anudeep.familytree.utils.DateTimeUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import org.springframework.http.HttpStatus;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -39,9 +41,9 @@ public class TreeController {
     public ResponseEntity<?> getTree(@Parameter(description = "elementId of the tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:72")
                                      @PathVariable String elementId) { // HttpSession removed
         log.info("TreeController: get tree");
-        User currentUser = commonUtils.getCurrentAuthenticatedUser();
+         User currentUser = commonUtils.getCurrentAuthenticatedUser();
         commonUtils.accessCheck(elementId,null); // Example: if creating trees needs a general role
-        Optional<Tree> tree = userTreeService.getTreeWithAccess(currentUser.getElementId(),elementId);
+         Optional<Tree> tree = userTreeService.getTreeWithAccess(currentUser.getElementId(),elementId);
         if(tree.isPresent()){
             Tree localTree = tree.get();
             localTree.setAccess(Constants.getRoleForRel(localTree.getAccess()));
@@ -96,5 +98,31 @@ public class TreeController {
             userTreeService.createRelationship(user.getElementId(), elementId, Constants.getRelForRole(user.getRole()));
         });
         return ResponseEntity.ok().body("success");
+    }
+
+    @DeleteMapping("/{elementId}")
+    @Operation(summary = "Delete a single tree by its elementId")
+    public ResponseEntity<Void> deleteTree(
+            @Parameter(description = "elementId of the tree to delete", required = true)
+            @PathVariable String elementId) {
+        log.info("TreeController: Request to delete tree with elementId: {}", elementId);
+        User currentUser = commonUtils.getCurrentAuthenticatedUser();
+        // commonUtils.accessCheck(elementId, new Role[]{Role.ADMIN}); // Service layer will do the definitive ownership/admin check
+        userTreeService.deleteTree(elementId, currentUser);
+        log.info("TreeController: Tree with elementId: {} successfully deleted by user: {}", elementId, currentUser.getEmail());
+        return ResponseEntity.ok().build(); // Or ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/delete-multiple")
+    @Operation(summary = "Delete multiple trees by their elementIds")
+    public ResponseEntity<Void> deleteMultipleTrees(
+            @Parameter(description = "List of tree elementIds to delete", required = true)
+            @RequestBody DeleteMultipleTreesRequestDto request) {
+        log.info("TreeController: Request to delete multiple trees. Count: {}", request.getIds() != null ? request.getIds().size() : 0);
+        User currentUser = commonUtils.getCurrentAuthenticatedUser();
+        // No generic accessCheck here as permissions are per-tree and handled in service
+        userTreeService.deleteMultipleTrees(request.getIds(), currentUser);
+        log.info("TreeController: Multiple trees deletion process completed for user: {}", currentUser.getEmail());
+        return ResponseEntity.ok().build(); // Or return a body with summary if service provides it
     }
 }

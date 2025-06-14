@@ -13,12 +13,14 @@ type CoreButtonsProps = {
   handleReset: () => void;
   handleSave: () => void;
   handleDelete: () => void;
+  disabled?:boolean;
 };
 export const CoreButtons: React.FC<CoreButtonsProps> = ({
   tree,
   handleReset,
   handleSave,
   handleDelete,
+  disabled,
 }) => {
   //ConfirmDialog related
   const [dialogOpen, setDialogOpen] = useState<ConfirmProps>({ open: false });
@@ -40,6 +42,7 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
       {tree.access === Role.Admin && (
         <Tooltip title="Delete">
           <IconButton
+            disabled={disabled}
             aria-label="delete"
             size="small"
             onClick={() =>
@@ -47,18 +50,19 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
                 open: true,
                 type: "error",
                 action: "Delete",
-                title: `Delete tree ${tree.elementId}`,
+                title: `Delete tree ${tree.name}`,
                 message:
                   "Are you sure you want to delete this tree? This action cannot be undone.",
               })
             }
           >
-            <DeleteTwoTone fontSize="small" color="error" />
+            <DeleteTwoTone fontSize="small" color={disabled ? "disabled": "error"} />
           </IconButton>
         </Tooltip>
       )}
       <Tooltip title="Reset">
         <IconButton
+          disabled={disabled}
           size="small"
           aria-label="reset"
           onClick={() =>
@@ -72,12 +76,13 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
             })
           }
         >
-          <Restore fontSize="small" color="action" />
+          <Restore fontSize="small" color={disabled ? "disabled": "action"} />
         </IconButton>
       </Tooltip>
       {(tree.access === Role.Admin || tree.access === Role.Editor) && (
         <Tooltip title="Save">
           <IconButton
+            disabled={disabled}
             size="small"
             aria-label="save"
             onClick={() =>
@@ -85,12 +90,12 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
                 open: true,
                 type: "primary",
                 action: "Save",
-                title: `Save tree ${tree.elementId}`,
+                title: `Save tree ${tree.name}`,
                 message: "Are you sure you want to save this tree?",
               })
             }
           >
-            <SaveTwoTone fontSize="small" color="primary" />
+            <SaveTwoTone fontSize="small" color={disabled ? "disabled": "primary"} />
           </IconButton>
         </Tooltip>
       )}

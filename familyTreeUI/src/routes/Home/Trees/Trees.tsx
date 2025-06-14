@@ -1,7 +1,11 @@
 import { useAuth } from "@/hooks/useAuth";
-import { useGetTreesQuery } from "@/redux/queries/tree-endpoints";
+import {
+  useGetTreesQuery,
+  useDeleteMultipleTreesMutation,
+} from "@/redux/queries/tree-endpoints";
 import { Tree } from "@/types/entityTypes"; // Changed
 import ConfirmDialog, { ConfirmProps } from "@/routes/common/ConfirmDialog";
+import { Role } from "@/types/common";
 import {
   Container,
   Typography,
@@ -28,7 +32,6 @@ import {
 } from "@mui/material";
 import { visuallyHidden } from "@mui/utils";
 import React, { useMemo, useState } from "react";
-import { Role } from "@/types/common";
 
 type Order = "asc" | "desc";
 
@@ -48,8 +51,10 @@ const headCells: readonly HeadCell[] = [
 export function getComparator<Key extends keyof Tree>( // Changed
   order: "asc" | "desc",
   orderBy: Key
-): (a: Tree, b: Tree) => number { // Changed
-  return (a: Tree, b: Tree) => { // Changed
+): (a: Tree, b: Tree) => number {
+  // Changed
+  return (a: Tree, b: Tree) => {
+    // Changed
     const aVal = a[orderBy];
     const bVal = b[orderBy];
 
@@ -63,11 +68,13 @@ export function getComparator<Key extends keyof Tree>( // Changed
   };
 }
 
-export type TreesProps = { // Changed
+export type TreesProps = {
+  // Changed
   handleTreeSelection: (tree: Tree) => void; // Changed
 };
 
-const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => { // Changed
+const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => {
+  // Changed
   const [selectedTreeIds, setSelectedTreeIds] = useState<string[]>([]); // Changed
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("");
@@ -85,6 +92,13 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => { // Changed
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [dialogOpen, setDialogOpen] = useState<ConfirmProps>({ open: false });
+  const [deletableTrees, setDeletableTrees] = useState<Tree[]>([]);
+  const [skippedTrees, setSkippedTrees] = useState<Tree[]>([]);
+
+  const [
+    deleteMultipleTrees,
+    { isLoading: isDeletingMultiple, error: deleteMultipleError },
+  ] = useDeleteMultipleTreesMutation();
 
   const handleRequestSort = (
     _event: React.MouseEvent<unknown>,
@@ -106,7 +120,8 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => { // Changed
     setPage(0);
   };
 
-  const isSearchTermInTree = (tree: Tree) => { // Changed
+  const isSearchTermInTree = (tree: Tree) => {
+    // Changed
     if (!search) return true;
     return (
       tree.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -116,11 +131,14 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => { // Changed
     );
   };
 
-  const filteredTrees = useMemo(() => { // Changed
+  const filteredTrees = useMemo(() => {
+    // Changed
     if (!allTrees) return []; // Changed
     return allTrees // Changed
       .filter(
-        (tree) => // Changed
+        (
+          tree // Changed
+        ) =>
           isSearchTermInTree(tree) && // Changed
           (!filterRole || tree.access === filterRole) // Changed
       )
@@ -128,16 +146,21 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => { // Changed
   }, [allTrees, search, filterRole, order, orderBy]); // Changed
 
   const toggleSelect = (id: string) => {
-    setSelectedTreeIds((prev) => // Changed
-      prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
+    setSelectedTreeIds(
+      (
+        prev // Changed
+      ) =>
+        prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
     );
   };
 
   const handleSelectAll = () => {
-    if (selectedTreeIds.length === filteredTrees.length) { // Changed
+    if (selectedTreeIds.length === filteredTrees.length) {
+      // Changed
       setSelectedTreeIds([]); // Changed
     } else {
-      setSelectedTreeIds( // Changed
+      setSelectedTreeIds(
+        // Changed
         filteredTrees // Changed
           .filter((t) => Boolean(t.elementId)) // Changed
           .map((t) => t.elementId!) // Changed
@@ -148,43 +171,81 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => { // Changed
   const handleDelete = () => {
     if (!allTrees) return;
 
-    const selectedTrees = allTrees.filter((tree) => selectedTreeIds.includes(tree.elementId!));
-    const deletableTrees = selectedTrees.filter((tree) => tree.access === Role.Admin);
-    const skippedTrees = selectedTrees.filter((tree) => tree.access !== Role.Admin);
+    const currentSelectedTrees =
+      allTrees.filter((tree) => selectedTreeIds.includes(tree.elementId!)) ||
+      [];
+    const adminTrees = currentSelectedTrees.filter(
+      (tree) => tree.access === Role.Admin
+    );
+    const otherAccessTrees = currentSelectedTrees.filter(
+      (tree) => tree.access !== Role.Admin
+    );
+
+    setDeletableTrees(adminTrees);
+    setSkippedTrees(otherAccessTrees);
 
     let message = "";
-    if (deletableTrees.length > 0) {
-      message += `Are you sure you want to delete the following trees: ${deletableTrees.map((t) => t.name).join(", ")}?`;
+    if (adminTrees.length > 0) {
+      message += `The following trees will be deleted: ${adminTrees
+        .map((t) => t.name)
+        .join(", ")}. `;
     }
-    if (skippedTrees.length > 0) {
-      message += `\nThe following trees will be skipped due to insufficient permissions: ${skippedTrees.map((t) => t.name).join(", ")}.`;
+    if (otherAccessTrees.length > 0) {
+      message += `The following trees will be skipped (you don't have Admin access): ${otherAccessTrees
+        .map((t) => t.name)
+        .join(", ")}.`;
+    }
+    if (adminTrees.length === 0 && otherAccessTrees.length > 0) {
+      message = `You do not have Admin access to any of the selected trees. No trees will be deleted. Skipped: ${otherAccessTrees
+        .map((t) => t.name)
+        .join(", ")}`;
+    }
+    if (
+      adminTrees.length === 0 &&
+      otherAccessTrees.length === 0 &&
+      selectedTreeIds.length > 0
+    ) {
+      message = "No trees selected or found with details to determine access.";
     }
 
-    if (deletableTrees.length === 0 && skippedTrees.length > 0) {
-      setDialogOpen({
-        open: true,
-        title: "Deletion Skipped",
-        message: `The following trees will be skipped due to insufficient permissions: ${skippedTrees.map((t) => t.name).join(", ")}. No trees will be deleted.`,
-        action: "OK",
-      });
-    } else if (deletableTrees.length > 0) {
-      setDialogOpen({
-        open: true,
-        title: "Confirm Deletion",
-        message,
-        action: "Delete",
-      });
+    if (selectedTreeIds.length === 0) {
+      setDialogOpen({ open: false }); // Don't open if nothing is selected
+      return;
     }
+
+    setDialogOpen({
+      open: true,
+      title: adminTrees.length > 0 ? "Confirm Deletion" : "Deletion skipped",
+      message:
+        message.trim() ||
+        "Are you sure you want to delete the selected trees? Please review access permissions.",
+      action: adminTrees.length > 0 ? "Delete" : "OK",
+      type: adminTrees.length > 0 ? "error" : "info",
+      onConfirm:
+        adminTrees.length > 0
+          ? () => handleConfirmDelete(adminTrees)
+          : () => setDialogOpen({ open: false }),
+      // Pass loading state to ConfirmDialog if it supports it, e.g., confirmLoading: isDeletingMultiple
+    });
   };
 
-  const handleConfirmDelete = () => {
-    if (!allTrees) return;
-    const deletableTrees = allTrees.filter(
-      (tree) => selectedTreeIds.includes(tree.elementId!) && tree.access === Role.Admin
-    );
-    console.log("Deleting trees:", deletableTrees);
-    // Actual delete API call will be handled later
+  const handleConfirmDelete = async (trees:Tree[]) => {
+    const deletableTreeIds = trees.map((tree) => tree.elementId!);
+    console.log("deletableTreeIds",deletableTreeIds);
+    if (deletableTreeIds.length > 0) {
+      try {
+        await deleteMultipleTrees({ ids: deletableTreeIds }).unwrap();
+        console.log("Successfully deleted trees:", deletableTreeIds);
+        // Optionally: show a success message via toast/snackbar
+      } catch (err) {
+        console.error("Failed to delete trees:", err);
+        // Optionally: show an error message to the user via toast/snackbar
+      }
+    }
     setDialogOpen({ open: false });
+    setSelectedTreeIds([]); // Clear selection
+    setDeletableTrees([]);
+    setSkippedTrees([]);
   };
 
   return (
@@ -220,16 +281,33 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => { // Changed
 
       {selectedTreeIds.length > 0 && ( // Changed
         <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-          <Button variant="contained" color="error" onClick={handleDelete}>
-            Delete
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleDelete}
+            disabled={isDeletingMultiple}
+          >
+            {isDeletingMultiple ? "Deleting..." : "Delete"}
           </Button>
-          <Button variant="outlined" onClick={() => setSelectedTreeIds([])}> 
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setSelectedTreeIds([]);
+              setDeletableTrees([]);
+              setSkippedTrees([]);
+            }}
+            disabled={isDeletingMultiple}
+          >
             Cancel
           </Button>
         </Box>
       )}
-      {treesError && ( // Changed for consistency
-        <Alert severity="error">Failed to fetch trees</Alert> // Changed
+      {treesError && <Alert severity="error">Failed to fetch trees</Alert>}
+      {deleteMultipleError && (
+        <Alert severity="error">
+          Failed to delete trees. Please try again. Error:{" "}
+          {JSON.stringify(deleteMultipleError)}
+        </Alert>
       )}
       <TableContainer component={Paper} elevation={3} sx={{ mt: 2, mb: 2 }}>
         <Table size="medium">
@@ -237,9 +315,11 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => { // Changed
             <TableRow>
               <TableCell padding="checkbox">
                 <Checkbox
-                  checked={ // Changed
+                  checked={
+                    // Changed
                     selectedTreeIds.length === // Changed
-                      filteredTrees.slice( // Changed
+                      filteredTrees.slice(
+                        // Changed
                         page * rowsPerPage,
                         page * rowsPerPage + rowsPerPage
                       ).length && filteredTrees.length > 0 // Changed
@@ -281,35 +361,51 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => { // Changed
             ) : filteredTrees.length > 0 ? ( // Changed
               filteredTrees // Changed
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((tree) => ( // Changed
-                  <TableRow key={tree.elementId} hover> 
-                    <TableCell key={`${tree.elementId}-checkbox`} padding="checkbox">
-                      <Checkbox
-                        checked={selectedTreeIds.includes( // Changed
-                          tree.elementId!
-                        )}
-                        onChange={() => toggleSelect(tree.elementId!)}
-                      />
-                    </TableCell>
-                    <TableCell key={`${tree.elementId}-name`}>
-                      <Link
-                        component="button"
-                        onClick={() => handleTreeSelection(tree!)} // Changed
+                .map(
+                  (
+                    tree // Changed
+                  ) => (
+                    <TableRow key={tree.elementId} hover>
+                      <TableCell
+                        key={`${tree.elementId}-checkbox`}
+                        padding="checkbox"
                       >
-                        {tree.name} 
-                      </Link>
-                    </TableCell>
-                    <TableCell key={`${tree.elementId}-desc`}>{tree.desc ?? "-"}</TableCell> 
-                    <TableCell key={`${tree.elementId}-role`}>{tree.access}</TableCell> 
-                    <TableCell key={`${tree.elementId}-createdBy`}>{tree.createdBy}</TableCell> 
-                    <TableCell key={`${tree.elementId}-createdAt`}>{tree.createdAt ?? "-"}</TableCell> 
-                  </TableRow>
-                ))
+                        <Checkbox
+                          checked={selectedTreeIds.includes(
+                            // Changed
+                            tree.elementId!
+                          )}
+                          onChange={() => toggleSelect(tree.elementId!)}
+                        />
+                      </TableCell>
+                      <TableCell key={`${tree.elementId}-name`}>
+                        <Link
+                          component="button"
+                          onClick={() => handleTreeSelection(tree!)} // Changed
+                        >
+                          {tree.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell key={`${tree.elementId}-desc`}>
+                        {tree.desc ?? "-"}
+                      </TableCell>
+                      <TableCell key={`${tree.elementId}-role`}>
+                        {tree.access}
+                      </TableCell>
+                      <TableCell key={`${tree.elementId}-createdBy`}>
+                        {tree.createdBy}
+                      </TableCell>
+                      <TableCell key={`${tree.elementId}-createdAt`}>
+                        {tree.createdAt ?? "-"}
+                      </TableCell>
+                    </TableRow>
+                  )
+                )
             ) : (
               filteredTrees.length === 0 && ( // Changed
                 <TableRow>
                   <TableCell colSpan={3} align="center">
-                    No trees found. 
+                    No trees found.
                   </TableCell>
                 </TableRow>
               )
@@ -329,8 +425,13 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => { // Changed
       </TableContainer>
       <ConfirmDialog
         {...dialogOpen}
-        onClose={() => setDialogOpen({ open: false })}
-        onConfirm={handleConfirmDelete}
+        onClose={() => {
+          setDialogOpen({ open: false });
+          // Also clear deletable/skipped trees if dialog is closed without confirming
+          setDeletableTrees([]);
+          setSkippedTrees([]);
+        }}
+        onConfirm={ () => dialogOpen.onConfirm || handleConfirmDelete} // Ensure onConfirm is correctly passed
       />
     </Container>
   );

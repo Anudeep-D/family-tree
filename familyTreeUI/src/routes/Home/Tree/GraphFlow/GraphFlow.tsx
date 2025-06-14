@@ -1,7 +1,7 @@
 import { AppEdge, Edges, edgeTypes } from "@/types/edgeTypes";
 import { AppNode, Nodes, nodeTypes } from "@/types/nodeTypes";
 import { getLayoutedElements } from "@/utils/layout";
-import { Box } from "@mui/material";
+import { Alert, Box } from "@mui/material";
 import {
   useNodesState,
   useEdgesState,
@@ -16,6 +16,8 @@ import {
   XYPosition,
 } from "@xyflow/react";
 import { FC, useCallback, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDeleteTreeMutation } from "@/redux/queries/tree-endpoints";
 import { NodeButtons } from "./Options/NodeButtons";
 import { CoreButtons } from "./Options/CoreButtons";
 
@@ -36,6 +38,8 @@ const GraphFlow: FC<GraphFlowProps> = ({
   tree,
 }) => {
   const isViewer = tree.access === Role.Viewer;
+  const [deleteTree, { isLoading: isDeleting, error: deleteError }] = useDeleteTreeMutation();
+  const navigate = useNavigate();
   const { nodes: initNodes, edges: initEdges } = getLayoutedElements(
     initialNodes,
     initialEdges
@@ -159,16 +163,38 @@ const GraphFlow: FC<GraphFlowProps> = ({
   const handleSave = () => {
     console.log("save");
   };
-  const handleDelete = () => {
-    console.log("delete");
+  const handleDelete = async () => {
+    if (!tree || !tree.elementId) {
+        console.error("Tree ID not available for deletion.");
+        // Displaying error via Alert below, using deleteError state
+        return;
+    }
+    try {
+        await deleteTree(tree.elementId).unwrap();
+        console.log("Tree deleted successfully:", tree.elementId);
+        navigate("/"); // Redirect to home page
+    } catch (err) {
+        console.error("Failed to delete tree:", err);
+        // Error will be caught and displayed by the Alert component via deleteError state
+    }
   };
   return (
-    <Box display="flex" height="85vh" width="100vw">
+    <Box display="flex" flexDirection="column" height="85vh" width="100vw">
+      {deleteError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Failed to delete tree. Error: {JSON.stringify(deleteError)}
+        </Alert>
+      )}
+      {isDeleting && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Deleting
+        </Alert>
+      )}
       <Box
         ref={reactFlowWrapper}
         sx={{ flex: 1 }}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
+        onDrop={isViewer ? undefined : onDrop} // Conditionally disable drop if viewer
+        onDragOver={isViewer ? undefined : onDragOver} // Conditionally disable dragOver if viewer
       >
         <ReactFlow
           nodes={nodes}
@@ -226,6 +252,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
             handleReset={handleReset}
             handleSave={handleSave}
             handleDelete={handleDelete}
+            disabled={isDeleting}
           />
         </ReactFlow>
       </Box>

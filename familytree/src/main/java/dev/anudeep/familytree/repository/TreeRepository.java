@@ -15,13 +15,13 @@ public interface TreeRepository extends Neo4jRepository<Tree, String> {
     @Query("MATCH (t:Tree) WHERE elementId(t) = $elementId RETURN t {.*, elementId: elementId(t) } AS tree")
     Optional<Tree> findByElementId(String elementId);
 
-    @Query("""
+     @Query("""
         MATCH (u:User)-[r]->(t:Tree)
         WHERE elementId(u) = $userId AND elementId(t) = $treeId
         RETURN t {.*, elementId: elementId(t), access: type(r) } AS tree
     """)
     Optional<Tree> findUserAccessforTree(String userId, String treeId);
-
+    
     @Query("""
         MATCH (u:User)-[r]->(t:Tree)
         WHERE elementId(t) = $treeElementId
@@ -56,4 +56,12 @@ public interface TreeRepository extends Neo4jRepository<Tree, String> {
         RETURN t {.*, elementId: elementId(t) } AS tree
     """)
     List<Tree> findTreesByRelationship(String userId, String relationship);
+
+    // Custom method for single delete with DETACH
+    @Query("MATCH (t:Tree) WHERE elementId(t) = $elementId DETACH DELETE t")
+    void detachAndDeleteByElementId(String elementId);
+
+    // Custom method for bulk delete with DETACH
+    @Query("MATCH (t:Tree) WHERE elementId(t) IN $elementIds DETACH DELETE t")
+    void detachAndDeleteAllByElementIdIn(List<String> elementIds);
 }

@@ -59,6 +59,21 @@ export const treeApi = createApi({
         body: args.users,
       }),
     }),
+    deleteTree: builder.mutation<void, string>({
+      query: (treeId) => ({
+        url: `/${treeId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['treeApi'],
+    }),
+    deleteMultipleTrees: builder.mutation<void, { ids: string[] }>({
+      query: (body) => ({
+        url: '/delete-multiple', // Assuming this endpoint for bulk delete
+        method: 'POST', // Using POST as per example, adjust if backend uses DELETE with body
+        body: body,
+      }),
+      invalidatesTags: ['treeApi'],
+    }),
   }),
 });
 
@@ -67,4 +82,6 @@ export const {
   useGetTreesQuery, // Renamed from useGetTreesQuery
   useCreateTreeMutation, // Renamed from useCreateTreeMutation
   useAddUsersToTreeMutation, // Renamed from useAddUsersToTreeMutation
+  useDeleteTreeMutation,
+  useDeleteMultipleTreesMutation,
 } = treeApi; // Renamed from treeApi
