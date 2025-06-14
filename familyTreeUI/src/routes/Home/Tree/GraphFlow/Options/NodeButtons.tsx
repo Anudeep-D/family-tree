@@ -12,7 +12,7 @@ const typeToIcon: Record<Nodes, ReactNode> = {
   [Nodes.House]: <Diversity3TwoTone fontSize="large" color="success" />,
 };
 type NodeButtonsProps = {
-  projectId: string;
+  treeId: string;
   onClose: () => void;
   onSubmit: (node: AppNode) => void;
   dialogMode?: "new" | "edit";
@@ -23,7 +23,7 @@ type NodeButtonsProps = {
   };
 };
 export const NodeButtons: React.FC<NodeButtonsProps> = ({
-  projectId,
+  treeId,
   onClose,
   onSubmit,
   dialogMode,
@@ -130,7 +130,7 @@ export const NodeButtons: React.FC<NodeButtonsProps> = ({
               : { imageUrl: "" }
           }
           onSubmit={handleDialogSubmit}
-          projectId={projectId}
+          treeId={treeId}
           nodeId={dialogMode === 'edit' ? editingNode!.id : internalNewNodeId!}
         />
       )}

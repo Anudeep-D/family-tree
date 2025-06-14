@@ -31,11 +31,11 @@ public class User implements Serializable {
     private String picture;
 
     @Relationship(type = Constants.ADMIN_REL, direction = Relationship.Direction.OUTGOING)
-    private transient Set<Project> adminProjects = new HashSet<>();
+    private transient Set<Tree> adminTrees = new HashSet<>();
     @Relationship(type = Constants.EDITOR_REL, direction = Relationship.Direction.OUTGOING)
-    private transient Set<Project> editorProjects = new HashSet<>();
+    private transient Set<Tree> editorTrees = new HashSet<>();
     @Relationship(type = Constants.VIEWER_REL, direction = Relationship.Direction.OUTGOING)
-    private transient Set<Project> viewerProjects = new HashSet<>();
+    private transient Set<Tree> viewerTrees = new HashSet<>();
 
     public User(String email, String name, String picture) {
         this.email = email;

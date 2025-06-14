@@ -33,17 +33,17 @@ public class GraphService {
     @Autowired
     private Neo4jClient neo4jClient;
 
-    public FlowGraphDTO getGraph(String projectId) {
+    public FlowGraphDTO getGraph(String treeId) {
         Set<FlowNodeDTO> nodes = new HashSet<>();
         Set<FlowEdgeDTO> edges = new HashSet<>();
         String cypher = String.format("""
-            MATCH (p:Person)-[:%s]->(proj:Project)
-            WHERE elementId(proj) = $projectId
+            MATCH (p:Person)-[:%s]->(proj:Tree)
+            WHERE elementId(proj) = $treeId
             OPTIONAL MATCH (n)-[r:%s|%s|%s]->(m)
             RETURN n, r, m
             """,Constants.PART_OF,Constants.MARRIED_REL, Constants.PARENT_REL, Constants.BELONGS_REL);
         AtomicInteger line= new AtomicInteger(1);
-        neo4jClient.query(cypher).bind(projectId).to("projectId").fetch()
+        neo4jClient.query(cypher).bind(treeId).to("treeId").fetch()
                 .all()
                 .forEach(row -> {
                     log.info("Row fetched {}", line.getAndIncrement());

@@ -2,7 +2,7 @@ package dev.anudeep.familytree.controller.common;
 
 import dev.anudeep.familytree.model.Role;
 import dev.anudeep.familytree.model.User; // Your User model
-import dev.anudeep.familytree.service.UserProjectService;
+import dev.anudeep.familytree.service.UserTreeService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -18,11 +18,11 @@ import java.util.function.Predicate;
 @Slf4j
 @Component
 public class CommonUtils {
-    private final UserProjectService userProjectService;
+    private final UserTreeService userTreeService;
 
-    // Constructor: Inject UserProjectService (and other services if needed here)
-    public CommonUtils(UserProjectService userProjectService) {
-        this.userProjectService = userProjectService;
+    // Constructor: Inject UserTreeService (and other services if needed here)
+    public CommonUtils(UserTreeService userTreeService) {
+        this.userTreeService = userTreeService;
     }
 
     /**
@@ -39,32 +39,32 @@ public class CommonUtils {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not authenticated or session expired");
         }
         String userId = (String) authentication.getPrincipal();
-        Optional<User> user = userProjectService.getUserByElementId(userId);
+        Optional<User> user = userTreeService.getUserByElementId(userId);
         return user.orElse(null);
     }
 
     /**
-     * Performs access checks. If projectId and rolesCheck are provided, it verifies project-specific roles.
+     * Performs access checks. If treeId and rolesCheck are provided, it verifies tree-specific roles.
      * Relies on getCurrentAuthenticatedUser() to ensure user is authenticated.
-     * @param projectId The ID of the project to check against (can be null if not a project-specific check).
+     * @param treeId The ID of the tree to check against (can be null if not a tree-specific check).
      * @param rolesCheck An array of Roles required for the operation (can be null).
      */
-    public void accessCheck(String projectId, Role[] rolesCheck) { // HttpSession parameter removed
+    public void accessCheck(String treeId, Role[] rolesCheck) { // HttpSession parameter removed
         User currentUser = getCurrentAuthenticatedUser(); // Get user from SecurityContext
-        log.info("accessCheck: currentUser {}, project {}, roles {}",currentUser, projectId, rolesCheck);
+        log.info("accessCheck: currentUser {}, tree {}, roles {}",currentUser, treeId, rolesCheck);
         // You might want to add a check here if currentUser itself is null, though getCurrentAuthenticatedUser should throw first.
         if (currentUser.getElementId() == null) { // Or any other essential check on your User object
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User details are incomplete or invalid");
         }
 
-        // Project-specific role check
-        if (projectId != null && rolesCheck != null && rolesCheck.length > 0) {
-            Role projectRole = userProjectService.getRelationshipType(currentUser.getElementId(), projectId)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not have a defined role for this project or project not found."));
-            log.info("projectRole: {}",projectRole);
-            Predicate<Role> isRoleMatch = requiredRole -> requiredRole == projectRole;
+        // Tree-specific role check
+        if (treeId != null && rolesCheck != null && rolesCheck.length > 0) {
+            Role treeRole = userTreeService.getRelationshipType(currentUser.getElementId(), treeId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not have a defined role for this tree or tree not found."));
+            log.info("treeRole: {}",treeRole);
+            Predicate<Role> isRoleMatch = requiredRole -> requiredRole == treeRole;
             if (Arrays.stream(rolesCheck).noneMatch(isRoleMatch)) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not have the required permission ('" + projectRole + "') for this action on the project. Required one of: " + Arrays.toString(rolesCheck));
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "User does not have the required permission ('" + treeRole + "') for this action on the tree. Required one of: " + Arrays.toString(rolesCheck));
             }
         }
     }

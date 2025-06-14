@@ -18,7 +18,7 @@ import { getImageUrl, uploadImage } from "@/routes/common/imageStorage";
 import { useAuth } from "@/hooks/useAuth";
 
 type NodeDialogProps = {
-  projectId: string;
+  treeId: string;
   nodeId: string; // elementId for Supabase path
   mode: "new" | "edit";
   open: boolean;
@@ -42,7 +42,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
   onSubmit,
   type = Nodes.Person,
   initialData,
-  projectId,
+  treeId,
   nodeId,
 }) => {
   const { idToken } = useAuth();
@@ -81,11 +81,11 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
     setIsUploading(true);
     await signInWithGoogleToken();
     // Upsert true to overwrite if file with same name exists, useful for updates
-    const path= await uploadImage(selectedFile,projectId, nodeId );
+    const path= await uploadImage(selectedFile,treeId, nodeId );
     if(!path)
       setIsUploading(false);
 
-    const publicUrl = await getImageUrl(projectId, nodeId );
+    const publicUrl = await getImageUrl(treeId, nodeId );
     console.log("publicUrl",publicUrl);
     setFormState((prev) => ({ ...prev, imageUrl: publicUrl }));
     setIsUploading(false);

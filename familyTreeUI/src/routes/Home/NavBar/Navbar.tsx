@@ -13,11 +13,11 @@ import {
   Notifications as NotificationsIcon,
 } from "@mui/icons-material";
 import "./Navbar.scss"; // Keep for layout styles if necessary, or remove if all handled by MUI
-import CreateProject from "../Projects/CreateProject";
+import CreateTree from "../Trees/CreateTree"; // Changed
 import Account from "./Account";
 
 export default function Navbar() {
-  const [openProject, setOpenProject] = useState(false);
+  const [openTree, setOpenTree] = useState(false); // Changed
 
   return (
     <>
@@ -35,11 +35,11 @@ export default function Navbar() {
           <Box sx={{ flexGrow: 1 }} />{" "}
           {/* This Box will push actions to the right */}
           <Button
-            onClick={() => setOpenProject(true)}
+            onClick={() => setOpenTree(true)} // Changed
             color="inherit"
             startIcon={<AddIcon />}
           >
-            New Project
+            New Tree 
           </Button>
           <IconButton color="inherit" aria-label="notifications">
             <Badge color="secondary" badgeContent={0}>
@@ -49,7 +49,7 @@ export default function Navbar() {
           <Account />
         </Toolbar>
       </AppBar>
-      <CreateProject open={openProject} onClose={() => setOpenProject(false)} />
+      <CreateTree open={openTree} onClose={() => setOpenTree(false)} /> 
     </>
   );
 }

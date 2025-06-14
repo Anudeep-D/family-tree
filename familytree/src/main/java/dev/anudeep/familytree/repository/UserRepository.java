@@ -1,10 +1,10 @@
 package dev.anudeep.familytree.repository;
 
 
-import dev.anudeep.familytree.model.Project;
 import dev.anudeep.familytree.model.User;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,9 +23,9 @@ public interface UserRepository extends Neo4jRepository<User, String> {
     Optional<User> findByEmail(String email);
 
     @Query("""
-        MATCH (u:User)-[r]->(p:Project)
-        WHERE elementId(u) = $userId AND elementId(p) = $projectId
+        MATCH (u:User)-[r]->(t:Tree)
+        WHERE elementId(u) = $userElementId AND elementId(t) = $treeElementId
         RETURN type(r)
     """)
-    Optional<String> findRelationshipBetweenUserAndProject(String userId, String projectId);
+    Optional<String> findRelationshipBetweenUserAndTree(@Param("userElementId") String userElementId, @Param("treeElementId") String treeElementId);
 }

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    // Allows importing modules using absolute paths starting from project root
+    // Allows importing modules using absolute paths starting from tree root
     "baseUrl": ".",
 
     // Custom path aliases for cleaner imports
@@ -26,7 +26,7 @@
     // Skip type checking of declaration files (*.d.ts) — improves build speed
     "skipLibCheck": true,
 
-    // Ensure file names are referenced with the correct casing across the project
+    // Ensure file names are referenced with the correct casing across the tree
     "forceConsistentCasingInFileNames": true,
 
     /* Bundler mode related settings */
@@ -54,7 +54,7 @@
 
     /* Linting options */
 
-    // Enable strict type checking across the project
+    // Enable strict type checking across the tree
     "strict": true,
 
     // Error on unused local variables

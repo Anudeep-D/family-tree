@@ -4,13 +4,13 @@ export type User = {
   name?: string;
   email?: string;
   picture?: string;
-  adminProjects?: any[];
-  editorProjects?: any[];
-  viewerProjects?: any[];
+  adminTrees?: any[];
+  editorTrees?: any[];
+  viewerTrees?: any[];
 };
 
 
-export type Project = {
+export type Tree = { // Renamed from Tree
   id?: string;
   elementId?: string;
   name: string;

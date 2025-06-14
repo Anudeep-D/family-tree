@@ -1,5 +1,5 @@
 import ConfirmDialog, { ConfirmProps } from "@/routes/common/ConfirmDialog";
-import { Project } from "@/types/entityTypes";
+import { Tree } from "@/types/entityTypes";
 import { DeleteTwoTone, Restore, SaveTwoTone } from "@mui/icons-material";
 import { Box, Tooltip, IconButton } from "@mui/material";
 import { Options } from "./Options";
@@ -7,13 +7,13 @@ import "./CoreButtons.scss";
 import { useState } from "react";
 
 type CoreButtonsProps = {
-  project: Project;
+  tree: Tree;
   handleReset: () => void;
   handleSave: () => void;
   handleDelete: () => void;
 };
 export const CoreButtons: React.FC<CoreButtonsProps> = ({
-  project,
+  tree,
   handleReset,
   handleSave,
   handleDelete,
@@ -44,9 +44,9 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
               open: true,
               type: "error",
               action: "Delete",
-              title: `Delete project ${project.elementId}`,
+              title: `Delete tree ${tree.elementId}`,
               message:
-                "Are you sure you want to delete this project? This action cannot be undone.",
+                "Are you sure you want to delete this tree? This action cannot be undone.",
             })
           }
         >
@@ -62,9 +62,9 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
               open: true,
               type: "warning",
               action: "Reset",
-              title: `Reset project ${project.name}`,
+              title: `Reset tree ${tree.name}`,
               message:
-                "Are you sure you want to reset this project to original? This action cannot be undone.",
+                "Are you sure you want to reset this tree to original? This action cannot be undone.",
             })
           }
         >
@@ -80,8 +80,8 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
               open: true,
               type: "primary",
               action: "Save",
-              title: `Save project ${project.elementId}`,
-              message: "Are you sure you want to save this project?",
+              title: `Save tree ${tree.elementId}`,
+              message: "Are you sure you want to save this tree?",
             })
           }
         >

@@ -5,7 +5,7 @@ import dev.anudeep.familytree.model.Role;
 import java.util.Objects;
 
 public class Constants {
-    // User, Project relationships
+    // User, Tree relationships
     private Constants(){};
     public static final String ADMIN_REL = "ADMIN_FOR";
     public static final String EDITOR_REL = "EDITOR_FOR";

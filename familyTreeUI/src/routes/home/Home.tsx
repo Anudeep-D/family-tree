@@ -10,42 +10,42 @@ import {
 } from "@mui/material";
 import { Home as HomeIcon } from "@mui/icons-material";
 import Navbar from "./NavBar/Navbar";
-import Tree from "./Tree/Tree";
-import Projects from "./Projects/Projects";
-import { Project } from "@/types/entityTypes";
+import Tree from "./Tree/Tree"; // This is the component that displays a single tree's graph
+import Trees from "./Trees/Trees"; // This is the component that lists all trees (previously Trees)
+import { Tree as TreeType } from "@/types/entityTypes"; // Renamed Tree to TreeType to avoid conflict with component
 import "./Home.scss";
-import { useGetProjectQuery } from "@/redux/queries/project-endpoints";
 import { getErrorMessage } from "@/utils/common";
 import { useNavigate, useParams } from "react-router-dom";
+import { useGetTreeQuery } from "@/redux/queries/tree-endpoints";
 export default function Home() {
-  const { projectId: encodedId } = useParams<{ projectId: string }>();
-  const projectId = encodedId && decodeURIComponent(encodedId!);
+  const { treeId: encodedId } = useParams<{ treeId: string }>(); // Changed
+  const treeId = encodedId && decodeURIComponent(encodedId!); // Changed
   const navigate = useNavigate();
   const {
-    data: project,
-    isFetching: isProjectFetching,
-    isLoading: isProjectLoading,
-    isError: isProjectError,
-    error: ProjectError,
-  } = useGetProjectQuery({ projectId: projectId! }, { skip: !projectId });
+    data: tree, // Changed
+    isFetching: isTreeFetching, // Changed
+    isLoading: isTreeLoading, // Changed
+    isError: isTreeError, // Changed
+    error: TreeError, // Changed
+  } = useGetTreeQuery({ treeId: treeId! }, { skip: !treeId }); // Changed
 
   useEffect(() => {
-    if (projectId && (isProjectFetching || isProjectLoading))
+    if (treeId && (isTreeFetching || isTreeLoading)) // Changed
       setisLoading(true);
     else setisLoading(false);
   }, [
-    projectId,
-    project,
-    isProjectFetching,
-    isProjectLoading,
-    isProjectError,
-    ProjectError,
+    treeId, // Changed
+    tree, // Changed
+    isTreeFetching, // Changed
+    isTreeLoading, // Changed
+    isTreeError, // Changed
+    TreeError, // Changed
   ]);
 
   const [isLoading, setisLoading] = useState<boolean>(false);
 
-  const handleProjectSelection = (project: Project) => {
-    navigate(`/projects/${encodeURIComponent(project.elementId!)}`);
+  const handleTreeSelection = (selectedTree: TreeType) => { // Changed parameter name and type
+    navigate(`/trees/${encodeURIComponent(selectedTree.elementId!)}`); // Changed
   };
   return (
     <Box>
@@ -65,9 +65,9 @@ export default function Home() {
             />
             Home
           </Link>
-          {project && (
+          {tree && ( // Changed
             <Typography className="breadcrumb-current">
-              {project.name}
+              {tree.name} 
             </Typography>
           )}
         </Breadcrumbs>
@@ -77,16 +77,16 @@ export default function Home() {
           <CircularProgress />
         </Box>
       )}
-      {projectId && isProjectError && (
+      {treeId && isTreeError && ( // Changed
         <Alert severity="error">
-          <AlertTitle>Failed to fetch graph</AlertTitle>
-          {getErrorMessage(ProjectError)}
+          <AlertTitle>Failed to fetch tree data</AlertTitle> 
+          {getErrorMessage(TreeError)} 
         </Alert>
       )}
-      {projectId && project && <Tree project={project} />}
+      {treeId && tree && <Tree tree={tree} />} 
 
-      {!projectId && (
-        <Projects handleProjectSelection={handleProjectSelection} />
+      {!treeId && ( 
+        <Trees handleTreeSelection={handleTreeSelection} /> 
       )}
     </Box>
   );

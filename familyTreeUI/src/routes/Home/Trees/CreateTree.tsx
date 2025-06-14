@@ -18,15 +18,11 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useEffect, useMemo, useState } from "react";
-import "./CreateProject.scss";
 import { useGetUsersQuery } from "@/redux/queries/user-endpoints";
-import {
-  useCreateProjectMutation,
-  useAddUsersToProjectMutation,
-} from "@/redux/queries/project-endpoints";
 import { Role } from "@/types/common";
 import { useNavigate } from "react-router-dom";
-import { Project } from "@/types/entityTypes";
+import "./CreateTree.scss"; // Changed
+import { useCreateTreeMutation, useAddUsersToTreeMutation } from "@/redux/queries/tree-endpoints";
 
 type AssignedUser = {
   elementId: string;
@@ -38,33 +34,33 @@ type Props = {
   onClose: () => void;
 };
 
-const CreateProject = ({ open, onClose }: Props) => {
+const CreateTree = ({ open, onClose }: Props) => { // Changed
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [users, setUsers] = useState<AssignedUser[]>([]);
   const [callAddUsers, setCallAddUsers] = useState(false);
   const navigate = useNavigate();
-  const handleProjectSelection = (projectId: string) => {
-    navigate(`/projects/${encodeURIComponent(projectId)}`);
+  const handleTreeSelection = (treeId: string) => { // Changed
+    navigate(`/trees/${encodeURIComponent(treeId)}`); // Changed
   };
   const [
-    createProjectMutation,
+    createTreeMutation, // Changed
     {
-      data: newProject,
+      data: newTree, // Changed
       isError: isErrorOnCreate,
       error: errorOnCreate,
       isLoading: isCreating,
     },
-  ] = useCreateProjectMutation();
+  ] = useCreateTreeMutation(); // Changed
 
   const [
-    addUsersToProjectMutation,
+    addUsersToTreeMutation, // Changed
     {
       isError: isErrorOnAddUsers,
       error: errorOnAddUsers,
       isLoading: isAddingUsers,
     },
-  ] = useAddUsersToProjectMutation();
+  ] = useAddUsersToTreeMutation(); // Changed
   const {
     data: allUsers,
     error: usersError,
@@ -83,7 +79,7 @@ const CreateProject = ({ open, onClose }: Props) => {
   };
 
   const onSubmit = (_data: { name: string; description: string }) => {
-    createProjectMutation({
+    createTreeMutation({ // Changed
       name: name,
       desc: description,
       createdAt: new Date().toISOString(),
@@ -108,26 +104,26 @@ const CreateProject = ({ open, onClose }: Props) => {
   };
 
   useEffect(() => {
-    if (newProject) {
+    if (newTree) { // Changed
       if (callAddUsers) {
-        addUsersToProjectMutation({
-          projectId: newProject.elementId!,
+        addUsersToTreeMutation({ // Changed
+          treeId: newTree.elementId!, // Changed
           users: users,
         });
         setUsers([]);
         setCallAddUsers(false);
         onClose();
       }
-      handleProjectSelection(newProject.elementId!);
+      handleTreeSelection(newTree.elementId!); // Changed
     }
-  }, [callAddUsers, newProject]);
+  }, [callAddUsers, newTree]); // Changed
 
   const errorMsg = useMemo(() => {
     if (isErrorOnCreate && errorOnCreate) {
-      return "Failed to create project";
+      return "Failed to create tree"; // Changed
     }
     if (isErrorOnAddUsers && errorOnAddUsers) {
-      return "Project created but failed to add users to project";
+      return "Tree created but failed to add users to tree"; // Changed
     }
     return null;
   }, [isErrorOnAddUsers, isErrorOnCreate, errorOnCreate, errorOnAddUsers]);
@@ -135,20 +131,20 @@ const CreateProject = ({ open, onClose }: Props) => {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle className="modalHeader">
-        Create New Project
+        Create New Tree 
         <IconButton onClick={onClose} className="closeIcon">
           <CloseIcon />
         </IconButton>
       </DialogTitle>
       <DialogContent className="modalBody">
         <Typography variant="body2" mb={2}>
-          Fill in the details below to create a new project and assign user
+          Fill in the details below to create a new tree and assign user 
           roles.
         </Typography>
         {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
         <TextField
           required
-          label="Project Name"
+          label="Tree Name" // Changed
           value={name}
           onChange={(e) => setName(e.target.value)}
           fullWidth
@@ -256,4 +252,4 @@ const CreateProject = ({ open, onClose }: Props) => {
   );
 };
 
-export default CreateProject;
+export default CreateTree; // Changed

@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
-import { useGetProjectsQuery } from "@/redux/queries/project-endpoints";
-import { Project } from "@/types/entityTypes";
+import { useGetTreesQuery } from "@/redux/queries/tree-endpoints";
+import { Tree } from "@/types/entityTypes"; // Changed
 import {
   Container,
   Typography,
@@ -31,7 +31,7 @@ import React, { useMemo, useState } from "react";
 type Order = "asc" | "desc";
 
 interface HeadCell {
-  id: keyof Project;
+  id: keyof Tree; // Changed
   label: string;
 }
 
@@ -43,11 +43,11 @@ const headCells: readonly HeadCell[] = [
   { id: "createdAt", label: "Created at" },
 ];
 
-export function getComparator<Key extends keyof Project>(
+export function getComparator<Key extends keyof Tree>( // Changed
   order: "asc" | "desc",
   orderBy: Key
-): (a: Project, b: Project) => number {
-  return (a: Project, b: Project) => {
+): (a: Tree, b: Tree) => number { // Changed
+  return (a: Tree, b: Tree) => { // Changed
     const aVal = a[orderBy];
     const bVal = b[orderBy];
 
@@ -61,31 +61,31 @@ export function getComparator<Key extends keyof Project>(
   };
 }
 
-export type ProjectsProps = {
-  handleProjectSelection: (project: Project) => void;
+export type TreesProps = { // Changed
+  handleTreeSelection: (tree: Tree) => void; // Changed
 };
 
-const Projects: React.FC<ProjectsProps> = ({ handleProjectSelection }) => {
-  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
+const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => { // Changed
+  const [selectedTreeIds, setSelectedTreeIds] = useState<string[]>([]); // Changed
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("");
 
   const { user } = useAuth(); // Get user from useAuth
   const {
-    data: allProjects,
-    error: projectsError,
-    isLoading: isProjectsLoading,
-    isFetching: isProjectsFetching,
-  } = useGetProjectsQuery();
+    data: allTrees, // Changed
+    error: treesError, // Changed for consistency, though not strictly required by prompt
+    isLoading: isTreesLoading, // Changed for consistency
+    isFetching: isTreesFetching, // Changed for consistency
+  } = useGetTreesQuery(); // Changed
 
   const [order, setOrder] = useState<Order>("asc");
-  const [orderBy, setOrderBy] = useState<keyof Project>("name");
+  const [orderBy, setOrderBy] = useState<keyof Tree>("name"); // Changed
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const handleRequestSort = (
     _event: React.MouseEvent<unknown>,
-    property: keyof Project
+    property: keyof Tree // Changed
   ) => {
     const isAsc = orderBy === property && order === "asc";
     setOrder(isAsc ? "desc" : "asc");
@@ -103,47 +103,47 @@ const Projects: React.FC<ProjectsProps> = ({ handleProjectSelection }) => {
     setPage(0);
   };
 
-  const isSearchTermInProject = (project: Project) => {
+  const isSearchTermInTree = (tree: Tree) => { // Changed
     if (!search) return true;
     return (
-      project.name.toLowerCase().includes(search.toLowerCase()) ||
-      project.desc?.toLowerCase().includes(search.toLowerCase()) ||
-      project.access?.toLowerCase().includes(search.toLowerCase()) ||
-      project.createdBy?.toLowerCase().includes(search.toLowerCase())
+      tree.name.toLowerCase().includes(search.toLowerCase()) ||
+      tree.desc?.toLowerCase().includes(search.toLowerCase()) ||
+      tree.access?.toLowerCase().includes(search.toLowerCase()) ||
+      tree.createdBy?.toLowerCase().includes(search.toLowerCase())
     );
   };
 
-  const filteredProjects = useMemo(() => {
-    if (!allProjects) return [];
-    return allProjects
+  const filteredTrees = useMemo(() => { // Changed
+    if (!allTrees) return []; // Changed
+    return allTrees // Changed
       .filter(
-        (project) =>
-          isSearchTermInProject(project) &&
-          (!filterRole || project.access === filterRole)
+        (tree) => // Changed
+          isSearchTermInTree(tree) && // Changed
+          (!filterRole || tree.access === filterRole) // Changed
       )
       .sort(getComparator(order, orderBy));
-  }, [allProjects, search, filterRole, order, orderBy]);
+  }, [allTrees, search, filterRole, order, orderBy]); // Changed
 
   const toggleSelect = (id: string) => {
-    setSelectedProjectIds((prev) =>
+    setSelectedTreeIds((prev) => // Changed
       prev.includes(id) ? prev.filter((pid) => pid !== id) : [...prev, id]
     );
   };
 
   const handleSelectAll = () => {
-    if (selectedProjectIds.length === filteredProjects.length) {
-      setSelectedProjectIds([]);
+    if (selectedTreeIds.length === filteredTrees.length) { // Changed
+      setSelectedTreeIds([]); // Changed
     } else {
-      setSelectedProjectIds(
-        filteredProjects
-          .filter((p) => Boolean(p.elementId))
-          .map((p) => p.elementId!)
+      setSelectedTreeIds( // Changed
+        filteredTrees // Changed
+          .filter((t) => Boolean(t.elementId)) // Changed
+          .map((t) => t.elementId!) // Changed
       );
     }
   };
 
   const handleDelete = () => {
-    console.log("Delete projects:", selectedProjectIds);
+    console.log("Delete trees:", selectedTreeIds); // Changed
   };
   return (
     <Container sx={{ mt: 4 }}>
@@ -155,7 +155,7 @@ const Projects: React.FC<ProjectsProps> = ({ handleProjectSelection }) => {
       {/* Rest of the component remains the same */}
       <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 2 }}>
         <TextField
-          label="Search projects"
+          label="Search trees" // Changed
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           size="small"
@@ -176,18 +176,18 @@ const Projects: React.FC<ProjectsProps> = ({ handleProjectSelection }) => {
         </FormControl>
       </Box>
 
-      {selectedProjectIds.length > 0 && (
+      {selectedTreeIds.length > 0 && ( // Changed
         <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
           <Button variant="contained" color="error" onClick={handleDelete}>
             Delete
           </Button>
-          <Button variant="outlined" onClick={() => setSelectedProjectIds([])}>
+          <Button variant="outlined" onClick={() => setSelectedTreeIds([])}> 
             Cancel
           </Button>
         </Box>
       )}
-      {projectsError && (
-        <Alert severity="error">Failed to fetch projects</Alert>
+      {treesError && ( // Changed for consistency
+        <Alert severity="error">Failed to fetch trees</Alert> // Changed
       )}
       <TableContainer component={Paper} elevation={3} sx={{ mt: 2, mb: 2 }}>
         <Table size="medium">
@@ -195,15 +195,15 @@ const Projects: React.FC<ProjectsProps> = ({ handleProjectSelection }) => {
             <TableRow>
               <TableCell padding="checkbox">
                 <Checkbox
-                  checked={
-                    selectedProjectIds.length ===
-                      filteredProjects.slice(
+                  checked={ // Changed
+                    selectedTreeIds.length === // Changed
+                      filteredTrees.slice( // Changed
                         page * rowsPerPage,
                         page * rowsPerPage + rowsPerPage
-                      ).length && filteredProjects.length > 0
+                      ).length && filteredTrees.length > 0 // Changed
                   }
                   onChange={handleSelectAll}
-                  inputProps={{ "aria-label": "select all projects" }}
+                  inputProps={{ "aria-label": "select all trees" }} // Changed
                 />
               </TableCell>
               {headCells.map((headCell) => (
@@ -230,44 +230,44 @@ const Projects: React.FC<ProjectsProps> = ({ handleProjectSelection }) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {isProjectsFetching || isProjectsLoading ? (
+            {isTreesFetching || isTreesLoading ? ( // Changed for consistency
               <TableRow>
                 <TableCell colSpan={3} align="center">
                   <Skeleton variant="text" width="100%" height={20} />
                 </TableCell>
               </TableRow>
-            ) : filteredProjects.length > 0 ? (
-              filteredProjects
+            ) : filteredTrees.length > 0 ? ( // Changed
+              filteredTrees // Changed
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map((project) => (
-                  <TableRow key={project.elementId} hover>
-                    <TableCell key={`${project.elementId}-checkbox`} padding="checkbox">
+                .map((tree) => ( // Changed
+                  <TableRow key={tree.elementId} hover> 
+                    <TableCell key={`${tree.elementId}-checkbox`} padding="checkbox">
                       <Checkbox
-                        checked={selectedProjectIds.includes(
-                          project.elementId!
+                        checked={selectedTreeIds.includes( // Changed
+                          tree.elementId!
                         )}
-                        onChange={() => toggleSelect(project.elementId!)}
+                        onChange={() => toggleSelect(tree.elementId!)}
                       />
                     </TableCell>
-                    <TableCell key={`${project.elementId}-name`}>
+                    <TableCell key={`${tree.elementId}-name`}>
                       <Link
                         component="button"
-                        onClick={() => handleProjectSelection(project!)}
+                        onClick={() => handleTreeSelection(tree!)} // Changed
                       >
-                        {project.name}
+                        {tree.name} 
                       </Link>
                     </TableCell>
-                    <TableCell key={`${project.elementId}-desc`}>{project.desc ?? "-"}</TableCell>
-                    <TableCell key={`${project.elementId}-role`}>{project.access}</TableCell>
-                    <TableCell key={`${project.elementId}-createdBy`}>{project.createdBy}</TableCell>
-                    <TableCell key={`${project.elementId}-createdAt`}>{project.createdAt ?? "-"}</TableCell>
+                    <TableCell key={`${tree.elementId}-desc`}>{tree.desc ?? "-"}</TableCell> 
+                    <TableCell key={`${tree.elementId}-role`}>{tree.access}</TableCell> 
+                    <TableCell key={`${tree.elementId}-createdBy`}>{tree.createdBy}</TableCell> 
+                    <TableCell key={`${tree.elementId}-createdAt`}>{tree.createdAt ?? "-"}</TableCell> 
                   </TableRow>
                 ))
             ) : (
-              filteredProjects.length === 0 && (
+              filteredTrees.length === 0 && ( // Changed
                 <TableRow>
                   <TableCell colSpan={3} align="center">
-                    No projects found.
+                    No trees found. 
                   </TableCell>
                 </TableRow>
               )
@@ -278,7 +278,7 @@ const Projects: React.FC<ProjectsProps> = ({ handleProjectSelection }) => {
         <TablePagination
           rowsPerPageOptions={[10, 50, 100]}
           component="div"
-          count={filteredProjects.length}
+          count={filteredTrees.length} // Changed
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -289,4 +289,4 @@ const Projects: React.FC<ProjectsProps> = ({ handleProjectSelection }) => {
   );
 };
 
-export default Projects;
+export default Trees; // Changed

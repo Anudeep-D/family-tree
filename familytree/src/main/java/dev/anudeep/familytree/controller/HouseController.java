@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @Tag(name = "House API", description = "Endpoints for managing houses in the family tree")
 @RestController
-@RequestMapping("/api/projects/{projectId}/houses")
+@RequestMapping("/api/trees/{treeId}/houses")
 @CrossOrigin(origins = "*") // Allow frontend requests
 public class HouseController {
 
@@ -28,22 +28,22 @@ public class HouseController {
     @GetMapping("/{elementId}")
     @Operation(summary = "Get house by elementId")
     public House getHouseById(
-            @Parameter(description = "Project Id of a project", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
-            @PathVariable String projectId,
+            @Parameter(description = "Tree Id of a tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @PathVariable String treeId,
             @Parameter(description = "elementId of the house to retrieve", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:72")
             @PathVariable String elementId,
             HttpSession session) {
 
-        commonUtils.accessCheck(projectId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(treeId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("HouseController: Fetching house elementId {}", elementId);
         return houseService.getHouseById(elementId);
     }
 
     @PostMapping
     @Operation(summary = "Create a new house")
-    public House createHouse(@Parameter(description = "Project Id of a project", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
-                                 @PathVariable String projectId,@RequestBody House house, HttpSession session) {
-        commonUtils.accessCheck(projectId,new Role[] {Role.EDITOR, Role.ADMIN});
+    public House createHouse(@Parameter(description = "Tree Id of a tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+                                 @PathVariable String treeId,@RequestBody House house, HttpSession session) {
+        commonUtils.accessCheck(treeId,new Role[] {Role.EDITOR, Role.ADMIN});
         log.info("HouseController: Creating house {}", house);
         return houseService.createHouse(house);
     }

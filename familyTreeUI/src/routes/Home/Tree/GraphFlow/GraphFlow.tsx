@@ -20,19 +20,19 @@ import { NodeButtons } from "./Options/NodeButtons";
 import { CoreButtons } from "./Options/CoreButtons";
 
 import "./GraphFlow.scss";
-import { Project } from "@/types/entityTypes";
+import { Tree } from "@/types/entityTypes";
 import { EdgeDialog } from "./EdgeDialog/EdgeDialog";
 
 type GraphFlowProps = {
   initialNodes: AppNode[];
   initialEdges: AppEdge[];
-  project: Project;
+  tree: Tree;
 };
 
 const GraphFlow: FC<GraphFlowProps> = ({
   initialNodes,
   initialEdges,
-  project,
+  tree,
 }) => {
   const { nodes: initNodes, edges: initEdges } = getLayoutedElements(
     initialNodes,
@@ -207,10 +207,10 @@ const GraphFlow: FC<GraphFlowProps> = ({
             dialogMode={nodeDialogMode}
             editingNode={editingNode}
             pendingNodeDrop={pendingNodeDrop}
-            projectId={project.elementId!} // Pass project.id as projectId
+            treeId={tree.elementId!} // Pass tree.id as treeId
           />
           <CoreButtons
-            project={project}
+            tree={tree}
             handleReset={handleReset}
             handleSave={handleSave}
             handleDelete={handleDelete}

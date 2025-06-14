@@ -15,10 +15,10 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-@Node("Project")
+@Node("Tree")
 @Setter @Getter @AllArgsConstructor
 @NoArgsConstructor
-public class Project implements Serializable {
+public class Tree implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -37,7 +37,7 @@ public class Project implements Serializable {
     @Relationship(type = Constants.VIEWER_REL, direction = Relationship.Direction.INCOMING)
     private transient Set<User> viewerUsers = new HashSet<>();
 
-    public Project(String name, String desc, String createdAt, String createdBy){
+    public Tree(String name, String desc, String createdAt, String createdBy){
         this.name=name;
         this.desc = desc;
         this.createdAt = (String) Objects.requireNonNullElseGet(createdAt, Date::new);
@@ -48,9 +48,9 @@ public class Project implements Serializable {
     public boolean equals(Object o) {
         if (this == o)
             return true;
-        if (!(o instanceof Project project))
+        if (!(o instanceof Tree tree))
             return false;
-        return Objects.equals(elementId, project.elementId);
+        return Objects.equals(elementId, tree.elementId);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class Project implements Serializable {
 
     @Override
     public String toString() {
-        return "Project{" +
+        return "Tree{" +
                 "elementId='" + elementId + '\'' +
                 ", name='" + name + '\'' +
                 ", desc='" + desc + '\'' +

@@ -20,7 +20,7 @@ export default function App() {
             }
           />
           <Route
-            path="/projects/:projectId"
+            path="/trees/:treeId" // Changed from /trees/:treeId
             element={
               <PrivateRoute>
                 <Home />

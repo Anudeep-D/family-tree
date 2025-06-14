@@ -1,5 +1,5 @@
 import { useGetGraphQuery } from "@/redux/queries/graph-endpoints";
-import { Project } from "@/types/entityTypes";
+import { Tree as TreeType } from "@/types/entityTypes"; // Changed
 import { getErrorMessage } from "@/utils/common";
 import {
   Alert,
@@ -11,17 +11,17 @@ import {
 import React from "react";
 import FlowCanvas from "./GraphFlow/GraphFlow";
 export type TreeProps = {
-  project: Project;
+  tree: TreeType; // Changed
 };
 
-const Tree: React.FC<TreeProps> = ({ project }) => {
+const Tree: React.FC<TreeProps> = ({ tree }) => { // Changed
   const {
     data: graphData,
     isFetching: isGraphFetching,
     isLoading: isGraphLoading,
     isError: isGraphError,
     error: graphError,
-  } = useGetGraphQuery({ projectId: project.elementId! }, { skip: !project });
+  } = useGetGraphQuery({ treeId: tree.elementId! }, { skip: !tree }); // Changed
 
   if (isGraphFetching || isGraphLoading)
     return (
@@ -41,7 +41,7 @@ const Tree: React.FC<TreeProps> = ({ project }) => {
       <FlowCanvas
         initialNodes={graphData?.nodes ?? []}
         initialEdges={graphData?.edges ?? []}
-        project={project}
+        tree={tree} // Changed
       />
     </Container>
   );
