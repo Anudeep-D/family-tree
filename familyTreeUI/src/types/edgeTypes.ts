@@ -8,21 +8,38 @@ export enum Edges {
   BELONGS_TO = "BELONGS_TO",
 }
 
-export const edgeFieldTemplates = {
-  [Edges.MARRIED_TO]: {
-    label: "",
-  },
-  [Edges.PARENT_OF]: {
-    label: "",
-  },
-  [Edges.BELONGS_TO]: {
-    label: "",
-  },
-} as const;
+export type EdgeField = {
+  readonly name: string;
+  readonly label: string;
+  readonly type: "string" | "date" | "boolean" | readonly string[];
+  readonly required: boolean;
+  readonly default?: string | boolean | Date | readonly string[] | undefined;
+};
+
+export type EdgeFieldsCollection = {
+  readonly [K in Edges]: readonly EdgeField[];
+};
+
+export const edgeFieldTemplates: EdgeFieldsCollection = {
+  [Edges.MARRIED_TO]: [
+    { name: "dateOfMarriage", label: "Date of Marriage", type: "date", required: false, default: undefined },
+    { name: "location", label: "Location", type: "string", required: false, default: "" },
+    { name: "status", label: "Status", type: ["married", "divorced", "separated"], required: false, default: "married" } 
+  ],
+  [Edges.PARENT_OF]: [
+    { name: "relationshipType", label: "Relationship Type", type: ["biological", "adopted", "step-parent"], required: false, default: "biological" }
+  ],
+  [Edges.BELONGS_TO]: [
+    { name: "since", label: "Member Since", type: "date", required: false, default: undefined }
+  ],
+};
+
+export type EdgeData = Record<string, string | number | boolean | Date | undefined | null>;
 
 export type EdgeDataMap = {
-  [K in Edges]: (typeof edgeFieldTemplates)[K];
+  [K in Edges]: EdgeData; // This could be refined further based on the actual fields in edgeFieldTemplates
 };
+
 export const edgeTypes = {
   [Edges.MARRIED_TO]: MarriageEdge,
   [Edges.PARENT_OF]: ParentEdge,

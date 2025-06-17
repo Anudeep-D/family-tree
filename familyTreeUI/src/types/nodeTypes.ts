@@ -6,6 +6,18 @@ export enum Nodes {
   House = "House",
 }
 
+// Definition for a single field in the metadata
+export type NodeFieldDefinition = {
+  readonly name: string;
+  readonly label: string;
+  readonly type: "string" | "date" | "boolean" | readonly string[];
+  readonly required: boolean;
+  readonly default?: string | boolean | Date | undefined; // Note: readonly string[] for default if type is readonly string[] might be needed if such defaults exist. Currently, 'gender' default is "male" (string).
+};
+
+// This type can be used to ensure nodeFieldsMetadata conforms to a structure where each Node type maps to an array of NodeFieldDefinition.
+// However, 'as const' provides stronger literal typing for 'type' and 'name' which is beneficial.
+// NodeDialog.tsx will use NodeFieldDefinition to type the iterated 'field'.
 export const nodeFieldsMetadata = {
   [Nodes.Person]: [
     {

@@ -17,10 +17,10 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
         {data.dob && (
           <div
             className={`commonlook green`}
-          >{`DOB: ${data.dob.getDate()}`}</div>
+          >{`DOB: ${data.dob}`}</div>
         )}
         {data.doe && (
-          <div className={`commonlook red`}>{`DOE: ${data.doe.getDate()}`}</div>
+          <div className={`commonlook red`}>{`DOE: ${data.doe}`}</div>
         )}
         {data.qualification && (
           <div className={`commonlook`}>{data.qualification}</div>

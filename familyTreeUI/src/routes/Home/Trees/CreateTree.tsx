@@ -15,6 +15,7 @@ import {
   Autocomplete,
   CircularProgress,
   Alert,
+  FormHelperText, // Added
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useEffect, useMemo, useState } from "react";
@@ -38,6 +39,7 @@ const CreateTree = ({ open, onClose }: Props) => { // Changed
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [users, setUsers] = useState<AssignedUser[]>([]);
+  const [errors, setErrors] = useState<Record<string, string | string[]>>({}); // Added errors state
   const [callAddUsers, setCallAddUsers] = useState(false);
   const navigate = useNavigate();
   const handleTreeSelection = (treeId: string) => { // Changed
@@ -94,10 +96,44 @@ const CreateTree = ({ open, onClose }: Props) => { // Changed
     setUsers(updated);
   };
 
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string | string[]> = {};
+    let isValid = true;
+
+    if (!name.trim()) {
+      newErrors.name = "Tree Name is required.";
+      isValid = false;
+    }
+
+    const userErrors: string[] = Array(users.length).fill('');
+    users.forEach((user, index) => {
+      if (!user.elementId) {
+        userErrors[index] = "User Email is required. " + (userErrors[index] || '');
+        isValid = false;
+      }
+      if (!user.role) { 
+        userErrors[index] = (userErrors[index] || '') + "User Role is required.";
+        isValid = false;
+      }
+    });
+    
+    if (userErrors.some(e => e !== '')) {
+       newErrors.users = userErrors;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
   const handleSubmit = () => {
+    if (!validateForm()) {
+      return;
+    }
     onSubmit({ name, description });
-    setName("");
-    setDescription("");
+    // Keep name and description, don't clear them here, 
+    // allow parent or success effect to handle clearing or closing.
+    // setName("");
+    // setDescription("");
     if (users.length === 0) {
       onClose();
     } else setCallAddUsers(true);
@@ -144,12 +180,17 @@ const CreateTree = ({ open, onClose }: Props) => { // Changed
         {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
         <TextField
           required
-          label="Tree Name" // Changed
+          label="Tree Name"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => {
+            setName(e.target.value);
+            if (errors.name) setErrors(prev => ({...prev, name: ''}));
+          }}
           fullWidth
           margin="normal"
-          disabled={isCreating && isAddingUsers}
+          disabled={isCreating || isAddingUsers} // Corrected loading state
+          error={!!errors.name}
+          helperText={errors.name as string}
         />
 
         <TextField
@@ -160,7 +201,7 @@ const CreateTree = ({ open, onClose }: Props) => { // Changed
           multiline
           rows={3}
           margin="normal"
-          disabled={isCreating && isAddingUsers}
+          disabled={isCreating || isAddingUsers} // Corrected loading state
         />
 
         <Box mt={3}>
@@ -181,7 +222,7 @@ const CreateTree = ({ open, onClose }: Props) => { // Changed
             users.map((user, index) => (
               <Box key={index} className="userRow">
                 <Autocomplete
-                  disabled={isCreating && isAddingUsers}
+                  disabled={isCreating || isAddingUsers} // Corrected loading state
                   options={allUsers}
                   getOptionLabel={(option) => option.email ?? "-"}
                   value={
@@ -193,21 +234,49 @@ const CreateTree = ({ open, onClose }: Props) => { // Changed
                       "elementId",
                       newValue?.elementId || ""
                     );
+                    if (errors.users && (errors.users as string[])[index]) {
+                      const newUserErrors = [...(errors.users as string[])];
+                      newUserErrors[index] = newUserErrors[index].replace("User Email is required. ", "").trim();
+                       if (newUserErrors[index] === "") newUserErrors[index] = ""; // Ensure empty string if all specific errors removed
+                      setErrors(prev => ({...prev, users: newUserErrors.every(err => err === "") ? [] : newUserErrors }));
+                    }
                   }}
                   renderInput={(params) => (
-                    <TextField required {...params} label="User Email" fullWidth />
+                    <TextField
+                      required
+                      {...params}
+                      label="User Email"
+                      fullWidth
+                      error={!!(errors.users && (errors.users as string[])[index]?.includes('Email'))}
+                      helperText={
+                        (errors.users && (errors.users as string[])[index]?.includes('Email'))
+                          ? (errors.users as string[])[index]
+                          : ''
+                      }
+                    />
                   )}
                   fullWidth
                 />
-                <FormControl className="roleSelect" required>
+                <FormControl 
+                  className="roleSelect" 
+                  required 
+                  error={!!(errors.users && (errors.users as string[])[index]?.includes('Role'))}
+                >
                   <InputLabel>Role</InputLabel>
                   <Select
                     value={user.role}
                     label="Role"
-                    onChange={(e) =>
-                      handleChangeUser(index, "role", e.target.value)
-                    }
-                    disabled={isCreating && isAddingUsers}
+                    onChange={(e) => {
+                      handleChangeUser(index, "role", e.target.value);
+                      if (errors.users && (errors.users as string[])[index]) {
+                        const newUserErrors = [...(errors.users as string[])];
+                        newUserErrors[index] = newUserErrors[index].replace("User Role is required.", "").trim();
+                        if (newUserErrors[index] === "") newUserErrors[index] = ""; // Ensure empty string if all specific errors removed
+                        setErrors(prev => ({...prev, users: newUserErrors.every(err => err === "") ? [] : newUserErrors }));
+                      }
+                    }}
+                    disabled={isCreating || isAddingUsers} // Corrected loading state
+                    error={!!(errors.users && (errors.users as string[])[index]?.includes('Role'))}
                   >
                     <MenuItem value="Admin">Admin</MenuItem>
                     <MenuItem value="Editor">Editor</MenuItem>
@@ -215,19 +284,22 @@ const CreateTree = ({ open, onClose }: Props) => { // Changed
                   </Select>
                 </FormControl>
                 <IconButton
-                  disabled={isCreating && isAddingUsers}
+                  disabled={isCreating || isAddingUsers} // Corrected loading state
                   onClick={() => handleRemoveUser(index)}
                 >
                   <CloseIcon />
                 </IconButton>
               </Box>
             ))}
+          {/* FormHelperText for overall user errors if not placing them per row */}
+          {typeof errors.users === 'string' && <FormHelperText error>{errors.users}</FormHelperText>}
+
           {allUsers && allUsers.length > 0 && (
             <Button
               onClick={handleAddUser}
               variant="outlined"
               className="addUserBtn"
-              disabled={isCreating && isAddingUsers}
+              disabled={isCreating || isAddingUsers} // Corrected loading state
             >
               + Add another user
             </Button>
@@ -235,16 +307,18 @@ const CreateTree = ({ open, onClose }: Props) => { // Changed
         </Box>
       </DialogContent>
       <DialogActions className="modalActions">
-        <Button disabled={isCreating && isAddingUsers} onClick={onClose}>
+        <Button disabled={isCreating || isAddingUsers} onClick={onClose}> {/* Corrected loading state */}
           Cancel
         </Button>
         <Button
           variant="contained"
           color="primary"
           onClick={handleSubmit}
-          loading={isCreating && isAddingUsers}
-          loadingPosition="start"
+          disabled={isCreating || isAddingUsers} // Ensure button is disabled during loading
+          // loading prop on MUI Button typically shows a spinner and handles disabled state
+          // but explicit disabled might be needed if not using standard loading indicators
         >
+          { (isCreating || isAddingUsers) && <CircularProgress size={24} sx={{ color: 'white', marginRight: 1 }} /> }
           Create
         </Button>
       </DialogActions>
