@@ -1,8 +1,8 @@
 import { type Edge, getBezierPath, type EdgeProps, BaseEdge, EdgeLabelRenderer } from "@xyflow/react";
-import { Edges } from "@/types/edgeTypes";
+import { EdgeDataMap, Edges } from "@/types/edgeTypes";
 import './RelationEdge.scss';
 
-export type BelongsEdge = Edge<{ label: string }, Edges.BELONGS_TO>;
+export type BelongsEdge = Edge<EdgeDataMap[Edges.BELONGS_TO], Edges.BELONGS_TO>;
 
 const BelongsEdge = ({
   id,
@@ -28,7 +28,7 @@ const BelongsEdge = ({
       <BaseEdge id={id} path={edgePath} className="edge-belongs" style={{ stroke: 'var(--belongs-stroke-color)', strokeWidth: 'var(--belongs-stroke-width)', strokeDasharray: 'var(--belongs-stroke-dasharray)' }} />
       <EdgeLabelRenderer>
         <div
-          className={`edge-label ${data?.label?.toLowerCase()}`}
+          className={`edge-label ${Edges.BELONGS_TO.toLowerCase()}`}
           style={{
             position: 'absolute',
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
@@ -40,7 +40,7 @@ const BelongsEdge = ({
             border: '1px solid #555',
           }}
         >
-          {data?.label ?? 'NA'}
+          {[Edges.BELONGS_TO]}
         </div>
       </EdgeLabelRenderer>
     </>

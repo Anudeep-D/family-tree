@@ -1,6 +1,7 @@
 import type { NodeTypes, Position, XYPosition } from "@xyflow/react";
 import PersonNode from "./Components/Nodes/PersonNode";
 import HouseNode from "./Components/Nodes/HouseNode";
+import { FromFieldList } from "./common";
 export enum Nodes {
   Person = "Person",
   House = "House",
@@ -108,37 +109,7 @@ export const nodeFieldsMetadata = {
     },
   ],
 } as const;
-type FieldTypeMap = {
-  string: string;
-  boolean: boolean;
-  date: Date;
-};
 
-type FieldDef = {
-  name: string;
-  type: keyof FieldTypeMap | readonly string[]; // Support for string enums
-  required: boolean;
-  label: string;
-  default: string | boolean | Date | undefined;
-};
-
-type FromFieldList<T extends readonly FieldDef[]> = {
-  [K in T[number] as K["required"] extends true
-    ? K["name"]
-    : never]: K["type"] extends readonly string[]
-    ? K["type"][number]
-    : K["type"] extends keyof FieldTypeMap
-    ? FieldTypeMap[K["type"]]
-    : never;
-} & {
-  [K in T[number] as K["required"] extends false
-    ? K["name"]
-    : never]?: K["type"] extends readonly string[]
-    ? K["type"][number]
-    : K["type"] extends keyof FieldTypeMap
-    ? FieldTypeMap[K["type"]]
-    : never;
-};
 
 export type NodeDataMap = {
   [Nodes.Person]: FromFieldList<(typeof nodeFieldsMetadata)[Nodes.Person]>;

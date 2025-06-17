@@ -1,8 +1,8 @@
 import { type Edge, getBezierPath, type EdgeProps, BaseEdge, EdgeLabelRenderer } from "@xyflow/react";
 import './RelationEdge.scss';
-import { Edges } from "@/types/edgeTypes";
+import { EdgeDataMap, Edges } from "@/types/edgeTypes";
 
-export type ParentEdge = Edge<{ label: string }, Edges.PARENT_OF>;
+export type ParentEdge = Edge<EdgeDataMap[Edges.PARENT_OF], Edges.PARENT_OF>;
 const ParentEdge = ({
   id,
   sourceX,
@@ -27,7 +27,7 @@ const ParentEdge = ({
       <BaseEdge id={id} path={edgePath} className="edge-parent" style={{ stroke: 'var(--parent-stroke-color)', strokeWidth: 'var(--parent-stroke-width)', strokeDasharray: 'var(--parent-stroke-dasharray)' }} />
       <EdgeLabelRenderer>
         <div
-          className={`edge-label ${data?.label?.toLowerCase()}`}
+          className={`edge-label ${Edges.BELONGS_TO.toLowerCase()}`}
           style={{
             position: 'absolute',
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
@@ -39,7 +39,7 @@ const ParentEdge = ({
             border: '1px solid #555',
           }}
         >
-          {data?.label ?? 'NA'}
+          {[Edges.BELONGS_TO]}
         </div>
       </EdgeLabelRenderer>
     </>

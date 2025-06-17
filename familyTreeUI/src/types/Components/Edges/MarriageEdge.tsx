@@ -1,9 +1,19 @@
-import { type Edge, getBezierPath, type EdgeProps, BaseEdge, EdgeLabelRenderer } from "@xyflow/react";
+import {
+  type Edge,
+  getBezierPath,
+  type EdgeProps,
+  BaseEdge,
+  EdgeLabelRenderer,
+} from "@xyflow/react";
 
-import './RelationEdge.scss';
-import { Edges } from "@/types/edgeTypes";
+import "./RelationEdge.scss";
+import { EdgeDataMap, Edges } from "@/types/edgeTypes";
+import dayjs from "dayjs";
 
-export type MarriageEdge = Edge<{ label: string }, Edges.MARRIED_TO>;
+export type MarriageEdge = Edge<
+  EdgeDataMap[Edges.MARRIED_TO],
+  Edges.MARRIED_TO
+>;
 const MarriageEdge = ({
   id,
   sourceX,
@@ -25,22 +35,32 @@ const MarriageEdge = ({
 
   return (
     <>
-      <BaseEdge id={id} path={edgePath} className="edge-marriage" style={{ stroke: 'var(--marriage-stroke-color)', strokeWidth: 'var(--marriage-stroke-width)' }} />
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        className="edge-marriage"
+        style={{
+          stroke: "var(--marriage-stroke-color)",
+          strokeWidth: "var(--marriage-stroke-width)",
+        }}
+      />
       <EdgeLabelRenderer>
         <div
-          className={`edge-label ${data?.label?.toLowerCase()}`}
+          className={`edge-label ${Edges.MARRIED_TO.toLowerCase()}`}
           style={{
-            position: 'absolute',
+            position: "absolute",
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
             fontSize: 12,
-            background: '#333',
-            padding: '2px 6px',
+            background: "#333",
+            padding: "2px 6px",
             borderRadius: 4,
-            color: '#fff',
-            border: '1px solid #555',
+            color: "#fff",
+            border: "1px solid #555",
           }}
         >
-          {data?.label ?? 'NA'}
+          {data?.dateOfMarriage
+            ? `married (${dayjs(data?.dateOfMarriage).format("DD-MMM-YYYY")})`
+            : [Edges.MARRIED_TO]}
         </div>
       </EdgeLabelRenderer>
     </>

@@ -3,6 +3,7 @@ import type { Node } from "@xyflow/react";
 import "./PersonNode.scss";
 import { NodeDataMap, Nodes } from "@/types/nodeTypes";
 import { useState } from "react"; // Import useState
+import dayjs from "dayjs";
 
 export type PersonNode = Node<NodeDataMap[Nodes.Person], Nodes.Person>;
 
@@ -17,10 +18,10 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
         {data.dob && (
           <div
             className={`commonlook green`}
-          >{`DOB: ${data.dob}`}</div>
+          >{`DOB: ${dayjs(data.dob).format('DD-MMM-YYYY')}`}</div>
         )}
         {data.doe && (
-          <div className={`commonlook red`}>{`DOE: ${data.doe}`}</div>
+          <div className={`commonlook red`}>{`DOE: ${dayjs(data.doe).format('DD-MMM-YYYY')}`}</div>
         )}
         {data.qualification && (
           <div className={`commonlook`}>{data.qualification}</div>
