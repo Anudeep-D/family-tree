@@ -12,8 +12,8 @@ import {
   Box,
   Typography,
 } from "@mui/material";
-import { nodeFieldTemplates, Nodes } from "@/types/nodeTypes";
-import { supabase, supaBucket } from "@/config/supabaseClient";
+import { Nodes, nodeFieldsMetadata } from "@/types/nodeTypes";
+import { supabase } from "@/config/supabaseClient";
 import { getImageUrl, uploadImage } from "@/routes/common/imageStorage";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -28,14 +28,6 @@ type NodeDialogProps = {
   initialData?: Record<string, any>; // Allow any for imageUrl
 };
 
-// Field configuration for each node type
-const nodeFields = Object.fromEntries(
-  Object.entries(nodeFieldTemplates).map(([key, value]) => [
-    key,
-    Object.keys(value),
-  ])
-) as Record<Nodes, string[]>;
-
 export const NodeDialog: React.FC<NodeDialogProps> = ({
   open,
   onClose,
@@ -46,10 +38,10 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
   nodeId,
 }) => {
   const { idToken } = useAuth();
-  const fields = nodeFields[type];
-  const [formState, setFormState] = useState<
-    Record<string, any> | undefined
-  >(initialData);
+  const fields = nodeFieldsMetadata[type];
+  const [formState, setFormState] = useState<Record<string, any> | undefined>(
+    initialData
+  );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
 
@@ -67,10 +59,10 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
 
   const signInWithGoogleToken = async () => {
     const { error } = await supabase.auth.signInWithIdToken({
-      provider: 'google',
+      provider: "google",
       token: idToken ?? "",
     });
-    if (error) console.error('Supabase sign-in failed:', error.message);
+    if (error) console.error("Supabase sign-in failed:", error.message);
   };
 
   const handleImageUpload = async () => {
@@ -81,12 +73,11 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
     setIsUploading(true);
     await signInWithGoogleToken();
     // Upsert true to overwrite if file with same name exists, useful for updates
-    const path= await uploadImage(selectedFile,treeId, nodeId );
-    if(!path)
-      setIsUploading(false);
+    const path = await uploadImage(selectedFile, treeId, nodeId);
+    if (!path) setIsUploading(false);
 
-    const publicUrl = await getImageUrl(treeId, nodeId );
-    console.log("publicUrl",publicUrl);
+    const publicUrl = await getImageUrl(treeId, nodeId);
+    console.log("publicUrl", publicUrl);
     setFormState((prev) => ({ ...prev, imageUrl: publicUrl }));
     setIsUploading(false);
     setSelectedFile(null); // Clear selected file after successful upload
@@ -114,7 +105,12 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
     }
     onSubmit(currentFormState ?? {});
   };
-
+  const getDefaultValueType = (type: Nodes, name: string) => {
+    const field = nodeFieldsMetadata[type].find(
+      (attribute) => attribute.name === name
+    );
+    return field?.default;
+  };
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
@@ -130,13 +126,17 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
             gap: 2,
           }}
         >
-          {fields?.map((key) => (
-            <Grid sx={{ gridColumn: "span 6" }} key={key}>
+          {fields?.map((field) => (
+            <Grid sx={{ gridColumn: "span 6" }} key={field.name}>
               <TextField
-                required={key === "name"}
-                label={key}
-                value={formState && formState[key] ? formState[key] : ""}
-                onChange={(e) => handleChange(key, e.target.value)}
+                required={field.required}
+                label={field.label}
+                value={
+                  formState && formState[field.name]
+                    ? formState[field.name]
+                    : getDefaultValueType(type, field.name)
+                }
+                onChange={(e) => handleChange(field.name, e.target.value)}
                 fullWidth
               />
             </Grid>
@@ -150,7 +150,11 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                 disabled={isUploading}
                 inputProps={{ accept: "image/*" }} // Suggest only image files
               />
-              {isUploading && <Typography variant="body2" sx={{mt: 1}}>Uploading image...</Typography>}
+              {isUploading && (
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  Uploading image...
+                </Typography>
+              )}
               {/* Display current image or preview */}
               {formState?.imageUrl && !selectedFile && (
                 <Box mt={1}>
@@ -168,7 +172,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                   />
                 </Box>
               )}
-               {selectedFile && (
+              {selectedFile && (
                 <Box mt={1}>
                   <Typography variant="caption">Image preview:</Typography>
                   <img

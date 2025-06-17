@@ -82,9 +82,16 @@
     color: #ccc; // Light grey for nickname
   }
 
-  .gender {
+  .commonlook {
     font-size: 0.8em;
     margin-top: 3px;
+
+    &.green {
+      color: #66bb6a; // Green
+    }
+    &.red {
+      color: #ef5350; // Red
+    }
   }
 
   .character {

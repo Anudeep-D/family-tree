@@ -1,4 +1,4 @@
-import { AppNode, nodeTypes, Nodes, nodeFieldTemplates } from "@/types/nodeTypes";
+import { AppNode, nodeTypes, Nodes } from "@/types/nodeTypes";
 import { Box, IconButton, Tooltip } from "@mui/material";
 // import { v4 as uuidv4 } from 'uuid'; // Removed uuid import
 import "./NodeButtons.scss";
@@ -125,9 +125,7 @@ export const NodeButtons: React.FC<NodeButtonsProps> = ({
           initialData={
             dialogMode === 'edit'
               ? editingNode?.data
-              : pendingNodeDrop
-              ? { ...nodeFieldTemplates[pendingNodeDrop.type], imageUrl: "" } // Provide default for new, including imageUrl
-              : { imageUrl: "" }
+              : {}
           }
           onSubmit={handleDialogSubmit}
           treeId={treeId}

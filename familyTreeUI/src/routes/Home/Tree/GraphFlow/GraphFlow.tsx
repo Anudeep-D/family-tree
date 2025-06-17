@@ -1,6 +1,7 @@
 import { AppEdge, Edges, edgeTypes } from "@/types/edgeTypes";
 import { AppNode, Nodes, nodeTypes } from "@/types/nodeTypes";
 import { getLayoutedElements } from "@/utils/layout";
+import { useUpdateGraphMutation } from "@/redux/queries/graph-endpoints"; // Path verified by ls
 import { Alert, Box } from "@mui/material";
 import {
   useNodesState,
@@ -25,6 +26,7 @@ import "./GraphFlow.scss";
 import { Tree } from "@/types/entityTypes";
 import { EdgeDialog } from "./EdgeDialog/EdgeDialog";
 import { Role } from "@/types/common";
+import { getDiff } from "@/utils/common";
 
 type GraphFlowProps = {
   initialNodes: AppNode[];
@@ -39,6 +41,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
 }) => {
   const isViewer = tree.access === Role.Viewer;
   const [deleteTree, { isLoading: isDeleting, error: deleteError }] = useDeleteTreeMutation();
+  const [updateGraph, { isLoading: isSaving, error: saveError }] = useUpdateGraphMutation(); // Initialize mutation hook
   const navigate = useNavigate();
   const { nodes: initNodes, edges: initEdges } = getLayoutedElements(
     initialNodes,
@@ -160,8 +163,52 @@ const GraphFlow: FC<GraphFlowProps> = ({
     setEdges(prevEdges);
     setNodes(prevNodes);
   };
-  const handleSave = () => {
-    console.log("save");
+  const handleSave = async () => {
+    if (!tree || !tree.elementId) {
+      console.error("Tree ID not available for saving.");
+      // Consider setting a state to show an error message to the user
+      return;
+    }
+
+    const nodeDiff = getDiff(prevNodes, nodes);
+    const edgeDiff = getDiff(prevEdges, edges);
+
+    const diffPayload = {
+      addedNodes: nodeDiff.added,
+      updatedNodes: nodeDiff.updated,
+      deletedNodeIds: nodeDiff.removed.map(n => n.id),
+      addedEdges: edgeDiff.added,
+      updatedEdges: edgeDiff.updated,
+      deletedEdgeIds: edgeDiff.removed.map(e => e.id),
+    };
+
+    // Optional: Check if there are any changes before calling the API
+    const hasChanges = diffPayload.addedNodes?.length || 
+                       diffPayload.updatedNodes?.length || 
+                       diffPayload.deletedNodeIds?.length || 
+                       diffPayload.addedEdges?.length || 
+                       diffPayload.updatedEdges?.length || 
+                       diffPayload.deletedEdgeIds?.length;
+
+    if (!hasChanges) {
+      console.log("No changes to save.");
+      // Optionally, inform the user that there are no changes.
+      return;
+    }
+
+    console.log("Saving graph with diff:", diffPayload);
+
+    try {
+      await updateGraph({ treeId: tree.elementId, diff: diffPayload }).unwrap();
+      setPrevNodes(nodes); // Update the baseline for future diffs
+      setPrevEdges(edges); // Update the baseline for future diffs
+      console.log("Graph saved successfully!");
+      // Optionally, trigger a success toast/notification
+    } catch (err) {
+      console.error("Failed to save graph:", err);
+      // The `saveError` variable from the hook will also be populated.
+      // Optionally, trigger an error toast/notification
+    }
   };
   const handleDelete = async () => {
     if (!tree || !tree.elementId) {
@@ -185,9 +232,19 @@ const GraphFlow: FC<GraphFlowProps> = ({
           Failed to delete tree. Error: {JSON.stringify(deleteError)}
         </Alert>
       )}
+      {saveError && ( // Display save error
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Failed to save tree changes. Error: {JSON.stringify(saveError)}
+        </Alert>
+      )}
       {isDeleting && (
         <Alert severity="info" sx={{ mb: 2 }}>
-          Deleting
+          Deleting tree...
+        </Alert>
+      )}
+      {isSaving && ( // Display saving indicator
+        <Alert severity="info" sx={{ mb: 2 }}>
+            Saving changes...
         </Alert>
       )}
       <Box
@@ -252,7 +309,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
             handleReset={handleReset}
             handleSave={handleSave}
             handleDelete={handleDelete}
-            disabled={isDeleting}
+            disabled={isDeleting || isSaving} // Update disabled state
           />
         </ReactFlow>
       </Box>

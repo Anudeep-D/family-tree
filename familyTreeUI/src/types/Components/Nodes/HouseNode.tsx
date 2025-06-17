@@ -16,12 +16,9 @@ const HouseNode = ({ data }: NodeProps<HouseNode>) => {
       onMouseLeave={() => setIsHovered(false)} // Set isHovered to false on mouse leave
     >
       <strong>{data.name}</strong>
-      <div className="sigil">{data.sigil}</div>
-      <div className="words">"{data.words}"</div>
-      {isHovered && ( // Conditionally render extra content
+      {isHovered && data.homeTown && ( // Conditionally render extra content
         <>
-          <div className="hometown">🏡 {data.hometown}</div>
-          <div className="gods">🙏 {data.gods}</div>
+          <div className="hometown">🏡 {data.homeTown}</div>
         </>
       )}
 

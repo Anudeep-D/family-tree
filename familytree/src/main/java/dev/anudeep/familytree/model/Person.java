@@ -24,7 +24,6 @@ public class Person {
     private boolean isAlive;
     private Date dob;
     private Date doe;
-    private String photo;
     private String qualification;
     private String job;
     private String currLocation;

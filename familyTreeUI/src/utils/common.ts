@@ -20,15 +20,21 @@ export function getErrorMessage(
   }
 }
 
-export const getDiff = <T extends { id: string }>(prev: T[], current: T[]) => {
-  const prevMap = new Map(prev.map((item) => [item.id, item]));
+export const getDiff = <T extends { id: string; data?: Record<string, any> }>(
+  prev: T[],
+  current: T[]
+) => {
+  const prevMap = new Map(prev.map((item) => [item.id, item.data]));
   const currentMap = new Map(current.map((item) => [item.id, item]));
 
   const added = current.filter((item) => !prevMap.has(item.id));
   const removed = prev.filter((item) => !currentMap.has(item.id));
   const updated = current.filter((item) => {
     const prevItem = prevMap.get(item.id);
-    return prevItem && JSON.stringify(prevItem) !== JSON.stringify(item);
+    return (
+      prevItem &&
+      JSON.stringify(prevItem.data ?? {}) !== JSON.stringify(item.data ?? {})
+    );
   });
   return { added, removed, updated };
 };
