@@ -26,12 +26,8 @@ export const edgeFieldTemplates: EdgeFieldsCollection = {
     { name: "location", label: "Location", type: "string", required: false, default: "" },
     { name: "status", label: "Status", type: ["married", "divorced", "separated"], required: false, default: "married" } 
   ],
-  [Edges.PARENT_OF]: [
-    { name: "relationshipType", label: "Relationship Type", type: ["biological", "adopted", "step-parent"], required: false, default: "biological" }
-  ],
-  [Edges.BELONGS_TO]: [
-    { name: "since", label: "Member Since", type: "date", required: false, default: undefined }
-  ],
+  [Edges.PARENT_OF]: [],
+  [Edges.BELONGS_TO]: [],
 };
 
 export type EdgeData = Record<string, string | number | boolean | Date | undefined | null>;

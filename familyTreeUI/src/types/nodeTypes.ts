@@ -71,10 +71,10 @@ export const nodeFieldsMetadata = {
     },
     {
       name: "isAlive",
-      type: "boolean",
+      type: ["Yes", "No"],
       required: false,
       label: "Is alive?",
-      default: true,
+      default: "Yes",
     },
     {
       name: "doe",
