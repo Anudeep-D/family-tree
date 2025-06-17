@@ -71,6 +71,13 @@ export const nodeFieldsMetadata = {
       default: undefined,
     },
     {
+      name: "imageUrl",
+      type: "string",
+      required: false,
+      label: "Image URL",
+      default: undefined,
+    },
+    {
       name: "isAlive",
       type: ["Yes", "No"],
       required: false,
@@ -82,13 +89,6 @@ export const nodeFieldsMetadata = {
       type: "date",
       required: false,
       label: "Died on",
-      default: undefined,
-    },
-    {
-      name: "imageUrl",
-      type: "string",
-      required: false,
-      label: "Image URL",
       default: undefined,
     },
   ],
