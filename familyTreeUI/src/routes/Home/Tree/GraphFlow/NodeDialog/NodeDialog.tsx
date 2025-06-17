@@ -480,7 +480,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
         {!imgSrc && <Typography>No image selected or an error occurred.</Typography>}
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
-        <Button variant="outlined" onClick={handleCropCancel}>
+        <Button variant="text" onClick={handleCropCancel}>
           Cancel
         </Button>
         <Button variant="contained" onClick={handleCropConfirm} disabled={!completedCrop || !imgSrc}>
