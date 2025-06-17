@@ -24,7 +24,7 @@ const ParentEdge = ({
 
   return (
     <>
-      <BaseEdge id={id} path={edgePath} className="edge-parent" style={{ stroke: 'var(--parent-stroke-color)', strokeWidth: 'var(--parent-stroke-width)', strokeDasharray: 'var(--parent-stroke-dasharray)' }} />
+      <BaseEdge id={id} path={edgePath} className={`edge-${Edges.PARENT_OF.toLowerCase()}`} style={{ stroke: 'var(--parent-stroke-color)', strokeWidth: 'var(--parent-stroke-width)', strokeDasharray: 'var(--parent-stroke-dasharray)' }} />
       <EdgeLabelRenderer>
         <div
           className={`edge-label ${Edges.BELONGS_TO.toLowerCase()}`}
@@ -39,7 +39,7 @@ const ParentEdge = ({
             border: '1px solid #555',
           }}
         >
-          {[Edges.BELONGS_TO]}
+          {[Edges.PARENT_OF]}
         </div>
       </EdgeLabelRenderer>
     </>

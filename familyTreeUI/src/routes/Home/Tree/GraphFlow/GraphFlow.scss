@@ -1,0 +1,26 @@
+@keyframes dashdraw {
+  from {
+    stroke-dashoffset: 20; // Adjusted for a potentially shorter dash effect initially
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.belongs-to-edge .react-flow__edge-path {
+  stroke-dasharray: 5 5 !important; // Defines a dash pattern (5 units on, 5 units off)
+  animation: dashdraw 5s linear infinite  !important; // Adjusted duration for a slower, more subtle animation
+  stroke: #d58e8e  !important; // Ensure the animated edge has the same color as the arrow
+}
+
+// Optional: Style for other edge types if needed, or ensure default styles are adequate
+// For example, to ensure non-animated edges also have a visible color:
+// .react-flow__edge-path {
+//   stroke: #b1b1b7; // Default React Flow edge color, adjust if your theme is different
+//   stroke-width: 1;
+// }
+
+// Ensure the marker color matches the edge color if not inheriting
+// .react-flow__marker path {
+//   fill: #d58e8e; // Or use a variable if defined
+// }

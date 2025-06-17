@@ -38,7 +38,7 @@ const MarriageEdge = ({
       <BaseEdge
         id={id}
         path={edgePath}
-        className="edge-marriage"
+        className={`edge-${Edges.MARRIED_TO.toLowerCase()}`}
         style={{
           stroke: "var(--marriage-stroke-color)",
           strokeWidth: "var(--marriage-stroke-width)",

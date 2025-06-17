@@ -12,6 +12,7 @@ import {
   ReactNode,
   useCallback,
 } from "react";
+import { supabase } from "@/config/supabaseClient"; // Import supabase client
 
 // Define the new SessionData interface
 interface SessionData {
@@ -74,18 +75,31 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
       setIdToken(currentSessionUser.idToken || null);
       setLocalIsAuthenticated(true);
       setLocalIsLoading(false);
+      // Attempt to refresh the Supabase client's session
+      // This is useful if auth is primarily cookie-based and the client needs to sync.
+      supabase.auth.refreshSession().then(({ error }) => {
+        if (error) {
+          console.error("Error refreshing Supabase session:", error.message);
+        } else {
+          console.log("Supabase session refreshed successfully after user session update.");
+        }
+      });
     } else if (sessionError) {
       console.error("Session fetch error:", sessionError);
       setLocalUser(null);
       setIdToken(null);
       setLocalIsAuthenticated(false);
       setLocalIsLoading(false);
+      // Also clear Supabase session on error
+      supabase.auth.signOut().catch(err => console.error("Error signing out Supabase session on error:", err.message));
     } else {
       // This case handles when sessionUser is null and no error (e.g., initial state or after logout)
       setLocalUser(null);
       setIdToken(null);
       setLocalIsAuthenticated(false);
       setLocalIsLoading(false); // Ensure loading is set to false
+      // Clear Supabase session when local session is cleared (e.g., after logout)
+      supabase.auth.signOut().catch(err => console.error("Error signing out Supabase session on logout:", err.message));
     }
   }, [sessionUser, sessionError, isInitialSessionLoading, isSessionFetching, contextIsLoading]);
 
@@ -93,18 +107,34 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
     async (googleCredentialToken: string) => {
       try {
         setLocalIsLoading(true);
-        // Expect User object directly from the mutation, backend sets HttpOnly cookie
         const user = await rtkLoginWithGoogle(
           googleCredentialToken as any
         ).unwrap();
 
-        // HttpOnly cookie is set by the backend and handled by the browser
-
-        setLocalUser(user); // Set user from the direct response
+        setLocalUser(user); 
         setLocalIsAuthenticated(true);
-        setIdToken(googleCredentialToken);
+        setIdToken(googleCredentialToken); // This might be the Google ID token
         setLocalIsLoading(false);
-        await refetchSession();
+        await refetchSession(); // This will trigger the useEffect above, which now calls refreshSession
+        
+        // Explicitly try to get the new session for Supabase after login and refetch
+        // This ensures the client syncs up if cookies were updated.
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+            console.error("Error getting Supabase session post-login:", error.message);
+        } else if (session) {
+            console.log("Supabase client session established post-login:", session);
+            // If your backend provides a direct Supabase access token with the user object,
+            // you could use supabase.auth.setSession here.
+            // e.g., if user.supabaseAccessToken and user.supabaseRefreshToken are available:
+            // await supabase.auth.setSession({
+            //   access_token: user.supabaseAccessToken,
+            //   refresh_token: user.supabaseRefreshToken,
+            // });
+        } else {
+            console.log("No active Supabase session found post-login by getSession, relying on refreshSession in useEffect.");
+        }
+
       } catch (error) {
         console.error("Login failed via RTK query:", error);
         setLocalUser(null);
@@ -129,7 +159,8 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
       setLocalIsAuthenticated(false);
       setIdToken(null);
       setLocalIsLoading(false);
-      await refetchSession();
+      // refetchSession will be called, which in turn will call supabase.auth.signOut() in the useEffect
+      await refetchSession(); 
     }
   }, [rtkLogout, refetchSession]);
 
