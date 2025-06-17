@@ -15,6 +15,7 @@ import {
   ReactFlowProvider,
   useReactFlow,
   XYPosition,
+  MarkerType, // Added MarkerType
 } from "@xyflow/react";
 import { FC, useCallback, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +28,9 @@ import { Tree } from "@/types/entityTypes";
 import { EdgeDialog } from "./EdgeDialog/EdgeDialog";
 import { Role } from "@/types/common";
 import { getDiff } from "@/utils/common";
+
+// Define defaultMarker outside the component if it's static, or inside if it depends on props/theme
+const defaultMarker = { type: MarkerType.ArrowClosed, width: 20, height: 20, color: '#555' };
 
 type GraphFlowProps = {
   initialNodes: AppNode[];
@@ -43,24 +47,29 @@ const GraphFlow: FC<GraphFlowProps> = ({
   const [deleteTree, { isLoading: isDeleting, error: deleteError }] = useDeleteTreeMutation();
   const [updateGraph, { isLoading: isSaving, error: saveError }] = useUpdateGraphMutation(); // Initialize mutation hook
   const navigate = useNavigate();
-  const { nodes: initNodes, edges: initEdges } = getLayoutedElements(
+
+  // Process initialEdges to add markers and classNames
+  const edgesWithMarkers = initialEdges.map(edge => ({
+    ...edge,
+    markerEnd: defaultMarker,
+    // Assuming Edges.BelongsTo is the correct enum member or string literal for the type
+    ...(edge.type === Edges.BELONGS_TO && { className: 'belongs-to-edge' }), 
+  }));
+
+  const { nodes: initNodes, edges: initEdgesWithMarkers } = getLayoutedElements(
     initialNodes,
-    initialEdges
+    edgesWithMarkers // Use the processed edges
   );
+  
   const [nodes, setNodes, onNodesChange] = useNodesState(initNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initEdges);
+  // Initialize useEdgesState with edges that have markers and classNames
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initEdgesWithMarkers); 
+  
   const [prevNodes, setPrevNodes] = useState<AppNode[]>(initNodes);
-  const [prevEdges, setPrevEdges] = useState<AppEdge[]>(initEdges);
+  // Initialize prevEdges with edges that have markers and classNames
+  const [prevEdges, setPrevEdges] = useState<AppEdge[]>(initEdgesWithMarkers); 
   const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
   const { screenToFlowPosition } = useReactFlow();
-  const onConnect: OnConnect = useCallback(
-    (connection) => {
-      console.log(connection);
-      setNewEdge({ id: `${Date.now()}-new`, ...connection });
-      setEdgeDialogMode("new");
-    },
-    [setEdges]
-  );
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
@@ -127,6 +136,20 @@ const GraphFlow: FC<GraphFlowProps> = ({
   );
   const [newEdge, setNewEdge] = useState<AppEdge | undefined>(undefined);
 
+    const onConnect: OnConnect = useCallback(
+    (connection) => {
+      console.log(connection);
+      setNewEdge({ 
+        id: `${Date.now()}-new-pending`, // Temporary ID for the pending edge
+        ...connection, 
+        markerEnd: defaultMarker // Add default marker to the edge being templated
+      });
+      setEdgeDialogMode("new");
+    },
+    // defaultMarker is a const, not reactive. Add other state setters if they are used directly.
+    [setNewEdge, setEdgeDialogMode] 
+  );
+
   const onEdgeDialogClose = () => {
     setEdgeDialogMode(undefined);
     setEditingEdge(undefined);
@@ -134,30 +157,44 @@ const GraphFlow: FC<GraphFlowProps> = ({
   };
 
   const handleEdgeSubmit = (type: Edges, data: Record<string, string>) => {
+    let currentEdge: AppEdge;
     if (edgeDialogMode === "edit") {
-      const currentEdge: AppEdge = {
-        ...editingEdge!,
-        type: type,
+      // editingEdge is the state holding the edge being edited
+      if (!editingEdge) return; // Should not happen if dialog is in edit mode
+
+      currentEdge = {
+        ...editingEdge, // Spread existing properties like id, source, target
+        type: type,    // Update type from dialog
         data: {
-          ...editingEdge!.data,
+          ...editingEdge.data,
           ...data,
         },
+        markerEnd: defaultMarker, // Ensure marker is present/updated
+        // Update className based on the potentially changed type
+        className: type === Edges.BELONGS_TO ? 'belongs-to-edge' : '', 
       };
       setEdges((eds) =>
-        eds.map((edge) => (edge.id === currentEdge?.id ? currentEdge : edge))
+        eds.map((edge) => (edge.id === currentEdge.id ? currentEdge : edge))
       );
-    }
-    if (edgeDialogMode === "new") {
-      console.log(newEdge);
-      const currentEdge: AppEdge = newEdge!;
-      currentEdge.type = type;
-      currentEdge.id = `${newEdge!.type}-${Date.now()}-new`;
-      currentEdge.data = { ...newEdge!.data, ...data };
-      setEdges((eds) => addEdge(currentEdge!, eds));
+    } else if (edgeDialogMode === "new") { 
+      // newEdge is the state holding the connection info from onConnect
+      if (!newEdge) return; // Should not happen
+
+      currentEdge = {
+        ...newEdge, // Spread connection (source, target, sourceHandle, targetHandle) and existing markerEnd
+        type: type,  // Set type from dialog
+        // Generate a more robust ID for the new edge
+        id: `${type}-${newEdge.sourceHandle}-${newEdge.targetHandle}-${Date.now()}`, 
+        data: { ...newEdge.data, ...data }, // Add data from dialog
+        // Ensure markerEnd is there (it should be from newEdge set in onConnect)
+        markerEnd: newEdge.markerEnd || defaultMarker, 
+        className: type === Edges.BELONGS_TO ? 'belongs-to-edge' : '',
+      };
+      setEdges((eds) => addEdge(currentEdge, eds)); // Use addEdge utility
     }
     onEdgeDialogClose();
   };
-
+  
   //Core actions
   const handleReset = () => {
     setEdges(prevEdges);

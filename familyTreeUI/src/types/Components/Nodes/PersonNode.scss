@@ -24,6 +24,7 @@
     width: 100%;
     height: 100%;
     z-index: 1; // Above background image, below handles if any conflict
+    position: relative; // Make .node-content a positioning context for the name
   }
 
   &.deceased {
@@ -39,11 +40,24 @@
 
     .person-name-on-image {
       font-weight: bold;
-      font-size: 1.2em;
-      padding: 2px 5px;
-      background-color: rgba(0, 0, 0, 0.5); // Semi-transparent background for readability
-      border-radius: 3px;
-      z-index: 2; // Ensure it's above the image but below overlay on hover
+      font-size: 0.9em; // Reduced font size (adjust as needed)
+      padding: 3px 8px; // Slightly adjust padding if desired
+      background-color: rgba(0, 0, 0, 0.6); // Slightly darker for better contrast maybe
+      border-radius: 4px; // Adjust if needed
+      z-index: 2;
+      
+      // New positioning styles
+      position: absolute;
+      bottom: 8px; // Position from the bottom of .node-content
+      left: 50%;
+      transform: translateX(-50%);
+      width: auto; // Allow width to be determined by content
+      min-width: 50%; // Prevent it from becoming too small
+      max-width: 90%; // Prevent it from overflowing too much if name is long
+      text-align: center;
+      white-space: nowrap; // Prevent name from wrapping if too long, ellipsis might be an option too
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .details-overlay {
@@ -63,6 +77,21 @@
       z-index: 3; // Highest z-index
       opacity: 0;
       transition: opacity 0.3s ease;
+      // Add overflow handling if content might exceed node dimensions
+      overflow-y: auto; // Allow scrolling if content overflows vertically
+      max-height: 95%;  // Ensure it doesn't exceed the parent's height
+      
+      // Improve scrollbar appearance for webkit browsers if overflow-y is active
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+      &::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+      }
+      &::-webkit-scrollbar-track {
+        background: transparent;
+      }
     }
 
     &.hovered {
@@ -76,6 +105,41 @@
     }
   }
 
+  // Overlay styles (common for both has-image and no-image scenarios if overlay is used in both)
+  // Current provided SCSS shows .details-overlay only within .has-image.
+  // If it can appear on non-image nodes when hovered, these styles should be more general.
+  // Assuming .details-overlay is the primary container for hovered details:
+
+  .details-overlay { 
+    // Styles for the overlay box itself (e.g., background, padding) are already defined.
+    // Add/override styles for text elements *specifically within* the overlay.
+    
+    strong { // Typically the person's name
+      font-size: 1em; // Adjust as needed, e.g., slightly larger than other details
+      display: block; // Ensure it takes its own line if not already
+      margin-bottom: 4px; // Add some space below the name
+    }
+
+    .nickname {
+      font-size: 0.75em; // Reduced from 0.85em
+      color: #bbb;     // Slightly adjust color if needed
+      margin-bottom: 2px;
+    }
+
+    .commonlook {
+      font-size: 0.7em;  // Reduced from 0.8em
+      margin-top: 2px;   // Slightly reduce margin
+      line-height: 1.3;  // Adjust line height for better readability of smaller text
+    }
+    
+    // If there are other specific classes for text within details-overlay, style them similarly.
+    // For example, if .character is used:
+    // .character {
+    //   font-size: 0.7em; // Reduced
+    //   margin-top: 2px;
+    // }
+  }
+  
   // Styles for nodes WITHOUT an image (or common styles for text details)
   .nickname {
     font-size: 0.85em;

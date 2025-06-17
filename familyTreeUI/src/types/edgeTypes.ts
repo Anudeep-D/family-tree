@@ -1,4 +1,4 @@
-import type { EdgeTypes } from "@xyflow/react";
+import type { EdgeTypes, MarkerType } from "@xyflow/react";
 import MarriageEdge from "./Components/Edges/MarriageEdge";
 import ParentEdge from "./Components/Edges/ParentEdge";
 import BelongsEdge from "./Components/Edges/BelongsEdge";
@@ -45,5 +45,9 @@ export type AppEdge = {
   source: string;
   target: string;
   type?: string;
+  className?: string;
+  markerEnd?: {type: MarkerType, width: number, height: number, color: string};
+  sourceHandle?: string | null;
+  targetHandle?: string | null;
   data?: Record<string, any>;
 };

@@ -107,12 +107,53 @@ $color-disabled: #76797e;
   }
 }
 
+// Keyframes for the animated edge
+@keyframes dashdraw {
+  0% {
+    stroke-dashoffset: 1000; // Start with a large offset
+  }
+  100% {
+    stroke-dashoffset: 0;   // Animate to zero offset
+  }
+}
+
+// Style for the .react-flow__edge path itself might be too general.
+// Target the path within a .belongs-to-edge specifically.
+// React Flow typically renders edges with a structure like:
+// <g class="react-flow__edge react-flow__edge-{type} belongs-to-edge selectable animated">
+//   <path class="react-flow__edge-path" d="..." marker-end="..."></path>
+//   ... (optional label) ...
+// </g>
+
+.react-flow__edge.belongs-to-edge {
+  path.react-flow__edge-path {
+    stroke-dasharray: 5; // Defines the pattern of dashes and gaps (e.g., 5px dash, 5px gap)
+    animation: dashdraw 30s linear infinite; // Apply the animation
+    // Adjust animation duration (e.g., 30s) and timing function (linear) as needed.
+    // stroke: #ff0073; // Optional: override color for animated edges if desired
+  }
+}
+
 // =========================
 // Handle Styles
 // =========================
 
 .react-flow__handle {
   background-color: var(--xy-handle-background-color-default);
+  // Add new/override existing properties for size
+  width: 14px !important;  // Increased size
+  height: 14px !important; // Increased size
+  border-radius: 50% !important; // Ensure it remains circular if that's the design
+  // border-width: 2px !important; // Optional: increase border width if desired
+
+  // Default React Flow handles are often positioned using top, left, right, bottom and transform.
+  // E.g., a right handle: top: 50%; right: 0; transform: translate(50%, -50%);
+  // The transform helps center it. If the library's default transform assumes a certain size,
+  // overriding width/height with !important should be okay, but visual check is good.
+  // The library might also use CSS variables for handle size, e.g., --xy-handle-size.
+  // If such a variable exists and is used by the library for width/height/positioning,
+  // overriding that variable would be cleaner than using !important.
+  // For now, direct override with !important is the most straightforward approach.
 
   &.connectionindicator {
     &:hover {

@@ -276,13 +276,20 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
 
               let inputComponent;
               if (field.type === "string") {
+                // Ensure displayValue is always a string for TextField's value prop
+                const displayValue = value ?? ''; 
+                // Determine if the field has a meaningful value to make the label shrink
+                const hasValue = displayValue !== ''; 
+
                 inputComponent = (
                   <TextField
-                    {...commonProps}
+                    {...commonProps} // Contains label, error, helperText
                     required={field.required}
-                    value={value}
+                    value={displayValue}
                     onChange={(e) => handleChange(field.name, e.target.value)}
                     fullWidth
+                    // Explicitly control label shrink behavior.
+                    InputLabelProps={{ shrink: hasValue }} 
                   />
                 );
               } else if (field.type === "boolean") {
@@ -322,7 +329,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                   <FormControl fullWidth required={field.required} error={!!errors[field.name]}>
                     <InputLabel>{field.label}</InputLabel>
                     <Select
-                      value={value}
+                      value={value ?? ''}
                       label={field.label}
                       onChange={(e) => handleChange(field.name, e.target.value)}
                     >
