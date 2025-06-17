@@ -5,6 +5,7 @@ import { NodeDataMap, Nodes } from "@/types/nodeTypes";
 import { useState, useEffect } from "react"; // Import useEffect
 import dayjs from "dayjs";
 import { useAuth } from "@/hooks/useAuth"; // Import useAuth
+import { getImage } from "@/routes/common/imageStorage";
 
 export type PersonNode = Node<NodeDataMap[Nodes.Person], Nodes.Person>;
 
@@ -12,26 +13,24 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
   const [isHovered, setIsHovered] = useState(false);
   const { user } = useAuth(); // Get user object from useAuth
 
-  const [imageUrlToDisplay, setImageUrlToDisplay] = useState<string | undefined>(undefined);
+  const [imageUrlToDisplay, setImageUrlToDisplay] = useState<
+    string | undefined
+  >(undefined);
 
   useEffect(() => {
     if (data.imageUrl) {
-      try {
-        const url = new URL(data.imageUrl);
-        // Use user.id if available and non-empty, otherwise fallback to current time as a simple bust key.
-        // This assumes `user` object is updated when auth state changes.
-        const bustKey = user?.id ? user.id : new Date().getTime().toString();
-        url.searchParams.set('v', bustKey);
-        setImageUrlToDisplay(url.toString());
-      } catch (e) {
-        // If data.imageUrl is not a valid URL, use it as is.
-        console.error("Error creating URL for cache busting:", e);
-        setImageUrlToDisplay(data.imageUrl);
-      }
+      const urlPromise = getImage(data.imageUrl);
+      urlPromise
+        .then((url) => setImageUrlToDisplay(url ?? undefined))
+        .catch((e) => {
+          // If data.imageUrl is not a valid URL, use it as is.
+          console.error("Error creating URL for cache busting:", e);
+          setImageUrlToDisplay(data.imageUrl);
+        });
     } else {
       setImageUrlToDisplay(undefined);
     }
-  }, [data.imageUrl, user]); // Re-run if imageUrl or user changes
+  }, [data.imageUrl]); // Re-run if imageUrl or user changes
 
   const extraDetails = () => {
     return (
@@ -40,12 +39,14 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
         {data.nickName && <div className="nickname">({data.nickName})</div>}
         {data.gender && <div className="commonlook">{data.gender}</div>}
         {data.dob && (
-          <div
-            className={`commonlook green`}
-          >{`DOB: ${dayjs(data.dob).format('DD-MMM-YYYY')}`}</div>
+          <div className={`commonlook green`}>{`DOB: ${dayjs(data.dob).format(
+            "DD-MMM-YYYY"
+          )}`}</div>
         )}
         {data.doe && (
-          <div className={`commonlook red`}>{`DOE: ${dayjs(data.doe).format('DD-MMM-YYYY')}`}</div>
+          <div className={`commonlook red`}>{`DOE: ${dayjs(data.doe).format(
+            "DD-MMM-YYYY"
+          )}`}</div>
         )}
         {data.qualification && (
           <div className={`commonlook`}>{data.qualification}</div>
@@ -59,7 +60,8 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
   };
 
   // Use imageUrlToDisplay in rendering logic
-  if (imageUrlToDisplay) { // Check imageUrlToDisplay instead of data.imageUrl directly
+  if (imageUrlToDisplay) {
+    // Check imageUrlToDisplay instead of data.imageUrl directly
     console.log("imageUrlToDisplay", imageUrlToDisplay);
     return (
       <div

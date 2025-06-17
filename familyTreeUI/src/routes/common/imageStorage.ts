@@ -23,3 +23,10 @@ export const getImageUrl = async (treeId: string, fileName: string ) => {
     .createSignedUrl(`trees/${encodeURIComponent(treeId)}/${encodeURIComponent(fileName)}`, 60*60);
   return data?.signedUrl ?? null;
 };
+
+export const getImage = async (url: string ) => {
+  const { data } = await supabase.storage
+    .from(supaBucket)
+    .createSignedUrl(url, 60*60);
+  return data?.signedUrl ?? null;
+};
