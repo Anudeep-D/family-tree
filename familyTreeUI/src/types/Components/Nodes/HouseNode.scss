@@ -1,31 +1,49 @@
 .house-node {
-  padding: 20px; /* Increased padding for better content fit */
+  padding: 8px;
   background: #1e88e5;
   color: white;
-  border-radius: 50%; /* Make it circular */
-  width: 170px; /* Fixed width */
-  height: 170px; /* Fixed height, equal to width */
-  display: flex; /* For centering content */
-  flex-direction: column; /* Stack content vertically */
-  justify-content: center; /* Center content vertically */
-  align-items: center; /* Center content horizontally */
+  border-radius: 15px; // Less circular, more squared with rounded corners
+  width: 120px; 
+  min-height: 50px; 
+  display: flex; 
+  flex-direction: column; 
+  justify-content: center; 
+  align-items: center; 
   text-align: center;
   border: 2px solid #90caf9;
-  transition: height 0.3s ease; /* Smooth transition for height changes */
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, height 0.3s ease;
+  font-size: 0.9em;
+
+  strong {
+    font-size: 1.1em; // Make name slightly larger relative to other text
+    margin-bottom: 4px; // Add some space if hometown is not shown
+  }
 
   .sigil {
     font-style: italic;
-    font-size: 0.85em;
+    font-size: 0.8em; // Adjusted
+    font-size: 0.85em; // Keep if sigil is used, or adjust if needed
   }
 
   .words {
-    font-size: 0.9em;
-    margin-top: 4px;
+    font-size: 0.85em; // Adjusted
+    margin-top: 3px; // Adjusted
     font-weight: bold;
   }
 
-  .hometown, .gods {
-    font-size: 0.75em;
-    margin-top: 5px; /* Add margin for spacing */
+  // .hometown is now displayed in Popover, so specific styling here might be redundant
+  // unless you want to style the trigger or have other elements with this class.
+  // For this task, we assume .hometown text is only in Popover.
+  .hometown, 
+  .gods { // Assuming .gods might still be used directly in node
+    font-size: 0.7em; // Adjusted
+    margin-top: 4px; // Adjusted
+  }
+
+  &.house-node-hoverable {
+    &:hover {
+      transform: scale(1.08);
+      box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.2);
+    }
   }
 }

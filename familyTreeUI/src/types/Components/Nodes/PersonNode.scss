@@ -1,6 +1,7 @@
 .person-node {
   // Common styles for all person nodes
   padding: 10px; // Adjusted padding
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   border-radius: 50%;
   width: 150px;
   height: 150px;
@@ -192,5 +193,12 @@
   // Ensure handles are visible on top of everything if not already
   .react-flow__handle {
     z-index: 10;
+  }
+
+  &.person-node-hoverable {
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+    }
   }
 }
