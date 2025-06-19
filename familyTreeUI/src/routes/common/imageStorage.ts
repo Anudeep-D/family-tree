@@ -17,6 +17,22 @@ export const uploadImage = async (
   return data.path;
 };
 
+export const uploadImageWithUrl = async (
+  file: File,
+  url: string
+) => {
+  const { data, error } = await supabase.storage
+    .from(supaBucket)
+    .upload(url, file, { cacheControl: '3600', upsert: true });
+
+  if (error) {
+      console.error("Error uploading image:", error);
+      // Optionally, inform the user about the error
+      return null;
+    }
+  return data.path;
+};
+
 export const getImageUrl = async (treeId: string, fileName: string ) => {
   const { data } = await supabase.storage
     .from(supaBucket)

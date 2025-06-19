@@ -62,7 +62,6 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
   // Use imageUrlToDisplay in rendering logic
   if (imageUrlToDisplay) {
     // Check imageUrlToDisplay instead of data.imageUrl directly
-    console.log("imageUrlToDisplay", imageUrlToDisplay);
     return (
       <div
         className={`person-node ${

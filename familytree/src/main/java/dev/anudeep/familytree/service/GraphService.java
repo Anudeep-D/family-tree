@@ -42,7 +42,7 @@ public class GraphService {
         String cypher = String.format("""
             MATCH (n:Person)-[:%s]->(proj:Tree)
             WHERE elementId(proj) = $treeId
-            OPTIONAL MATCH (n)-[r:%s|%s|%s]->(m)
+            OPTIONAL MATCH (m)-[r:%s|%s|%s]->(n)
             RETURN n, r, m
             """,Constants.PART_OF,Constants.MARRIED_REL, Constants.PARENT_REL, Constants.BELONGS_REL);
         log.info("Cypher to get the full graph: \n {}", cypher);

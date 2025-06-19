@@ -1,5 +1,5 @@
 // NodeDialog.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -32,7 +32,12 @@ import {
   NodeFieldDefinition,
 } from "@/types/nodeTypes"; // Import NodeFieldDefinition
 import { supabase } from "@/config/supabaseClient";
-import { getImageUrl, uploadImage } from "@/routes/common/imageStorage";
+import {
+  getImage,
+  getImageUrl,
+  uploadImage,
+  uploadImageWithUrl,
+} from "@/routes/common/imageStorage";
 import { useAuth } from "@/hooks/useAuth";
 import CropperDialog from "./CropperDialog";
 
@@ -158,7 +163,10 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
     }
     setIsUploading(true);
     await signInWithGoogleToken(); // Ensure session is active
-    const path = await uploadImage(croppedFile, treeId, nodeId);
+
+    const path = (await initialData?.imageUrl)
+      ? uploadImageWithUrl(croppedFile, initialData!.imageUrl)
+      : uploadImage(croppedFile, treeId, nodeId);
 
     if (!path) {
       setIsUploading(false);
@@ -168,6 +176,8 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
         imageUrl: initialData?.imageUrl || "",
       }));
     }
+    const publicUrl = await getImageUrl(treeId, nodeId);
+    setFormState((prev) => ({ ...prev, publicUrl: publicUrl }));
     setIsUploading(false);
   };
 
@@ -178,7 +188,12 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
 
     // Automatically start the upload process
     await handleImageUpload(file);
-    setFormState((prev) => ({ ...prev, imageUrl: `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(nodeId)}` })); // Show preview
+    setFormState((prev) => ({
+      ...prev,
+      imageUrl: `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(
+        nodeId
+      )}`,
+    })); // Show preview
     // Ensure the file input is cleared so the same file can be chosen again if needed
     const fileInput = document.getElementById(
       "person-image-upload"
@@ -189,7 +204,10 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
   };
 
   const handleCropperClose = () => {
-    setFormState((prev) => ({ ...prev, imageUrl: initialData?.imageUrl || '' })); // Show preview
+    setFormState((prev) => ({
+      ...prev,
+      imageUrl: initialData?.imageUrl || "",
+    })); // Show preview
     setCropperOpen(false);
     setImgSrc("");
     // Ensure the file input is cleared
@@ -221,31 +239,34 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
 
     // Ensure any lingering blob URL is revoked if it wasn't uploaded.
     // This is a fallback, ideally handleImageUpload manages this.
-    if (
-      formState?.imageUrl &&
-      formState.imageUrl.startsWith("blob:") &&
-      !isUploading
-    ) {
-      URL.revokeObjectURL(formState.imageUrl);
-      // Decide what the imageUrl should be if a blob was present but not uploaded by submit time
-      setFormState((prev) => ({
-        ...prev,
-        imageUrl: initialData?.imageUrl || "",
-      }));
-      onSubmit({ ...formState, imageUrl: initialData?.imageUrl || "" });
+    if (type === Nodes.Person) {
+      if (
+        formState?.imageUrl &&
+        formState.imageUrl.startsWith("blob:") &&
+        !isUploading
+      ) {
+        URL.revokeObjectURL(formState.imageUrl);
+        // Decide what the imageUrl should be if a blob was present but not uploaded by submit time
+        setFormState((prev) => ({
+          ...prev,
+          imageUrl: initialData?.imageUrl || "",
+        }));
+        onSubmit({ ...formState, imageUrl: initialData?.imageUrl || "" });
+      } else {
+        setFormState((prev) => ({
+          ...prev,
+          imageUrl: `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(
+            nodeId
+          )}`,
+        }));
+        onSubmit({
+          ...formState,
+          imageUrl: `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(
+            nodeId
+          )}`,
+        });
+      }
     } else {
-      setFormState((prev) => ({
-        ...prev,
-        imageUrl: `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(
-          nodeId
-        )}`,
-      }));
-      onSubmit({
-        ...formState,
-        imageUrl: `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(
-          nodeId
-        )}`,
-      });
       onSubmit(formState ?? {});
     }
   };
@@ -303,7 +324,10 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
           >
             {fields?.map((field) => {
               // Conditional rendering for 'doe' field
-              if (field.name === "doe" && formState?.isAlive !== "No") {
+              if (
+                (field.name === "doe" && formState?.isAlive !== "No") ||
+                field.name === "imageUrl"
+              ) {
                 return null; // Don't render 'doe' field if isAlive is not 'No'
               }
 
@@ -424,7 +448,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                   </Typography>
                 )}
                 {/* Display current image (either from initialData, cropped preview, or uploaded URL) */}
-                {formState?.imageUrl && (
+                {formState?.publicUrl && (
                   <Box
                     mt={2}
                     sx={{
@@ -437,7 +461,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                       Image Preview:
                     </Typography>
                     <img
-                      src={formState.imageUrl}
+                      src={formState?.publicUrl ?? ""}
                       alt="Person"
                       style={{
                         width: "100px",

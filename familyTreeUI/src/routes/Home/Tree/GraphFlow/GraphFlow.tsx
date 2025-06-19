@@ -118,10 +118,12 @@ const GraphFlow: FC<GraphFlowProps> = ({
 
   const onNodeDialogSubmit = (curNode: AppNode) => {
     if (nodeDialogMode === "edit") {
+      console.log("(onNodeDialogSubmit) Editing node id:", curNode?.id);
       setNodes((nds) =>
         nds.map((node) => (node.id === curNode?.id ? curNode : node))
       );
     } else if (nodeDialogMode === "new") {
+      console.log("(onNodeDialogSubmit) New node id:", curNode?.id);
       setNodes((nds) => nds.concat(curNode));
     }
     onNodeDialogClose();

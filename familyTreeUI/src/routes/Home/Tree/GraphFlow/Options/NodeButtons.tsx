@@ -49,7 +49,7 @@ export const NodeButtons: React.FC<NodeButtonsProps> = ({
     event.dataTransfer.effectAllowed = "move";
   };
 
-  // handleSubmit is called by NodeDialog's onSubmit
+  // handleDialogSubmit is called by NodeDialog's onSubmit
   const handleDialogSubmit = (formData: Record<string, any>) => {
     let finalNodeData: AppNode;
     if (dialogMode === 'edit') {
@@ -71,9 +71,6 @@ export const NodeButtons: React.FC<NodeButtonsProps> = ({
       };
     }
     onSubmit(finalNodeData);
-    // Reset internalNewNodeId AFTER successful submission handling by parent (onSubmit)
-    // The useEffect will also handle resetting it if dialogMode changes or closes.
-    // For explicit reset after 'new' submission:
     if (dialogMode === 'new') {
       setInternalNewNodeId(undefined);
     }
