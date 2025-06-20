@@ -14,6 +14,7 @@ export type NodeFieldDefinition = {
   readonly type: "string" | "date" | "boolean" | readonly string[];
   readonly required: boolean;
   readonly default?: string | boolean | Date | undefined; // Note: readonly string[] for default if type is readonly string[] might be needed if such defaults exist. Currently, 'gender' default is "male" (string).
+  readonly isField: boolean;
 };
 
 // This type can be used to ensure nodeFieldsMetadata conforms to a structure where each Node type maps to an array of NodeFieldDefinition.
@@ -27,6 +28,7 @@ export const nodeFieldsMetadata = {
       required: true,
       label: "Name",
       default: undefined,
+      isField:true,
     },
     {
       name: "nickName",
@@ -34,6 +36,7 @@ export const nodeFieldsMetadata = {
       required: false,
       label: "Nick name",
       default: undefined,
+      isField:true,
     },
     {
       name: "gender",
@@ -41,6 +44,7 @@ export const nodeFieldsMetadata = {
       required: true,
       label: "Gender",
       default: "male",
+      isField:true,
     },
     {
       name: "dob",
@@ -48,6 +52,7 @@ export const nodeFieldsMetadata = {
       required: false,
       label: "Born on",
       default: undefined,
+      isField:true,
     },
     {
       name: "currLocation",
@@ -55,6 +60,7 @@ export const nodeFieldsMetadata = {
       required: false,
       label: "Current location",
       default: undefined,
+      isField:true,
     },
     {
       name: "qualification",
@@ -62,6 +68,7 @@ export const nodeFieldsMetadata = {
       required: false,
       label: "Education qualification",
       default: undefined,
+      isField:true,
     },
     {
       name: "job",
@@ -69,13 +76,7 @@ export const nodeFieldsMetadata = {
       required: false,
       label: "Job",
       default: undefined,
-    },
-    {
-      name: "imageUrl",
-      type: "string",
-      required: false,
-      label: "Image URL",
-      default: undefined,
+      isField:true,
     },
     {
       name: "isAlive",
@@ -83,6 +84,7 @@ export const nodeFieldsMetadata = {
       required: false,
       label: "Is alive?",
       default: "Yes",
+      isField:true,
     },
     {
       name: "doe",
@@ -90,7 +92,32 @@ export const nodeFieldsMetadata = {
       required: false,
       label: "Died on",
       default: undefined,
+      isField:true,
     },
+    {
+      name: "imageUrl",
+      type: "string",
+      required: false,
+      label: "Image URL",
+      default: undefined,
+      isField:false,
+    },
+    {
+      name: "imageUrl",
+      type: "string",
+      required: false,
+      label: "Image URL",
+      default: undefined,
+      isField:false,
+    },
+    {
+      name: "updatedOn",
+      type: "date",
+      required: false,
+      label: "Updated On",
+      default: undefined,
+      isField:false,
+    }
   ],
   [Nodes.House]: [
     {
@@ -99,6 +126,7 @@ export const nodeFieldsMetadata = {
       required: true,
       label: "Family name",
       default: undefined,
+      isField:true,
     },
     {
       name: "homeTown",
@@ -106,7 +134,16 @@ export const nodeFieldsMetadata = {
       required: false,
       label: "Origins of this family",
       default: undefined,
+      isField:true,
     },
+    {
+      name: "updatedOn",
+      type: "date",
+      required: false,
+      label: "Updated On",
+      default: undefined,
+      isField:false,
+    }
   ],
 } as const;
 

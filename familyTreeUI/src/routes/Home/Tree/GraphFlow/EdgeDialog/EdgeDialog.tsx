@@ -42,7 +42,8 @@ export const EdgeDialog: React.FC<EdgeDialogProps> = ({
   const [edgeType, setEdgeType] = useState(type);
 
   const fields: readonly EdgeField[] = useMemo(() => {
-    return edgeType ? edgeFieldTemplates[edgeType] : [];
+    const allFields = edgeType ? edgeFieldTemplates[edgeType] : [];
+    return allFields.filter((field) => field.isField);
   }, [edgeType]);
 
   const [formState, setFormState] = useState<Record<string, any> | undefined>(
@@ -154,7 +155,7 @@ export const EdgeDialog: React.FC<EdgeDialogProps> = ({
     }
     // Ensure date objects are converted to ISO strings before submission if not already
     // The handleChange for 'date' type already stores them as ISO strings.
-    onSubmit(edgeType!, formState ?? {});
+    onSubmit(edgeType!, { ...formState, updatedOn: Date() });
     // Consider clearing form or specific fields after successful submission if needed, or handle in parent via onClose
   };
 

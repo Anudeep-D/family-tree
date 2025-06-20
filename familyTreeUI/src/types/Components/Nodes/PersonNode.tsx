@@ -71,7 +71,7 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
     } else {
       setImageUrlToDisplay(undefined);
     }
-  }, [data.imageUrl]); // Re-run if imageUrl or user changes
+  }, [data.imageUrl, data.updatedOn]); // Re-run if imageUrl or user changes
 
   const extraDetailsContent = (
     <Box>

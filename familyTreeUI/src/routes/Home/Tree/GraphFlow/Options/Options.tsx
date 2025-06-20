@@ -9,6 +9,7 @@ import {
   SmartToyTwoTone,
   SortTwoTone,
   TuneTwoTone,
+  PersonPinCircleTwoTone
 } from "@mui/icons-material";
 import "./Options.scss";
 
@@ -17,6 +18,7 @@ const actions = [
   { icon: <SortTwoTone sx={{ color: "#e040fb" }} />, name: "Sort" },
   { icon: <TuneTwoTone sx={{ color: "#64ffda" }} />, name: "Filter" },
   { icon: <SearchTwoTone sx={{ color: "#ffd54f" }} />, name: "Search" },
+  { icon: <PersonPinCircleTwoTone sx={{ color: "#ff9d9d" }} />, name: "Root" },
   { icon: <SmartToyTwoTone sx={{ color: "#82b1ff" }} />, name: "Chat" },
 ];
 

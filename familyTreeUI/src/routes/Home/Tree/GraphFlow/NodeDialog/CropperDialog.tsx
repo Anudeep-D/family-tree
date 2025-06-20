@@ -35,7 +35,7 @@ const CropperDialog: React.FC<CropperDialogProps> = ({
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const imgRef = useRef<HTMLImageElement>(null);
-
+  const [isProcessing, setIsProcessing] = useState(false);
   function centerAspectCrop(
     mediaWidth: number,
     mediaHeight: number,
@@ -115,6 +115,7 @@ const CropperDialog: React.FC<CropperDialogProps> = ({
 
   const handleCropConfirm = async () => {
     if (completedCrop && imgRef.current) {
+      setIsProcessing(true);
       let finalFile = await getCroppedImg(
         imgRef.current,
         completedCrop,
@@ -147,6 +148,7 @@ const CropperDialog: React.FC<CropperDialogProps> = ({
         }
         onConfirm(finalFile); // Pass the final (potentially compressed) file
       }
+      setIsProcessing(false);
     }
     onClose(); // Close the dialog
   };
@@ -189,8 +191,19 @@ const CropperDialog: React.FC<CropperDialogProps> = ({
         )}
       </DialogContent>
       <DialogActions>
-        <Button variant="text" onClick={handleCropCancel}>Cancel</Button>
-        <Button variant="contained" onClick={handleCropConfirm} color="primary">
+        <Button
+          variant="text"
+          disabled={isProcessing}
+          onClick={handleCropCancel}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          loading={isProcessing}
+          onClick={handleCropConfirm}
+          color="primary"
+        >
           Confirm
         </Button>
       </DialogActions>

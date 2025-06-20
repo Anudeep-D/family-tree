@@ -31,15 +31,13 @@ import {
   nodeFieldsMetadata,
   NodeFieldDefinition,
 } from "@/types/nodeTypes"; // Import NodeFieldDefinition
-import { supabase } from "@/config/supabaseClient";
 import {
   getImage,
-  getImageUrl,
-  uploadImage,
+  renameImage,
   uploadImageWithUrl,
 } from "@/routes/common/imageStorage";
-import { useAuth } from "@/hooks/useAuth";
 import CropperDialog from "./CropperDialog";
+import { useAuth } from "@/hooks/useAuth";
 
 type NodeDialogProps = {
   treeId: string;
@@ -52,6 +50,12 @@ type NodeDialogProps = {
   initialData?: Record<string, any>; // Allow any for imageUrl
 };
 
+type ImageStateProps = {
+  publicUrl: string | undefined;
+  imagePath: string | undefined;
+  isLocal: boolean;
+};
+
 export const NodeDialog: React.FC<NodeDialogProps> = ({
   open,
   onClose,
@@ -62,10 +66,19 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
   nodeId,
 }) => {
   const { idToken } = useAuth();
-  const fields: readonly NodeFieldDefinition[] = nodeFieldsMetadata[type]; // Explicitly type fields
+  const [isProcessing, setIsProcessing] = useState(false);
+  const fields: readonly NodeFieldDefinition[] = useMemo(() => {
+    const allFields = type ? nodeFieldsMetadata[type] : [];
+    return allFields.filter((field) => field.isField);
+  }, [type]);
   const [formState, setFormState] = useState<Record<string, any> | undefined>(
     initialData
   );
+  const [imageState, setImageState] = useState<ImageStateProps>({
+    publicUrl: undefined,
+    imagePath: initialData && initialData["imageUrl"],
+    isLocal: false,
+  });
   // const [selectedFile, setSelectedFile] = useState<File | null>(null); // Removed unused state
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -124,6 +137,19 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, type, fields]); // 'type' is a dependency for 'fields', 'fields' itself is stable if type doesn't change.
 
+  const setPublicUrl = async (url: string, isLocal: boolean) => {
+    const publicUrl = await getImage(url);
+    setImageState((prev) => ({
+      ...prev,
+      publicUrl: publicUrl ?? undefined,
+      isLocal: isLocal,
+    }));
+  };
+  useEffect(() => {
+    if (initialData?.hasOwnProperty("imageUrl")) {
+      setPublicUrl(initialData["imageUrl"], false);
+    }
+  }, [initialData]);
   // getCroppedImg, onImageLoad, handleCropConfirm, handleCropCancel are moved to CropperDialog.tsx
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -139,61 +165,35 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
     }
   };
 
-  const signInWithGoogleToken = async () => {
-    const { error } = await supabase.auth.signInWithIdToken({
-      provider: "google",
-      token: idToken ?? "",
-    });
-    if (error) console.error("Supabase sign-in failed:", error.message);
-  };
-
   // Modified to accept a File argument
   const handleImageUpload = async (croppedFile: File) => {
-    if (!croppedFile || !nodeId) {
-      // If no file is provided (e.g. user cancels crop after selecting),
-      // ensure imageUrl is not a lingering blob from a previous crop.
-      // This might need more robust handling based on desired UX.
-      if (formState?.imageUrl && formState.imageUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(formState.imageUrl);
-        setFormState((prev) => ({
-          ...prev,
-          imageUrl: initialData?.imageUrl || "",
-        }));
-      }
+    if (croppedFile && nodeId) {
+      const path = await uploadImageWithUrl(
+        croppedFile,
+        `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(
+          nodeId
+        )}-unsaved`,
+        idToken
+      );
+      return path;
     }
-    setIsUploading(true);
-    await signInWithGoogleToken(); // Ensure session is active
-
-    const path = (await initialData?.imageUrl)
-      ? uploadImageWithUrl(croppedFile, initialData!.imageUrl)
-      : uploadImage(croppedFile, treeId, nodeId);
-
-    if (!path) {
-      setIsUploading(false);
-      // Revert to initial image or clear if upload failed
-      setFormState((prev) => ({
-        ...prev,
-        imageUrl: initialData?.imageUrl || "",
-      }));
-    }
-    const publicUrl = await getImageUrl(treeId, nodeId);
-    setFormState((prev) => ({ ...prev, publicUrl: publicUrl }));
-    setIsUploading(false);
+    return null;
   };
 
   // New handler for when CropperDialog confirms
   const handleCropperConfirm = async (file: File) => {
     setCropperOpen(false);
     setImgSrc(""); // Clear imgSrc as it's no longer needed
-
+    setIsUploading(true); // Ensure session is active
     // Automatically start the upload process
-    await handleImageUpload(file);
-    setFormState((prev) => ({
-      ...prev,
-      imageUrl: `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(
-        nodeId
-      )}`,
-    })); // Show preview
+    const path = await handleImageUpload(file);
+    path &&
+      setPublicUrl(
+        `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(
+          nodeId
+        )}-unsaved`,
+        true
+      );
     // Ensure the file input is cleared so the same file can be chosen again if needed
     const fileInput = document.getElementById(
       "person-image-upload"
@@ -201,13 +201,10 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
     if (fileInput) {
       fileInput.value = "";
     }
+    setIsUploading(false);
   };
 
   const handleCropperClose = () => {
-    setFormState((prev) => ({
-      ...prev,
-      imageUrl: initialData?.imageUrl || "",
-    })); // Show preview
     setCropperOpen(false);
     setImgSrc("");
     // Ensure the file input is cleared
@@ -232,42 +229,36 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
   };
 
   const handleSubmit = async () => {
-    // Image upload is now handled by handleCropperConfirm -> handleImageUpload.
+    // Image upload is now handled by handleCropperConfirm -> hdlImageUpload.
     // handleSubmit will just use the imageUrl from formState, which should be the Supabase URL if upload was successful.
     // If upload failed, formState.imageUrl might be the initial URL or empty.
-    // It's important that handleImageUpload correctly sets formState.imageUrl upon failure.
+    // It's important that hdlImageUpload correctly sets formState.imageUrl upon failure.
 
     // Ensure any lingering blob URL is revoked if it wasn't uploaded.
-    // This is a fallback, ideally handleImageUpload manages this.
-    if (type === Nodes.Person) {
-      if (
-        formState?.imageUrl &&
-        formState.imageUrl.startsWith("blob:") &&
-        !isUploading
-      ) {
-        URL.revokeObjectURL(formState.imageUrl);
-        // Decide what the imageUrl should be if a blob was present but not uploaded by submit time
+    // This is a fallback, ideally hdlImageUpload manages this.
+    if (type === Nodes.Person && imageState.isLocal) {
+      const actualPath =
+        initialData?.imageUrl ||
+        `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(nodeId)}`;
+      const response = await renameImage(
+        `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(
+          nodeId
+        )}-unsaved`,
+        actualPath,
+        idToken
+      );
+      if (response) {
         setFormState((prev) => ({
           ...prev,
-          imageUrl: initialData?.imageUrl || "",
+          imageUrl: actualPath,
+          updatedOn: Date(),
         }));
-        onSubmit({ ...formState, imageUrl: initialData?.imageUrl || "" });
+        onSubmit({ ...formState, imageUrl: actualPath, updatedOn: Date() });
       } else {
-        setFormState((prev) => ({
-          ...prev,
-          imageUrl: `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(
-            nodeId
-          )}`,
-        }));
-        onSubmit({
-          ...formState,
-          imageUrl: `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(
-            nodeId
-          )}`,
-        });
+        onSubmit({ ...formState, updatedOn: Date() });
       }
     } else {
-      onSubmit(formState ?? {});
+      onSubmit({ ...formState, updatedOn: Date() });
     }
   };
 
@@ -448,7 +439,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                   </Typography>
                 )}
                 {/* Display current image (either from initialData, cropped preview, or uploaded URL) */}
-                {formState?.publicUrl && (
+                {imageState.publicUrl && (
                   <Box
                     mt={2}
                     sx={{
@@ -461,7 +452,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                       Image Preview:
                     </Typography>
                     <img
-                      src={formState?.publicUrl ?? ""}
+                      src={imageState.publicUrl}
                       alt="Person"
                       style={{
                         width: "100px",
@@ -478,15 +469,18 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button variant="text" onClick={onClose}>
+          <Button disabled={isProcessing} variant="text" onClick={onClose}>
             Cancel
           </Button>
           <Button
             variant="contained"
-            onClick={() => {
+            loading={isProcessing}
+            onClick={async () => {
+              setIsProcessing(true);
               if (validateForm()) {
-                handleSubmit();
+                await handleSubmit();
               }
+              setIsProcessing(false);
             }}
           >
             {initialData ? "Update" : "Add"}
