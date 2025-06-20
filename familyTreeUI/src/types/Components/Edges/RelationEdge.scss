@@ -1,36 +1,11 @@
 .edge-label {
   &.married_to {
-    background-color: #6a1b9a;
+    background-color: #6a1b9a !important;
   }
   &.parent_of {
-    background-color: #1e88e5;
+    background-color: #1e88e5 !important;
   }
   &.belongs_to {
-    background-color: #2e7d32;
+    background-color: #2e7d32 !important;
   }
-}
-
-.edge-married_to {
-  --marriage-stroke-color: #1ac8f0;
-  --marriage-stroke-width: 3px;
-  /* stroke: blue; */
-  /* stroke-width: 3; */
-}
-
-.edge-parent_of {
-  --parent-stroke-color: #03ff68;
-  --parent-stroke-width: 2px;
-  --parent-stroke-dasharray: 5, 5;
-  /* stroke: green; */
-  /* stroke-width: 2; */
-  /* stroke-dasharray: 5, 5; */
-}
-
-.edge-belongs_to {
-  --belongs-stroke-color: #ffe830;
-  --belongs-stroke-width: 2px;
-  --belongs-stroke-dasharray: 2, 2;
-  /* stroke: gray; */
-  /* stroke-width: 2; */
-  /* stroke-dasharray: 2, 2; */
 }

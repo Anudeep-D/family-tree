@@ -26,24 +26,11 @@ const ParentEdge = (props: EdgeProps<ParentEdgeType>) => { // Use the new type n
     targetPosition,
   });
 
-  // Merge styles
-  const mergedStyle = {
-    stroke: 'var(--parent-stroke-color)',
-    strokeWidth: 'var(--parent-stroke-width)',
-    strokeDasharray: 'var(--parent-stroke-dasharray)',
-    ...(props.style || {}), // Spread props.style
-  };
-
-  // Merge className
-  const customClassName = `edge-${Edges.PARENT_OF.toLowerCase()}`;
-
   return (
     <>
       <BaseEdge
         {...props} // Spread all original props
         path={edgePath} // Override path
-        style={mergedStyle} // Apply merged styles
-        className={customClassName} // Apply merged class names
       />
       <EdgeLabelRenderer>
         <div

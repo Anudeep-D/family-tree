@@ -26,24 +26,11 @@ const BelongsEdge = (props: EdgeProps<BelongsEdgeType>) => { // Use the new type
     targetPosition,
   });
 
-  // Merge styles
-  const mergedStyle = {
-    stroke: 'var(--belongs-stroke-color)',
-    strokeWidth: 'var(--belongs-stroke-width)',
-    strokeDasharray: 'var(--belongs-stroke-dasharray)',
-    ...(props.style || {}), // Spread props.style
-  };
-
-  // Merge className
-  const customClassName = `edge-${Edges.BELONGS_TO.toLowerCase()}`;
-
   return (
     <>
       <BaseEdge
         {...props} // Spread all original props
         path={edgePath} // Override path
-        style={mergedStyle} // Apply merged styles
-        className={customClassName} // Apply merged class names
       />
       <EdgeLabelRenderer>
         <div

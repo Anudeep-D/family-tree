@@ -61,7 +61,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
     ...edge,
     markerEnd: defaultMarker,
     // Assuming Edges.BelongsTo is the correct enum member or string literal for the type
-    ...(edge.type === Edges.BELONGS_TO && { className: "belongs-to-edge" }),
+    className: `${edge.type!}-edge`,
   }));
 
   const { nodes: initNodes, edges: initEdgesWithMarkers } = getLayoutedElements(
@@ -189,7 +189,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
         },
         markerEnd: defaultMarker, // Ensure marker is present/updated
         // Update className based on the potentially changed type
-        className: type === Edges.BELONGS_TO ? "belongs-to-edge" : "",
+        className: `${type}-edge`,
       };
       setEdges((eds) =>
         eds.map((edge) => (edge.id === currentEdge.id ? currentEdge : edge))
@@ -208,7 +208,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
         data: { ...newEdge.data, ...data }, // Add data from dialog
         // Ensure markerEnd is there (it should be from newEdge set in onConnect)
         markerEnd: newEdge.markerEnd || defaultMarker,
-        className: type === Edges.BELONGS_TO ? "belongs-to-edge" : "",
+        className: `${type}-edge`,
       };
       setEdges((eds) => addEdge(currentEdge, eds)); // Use addEdge utility
     }
