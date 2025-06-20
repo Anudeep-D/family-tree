@@ -28,9 +28,15 @@ import { Tree } from "@/types/entityTypes";
 import { EdgeDialog } from "./EdgeDialog/EdgeDialog";
 import { Role } from "@/types/common";
 import { getDiff } from "@/utils/common";
+import { Source } from "@mui/icons-material";
 
 // Define defaultMarker outside the component if it's static, or inside if it depends on props/theme
-const defaultMarker = { type: MarkerType.Arrow, width: 15, height: 15, color: '#cb4e4e' };
+const defaultMarker = {
+  type: MarkerType.Arrow,
+  width: 15,
+  height: 15,
+  color: "#cb4e4e",
+};
 
 type GraphFlowProps = {
   initialNodes: AppNode[];
@@ -44,30 +50,32 @@ const GraphFlow: FC<GraphFlowProps> = ({
   tree,
 }) => {
   const isViewer = tree.access === Role.Viewer;
-  const [deleteTree, { isLoading: isDeleting, error: deleteError }] = useDeleteTreeMutation();
-  const [updateGraph, { isLoading: isSaving, error: saveError }] = useUpdateGraphMutation(); // Initialize mutation hook
+  const [deleteTree, { isLoading: isDeleting, error: deleteError }] =
+    useDeleteTreeMutation();
+  const [updateGraph, { isLoading: isSaving, error: saveError }] =
+    useUpdateGraphMutation(); // Initialize mutation hook
   const navigate = useNavigate();
 
   // Process initialEdges to add markers and classNames
-  const edgesWithMarkers = initialEdges.map(edge => ({
+  const edgesWithMarkers = initialEdges.map((edge) => ({
     ...edge,
     markerEnd: defaultMarker,
     // Assuming Edges.BelongsTo is the correct enum member or string literal for the type
-    ...(edge.type === Edges.BELONGS_TO && { className: 'belongs-to-edge' }), 
+    ...(edge.type === Edges.BELONGS_TO && { className: "belongs-to-edge" }),
   }));
 
   const { nodes: initNodes, edges: initEdgesWithMarkers } = getLayoutedElements(
     initialNodes,
     edgesWithMarkers // Use the processed edges
   );
-  
+
   const [nodes, setNodes, onNodesChange] = useNodesState(initNodes);
   // Initialize useEdgesState with edges that have markers and classNames
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initEdgesWithMarkers); 
-  
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initEdgesWithMarkers);
+
   const [prevNodes, setPrevNodes] = useState<AppNode[]>(initNodes);
   // Initialize prevEdges with edges that have markers and classNames
-  const [prevEdges, setPrevEdges] = useState<AppEdge[]>(initEdgesWithMarkers); 
+  const [prevEdges, setPrevEdges] = useState<AppEdge[]>(initEdgesWithMarkers);
   const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
   const { screenToFlowPosition } = useReactFlow();
 
@@ -136,20 +144,28 @@ const GraphFlow: FC<GraphFlowProps> = ({
   const [editingEdge, setEditingEdge] = useState<AppEdge | undefined>(
     undefined
   );
+  const [involvedNodes, setInvolvedNodes] = useState<
+    { source: AppNode; target: AppNode } | undefined
+  >(undefined);
   const [newEdge, setNewEdge] = useState<AppEdge | undefined>(undefined);
 
-    const onConnect: OnConnect = useCallback(
+  const onConnect: OnConnect = useCallback(
     (connection) => {
       console.log(connection);
-      setNewEdge({ 
+      setNewEdge({
         id: `${Date.now()}-new-pending`, // Temporary ID for the pending edge
-        ...connection, 
-        markerEnd: defaultMarker // Add default marker to the edge being templated
+        ...connection,
+        markerEnd: defaultMarker, // Add default marker to the edge being templated
       });
+      const edgeSource = nodes.find((nodeS) => nodeS.id === connection.source);
+      const edgeTarget = nodes.find((nodeT) => nodeT.id === connection.target);
+      edgeSource &&
+        edgeTarget &&
+        setInvolvedNodes({ source: edgeSource, target: edgeTarget });
       setEdgeDialogMode("new");
     },
     // defaultMarker is a const, not reactive. Add other state setters if they are used directly.
-    [setNewEdge, setEdgeDialogMode] 
+    [setNewEdge, setEdgeDialogMode]
   );
 
   const onEdgeDialogClose = () => {
@@ -166,37 +182,39 @@ const GraphFlow: FC<GraphFlowProps> = ({
 
       currentEdge = {
         ...editingEdge, // Spread existing properties like id, source, target
-        type: type,    // Update type from dialog
+        type: type, // Update type from dialog
         data: {
           ...editingEdge.data,
           ...data,
         },
         markerEnd: defaultMarker, // Ensure marker is present/updated
         // Update className based on the potentially changed type
-        className: type === Edges.BELONGS_TO ? 'belongs-to-edge' : '', 
+        className: type === Edges.BELONGS_TO ? "belongs-to-edge" : "",
       };
       setEdges((eds) =>
         eds.map((edge) => (edge.id === currentEdge.id ? currentEdge : edge))
       );
-    } else if (edgeDialogMode === "new") { 
+    } else if (edgeDialogMode === "new") {
       // newEdge is the state holding the connection info from onConnect
       if (!newEdge) return; // Should not happen
 
       currentEdge = {
         ...newEdge, // Spread connection (source, target, sourceHandle, targetHandle) and existing markerEnd
-        type: type,  // Set type from dialog
+        type: type, // Set type from dialog
         // Generate a more robust ID for the new edge
-        id: `${type}-${newEdge.sourceHandle}-${newEdge.targetHandle}-${Date.now()}`, 
+        id: `${type}-${newEdge.sourceHandle}-${
+          newEdge.targetHandle
+        }-${Date.now()}`,
         data: { ...newEdge.data, ...data }, // Add data from dialog
         // Ensure markerEnd is there (it should be from newEdge set in onConnect)
-        markerEnd: newEdge.markerEnd || defaultMarker, 
-        className: type === Edges.BELONGS_TO ? 'belongs-to-edge' : '',
+        markerEnd: newEdge.markerEnd || defaultMarker,
+        className: type === Edges.BELONGS_TO ? "belongs-to-edge" : "",
       };
       setEdges((eds) => addEdge(currentEdge, eds)); // Use addEdge utility
     }
     onEdgeDialogClose();
   };
-  
+
   //Core actions
   const handleReset = () => {
     setEdges(prevEdges);
@@ -215,19 +233,20 @@ const GraphFlow: FC<GraphFlowProps> = ({
     const diffPayload = {
       addedNodes: nodeDiff.added,
       updatedNodes: nodeDiff.updated,
-      deletedNodeIds: nodeDiff.removed.map(n => n.id),
+      deletedNodeIds: nodeDiff.removed.map((n) => n.id),
       addedEdges: edgeDiff.added,
       updatedEdges: edgeDiff.updated,
-      deletedEdgeIds: edgeDiff.removed.map(e => e.id),
+      deletedEdgeIds: edgeDiff.removed.map((e) => e.id),
     };
 
     // Optional: Check if there are any changes before calling the API
-    const hasChanges = diffPayload.addedNodes?.length || 
-                       diffPayload.updatedNodes?.length || 
-                       diffPayload.deletedNodeIds?.length || 
-                       diffPayload.addedEdges?.length || 
-                       diffPayload.updatedEdges?.length || 
-                       diffPayload.deletedEdgeIds?.length;
+    const hasChanges =
+      diffPayload.addedNodes?.length ||
+      diffPayload.updatedNodes?.length ||
+      diffPayload.deletedNodeIds?.length ||
+      diffPayload.addedEdges?.length ||
+      diffPayload.updatedEdges?.length ||
+      diffPayload.deletedEdgeIds?.length;
 
     if (!hasChanges) {
       console.log("No changes to save.");
@@ -251,17 +270,17 @@ const GraphFlow: FC<GraphFlowProps> = ({
   };
   const handleDelete = async () => {
     if (!tree || !tree.elementId) {
-        console.error("Tree ID not available for deletion.");
-        // Displaying error via Alert below, using deleteError state
-        return;
+      console.error("Tree ID not available for deletion.");
+      // Displaying error via Alert below, using deleteError state
+      return;
     }
     try {
-        await deleteTree(tree.elementId).unwrap();
-        console.log("Tree deleted successfully:", tree.elementId);
-        navigate("/"); // Redirect to home page
+      await deleteTree(tree.elementId).unwrap();
+      console.log("Tree deleted successfully:", tree.elementId);
+      navigate("/"); // Redirect to home page
     } catch (err) {
-        console.error("Failed to delete tree:", err);
-        // Error will be caught and displayed by the Alert component via deleteError state
+      console.error("Failed to delete tree:", err);
+      // Error will be caught and displayed by the Alert component via deleteError state
     }
   };
   return (
@@ -283,7 +302,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
       )}
       {isSaving && ( // Display saving indicator
         <Alert severity="info" sx={{ mb: 2 }}>
-            Saving changes...
+          Saving changes...
         </Alert>
       )}
       <Box
@@ -300,26 +319,62 @@ const GraphFlow: FC<GraphFlowProps> = ({
           edgeTypes={edgeTypes}
           onEdgesChange={onEdgesChange}
           onConnect={isViewer ? undefined : onConnect}
-          onNodeClick={isViewer ? undefined : (_event, node) => {
-            console.log("show node's extra info",node);
-          }}
-          onNodeDoubleClick={isViewer ? undefined : (_event, node) => {
-            setEditingNode(node);
-            setNodeDialogMode("edit");
-          }}
-          onNodeContextMenu={isViewer ? undefined : (_event, node) => {
-            console.log("show node's context info",node);
-          }}
-          onEdgeClick={isViewer ? undefined : (_event, edge) => {
-            console.log("show edge's extra info",edge);
-          }}
-          onEdgeDoubleClick={isViewer ? undefined : (_event, edge) => {
-            setEditingEdge(edge);
-            setEdgeDialogMode("edit");
-          }}
-          onEdgeContextMenu={isViewer ? undefined : (_event, edge) => {
-            console.log("show edge's context info",edge);
-          }}
+          onNodeClick={
+            isViewer
+              ? undefined
+              : (_event, node) => {
+                  console.log("show node's extra info", node);
+                }
+          }
+          onNodeDoubleClick={
+            isViewer
+              ? undefined
+              : (_event, node) => {
+                  setEditingNode(node);
+                  setNodeDialogMode("edit");
+                }
+          }
+          onNodeContextMenu={
+            isViewer
+              ? undefined
+              : (_event, node) => {
+                  console.log("show node's context info", node);
+                }
+          }
+          onEdgeClick={
+            isViewer
+              ? undefined
+              : (_event, edge) => {
+                  console.log("show edge's extra info", edge);
+                }
+          }
+          onEdgeDoubleClick={
+            isViewer
+              ? undefined
+              : (_event, edge) => {
+                  const edgeSource = nodes.find(
+                    (node) => node.id === edge.source
+                  );
+                  const edgeTarget = nodes.find(
+                    (node) => node.id === edge.target
+                  );
+                  edgeSource &&
+                    edgeTarget &&
+                    setInvolvedNodes({
+                      source: edgeSource,
+                      target: edgeTarget,
+                    });
+                  setEditingEdge(edge);
+                  setEdgeDialogMode("edit");
+                }
+          }
+          onEdgeContextMenu={
+            isViewer
+              ? undefined
+              : (_event, edge) => {
+                  console.log("show edge's context info", edge);
+                }
+          }
           fitView
           nodesDraggable={!isViewer}
           nodesConnectable={!isViewer}
@@ -354,6 +409,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
       </Box>
       {edgeDialogMode && (
         <EdgeDialog
+          nodes={involvedNodes}
           open={Boolean(edgeDialogMode)}
           onClose={onEdgeDialogClose}
           mode={edgeDialogMode ? edgeDialogMode : "new"}

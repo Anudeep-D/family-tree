@@ -75,27 +75,45 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
 
   const extraDetailsContent = (
     <Box>
-      <Typography  sx={{ p: 2, pb: 1, fontWeight: "bold", fontSize: '0.7rem' }}>{data.name}</Typography>
+      <Typography sx={{ p: 2, pb: 1, fontWeight: "bold", fontSize: "0.7rem" }}>
+        {data.name}
+      </Typography>
       {data.nickName && (
-        <Typography sx={{ p: 0.3, pl: 2, fontSize: '0.6rem' }}>({data.nickName})</Typography>
+        <Typography sx={{ p: 0.3, pl: 2, fontSize: "0.6rem" }}>
+          ({data.nickName})
+        </Typography>
       )}
-      {data.gender && <Typography sx={{ p: 0.3, pl: 2, fontSize: '0.6rem' }}>{data.gender}</Typography>}
+      {data.gender && (
+        <Typography sx={{ p: 0.3, pl: 2, fontSize: "0.6rem" }}>
+          {data.gender}
+        </Typography>
+      )}
       {data.dob && (
-        <Typography sx={{ p: 0.3, pl: 2, fontSize: '0.6rem' }} className="green">{`DOB: ${dayjs(
-          data.dob
-        ).format("DD-MMM-YYYY")}`}</Typography>
+        <Typography
+          sx={{ p: 0.3, pl: 2, fontSize: "0.6rem" }}
+          className="green"
+        >{`DOB: ${dayjs(data.dob).format("DD-MMM-YYYY")}`}</Typography>
       )}
       {data.doe && (
-        <Typography sx={{ p: 0.3, pl: 2, fontSize: '0.6rem' }} className="red">{`DOE: ${dayjs(
-          data.doe
-        ).format("DD-MMM-YYYY")}`}</Typography>
+        <Typography
+          sx={{ p: 0.3, pl: 2, fontSize: "0.6rem" }}
+          className="red"
+        >{`DOE: ${dayjs(data.doe).format("DD-MMM-YYYY")}`}</Typography>
       )}
       {data.qualification && (
-        <Typography sx={{ p: 0.3, pl: 2, fontSize: '0.6rem' }}>{data.qualification}</Typography>
+        <Typography sx={{ p: 0.3, pl: 2, fontSize: "0.6rem" }}>
+          {data.qualification}
+        </Typography>
       )}
-      {data.job && <Typography sx={{ p: 0.3, pl: 2, fontSize: '0.6rem' }}>{data.job}</Typography>}
+      {data.job && (
+        <Typography sx={{ p: 0.3, pl: 2, fontSize: "0.6rem" }}>
+          {data.job}
+        </Typography>
+      )}
       {data.currLocation && (
-        <Typography sx={{ p: 0.3, pl: 2, fontSize: '0.6rem' }}>{data.currLocation}</Typography>
+        <Typography sx={{ p: 0.3, pl: 2, fontSize: "0.6rem" }}>
+          {data.currLocation}
+        </Typography>
       )}
     </Box>
   );
@@ -104,8 +122,13 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
     data.isAlive ? "alive" : "deceased"
   } ${imageUrlToDisplay ? "has-image" : ""}`;
 
-  const displayLabel =
-    data.name.length > 13 ? `${data.name.slice(0, 10)}...` : data.name;
+  const displayLabel = data.nickName
+    ? data.nickName.length > 13
+      ? `${data.nickName.slice(0, 10)}...`
+      : data.nickName
+    : data.name.length > 13
+    ? `${data.name.slice(0, 10)}...`
+    : data.name;
   return (
     <div
       className={personNodeClasses}
@@ -144,10 +167,7 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
               }}
               onClick={handlePopoverOpen}
               endIcon={
-                <InfoTwoTone
-                  fontSize="small"
-                  sx={{ fill: "#ffffff" }}
-                />
+                <InfoTwoTone fontSize="small" sx={{ fill: "#ffffff" }} />
               }
             >
               {displayLabel}

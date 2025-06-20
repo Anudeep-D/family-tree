@@ -21,7 +21,13 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
-import { edgeFieldTemplates, Edges, EdgeField } from "@/types/edgeTypes"; // Import EdgeField
+import {
+  edgeFieldTemplates,
+  Edges,
+  EdgeField,
+  AppEdge,
+} from "@/types/edgeTypes"; // Import EdgeField
+import { AppNode, Nodes } from "@/types/nodeTypes";
 
 type EdgeDialogProps = {
   mode: "new" | "edit";
@@ -30,6 +36,7 @@ type EdgeDialogProps = {
   onSubmit: (type: Edges, data: Record<string, string>) => void;
   type?: Edges;
   initialData?: Record<string, any>; // Allow 'any' for initialData due to potential dayjs objects
+  nodes: { source: AppNode; target: AppNode } | undefined;
 };
 
 export const EdgeDialog: React.FC<EdgeDialogProps> = ({
@@ -38,6 +45,7 @@ export const EdgeDialog: React.FC<EdgeDialogProps> = ({
   onSubmit,
   type,
   initialData,
+  nodes,
 }) => {
   const [edgeType, setEdgeType] = useState(type);
 
@@ -50,7 +58,7 @@ export const EdgeDialog: React.FC<EdgeDialogProps> = ({
     initialData
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
-
+  console.log("nodes?.source, nodes?.target",nodes?.source, nodes?.target);
   useEffect(() => {
     // No need for currentFields, 'fields' is already correctly typed and available
     if (initialData) {
@@ -190,9 +198,25 @@ export const EdgeDialog: React.FC<EdgeDialogProps> = ({
               >
                 {/* <MenuItem value={undefined}>None</MenuItem> */}{" "}
                 {/* Consider if "None" is a valid state or if a type must always be selected for a new edge */}
-                <MenuItem value={Edges.BELONGS_TO}>{Edges.BELONGS_TO}</MenuItem>
-                <MenuItem value={Edges.PARENT_OF}>{Edges.PARENT_OF}</MenuItem>
-                <MenuItem value={Edges.MARRIED_TO}>{Edges.MARRIED_TO}</MenuItem>
+                {[nodes?.source.type, nodes?.target.type].includes(
+                  Nodes.House
+                ) && (
+                  <MenuItem value={Edges.BELONGS_TO}>
+                    {Edges.BELONGS_TO}
+                  </MenuItem>
+                )}
+                {![nodes?.source.type, nodes?.target.type].includes(
+                  Nodes.House
+                ) && (
+                  <MenuItem value={Edges.PARENT_OF}>{Edges.PARENT_OF}</MenuItem>
+                )}
+                {![nodes?.source.type, nodes?.target.type].includes(
+                  Nodes.House
+                ) && (
+                  <MenuItem value={Edges.MARRIED_TO}>
+                    {Edges.MARRIED_TO}
+                  </MenuItem>
+                )}
               </Select>
             </FormControl>
           </Box>
