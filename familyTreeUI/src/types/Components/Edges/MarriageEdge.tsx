@@ -23,6 +23,7 @@ const MarriageEdge = ({
   sourcePosition,
   targetPosition,
   data,
+  ...rest // Capture all other props
 }: EdgeProps<MarriageEdge>) => {
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
@@ -33,16 +34,25 @@ const MarriageEdge = ({
     targetPosition,
   });
 
+  // Merge styles: props.style can contain styles from ReactFlow (e.g., selected/animated)
+  // or from the edge instance itself.
+  const mergedStyle = {
+    stroke: "var(--marriage-stroke-color)",
+    strokeWidth: "var(--marriage-stroke-width)",
+    ...(rest.style || {}), // Spread props.style to include other dynamic styles
+  };
+
+  // Merge className
+  const customClassName = `edge-${Edges.MARRIED_TO.toLowerCase()}`;
+
   return (
     <>
       <BaseEdge
-        id={id}
-        path={edgePath}
-        className={`edge-${Edges.MARRIED_TO.toLowerCase()}`}
-        style={{
-          stroke: "var(--marriage-stroke-color)",
-          strokeWidth: "var(--marriage-stroke-width)",
-        }}
+        {...rest} // Spread all original props first
+        id={id} // id is explicitly passed
+        path={edgePath} // Override path with the calculated one
+        style={mergedStyle} // Apply merged styles
+        className={customClassName} // Apply merged class names
       />
       <EdgeLabelRenderer>
         <div
@@ -60,7 +70,7 @@ const MarriageEdge = ({
         >
           {data?.dateOfMarriage
             ? `married (${dayjs(data?.dateOfMarriage).format("DD-MMM-YYYY")})`
-            : [Edges.MARRIED_TO]}
+            : Edges.MARRIED_TO}
         </div>
       </EdgeLabelRenderer>
     </>

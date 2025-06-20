@@ -117,22 +117,6 @@ $color-disabled: #76797e;
   }
 }
 
-// Style for the .react-flow__edge path itself might be too general.
-// Target the path within a .belongs-to-edge specifically.
-// React Flow typically renders edges with a structure like:
-// <g class="react-flow__edge react-flow__edge-{type} belongs-to-edge selectable animated">
-//   <path class="react-flow__edge-path" d="..." marker-end="..."></path>
-//   ... (optional label) ...
-// </g>
-
-.react-flow__edge.belongs-to-edge {
-  path.react-flow__edge-path {
-    stroke-dasharray: 5; // Defines the pattern of dashes and gaps (e.g., 5px dash, 5px gap)
-    animation: dashdraw 30s linear infinite; // Apply the animation
-    // Adjust animation duration (e.g., 30s) and timing function (linear) as needed.
-    // stroke: #ff0073; // Optional: override color for animated edges if desired
-  }
-}
 
 // =========================
 // Handle Styles

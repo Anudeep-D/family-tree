@@ -2,17 +2,21 @@ import { type Edge, getBezierPath, type EdgeProps, BaseEdge, EdgeLabelRenderer }
 import './RelationEdge.scss';
 import { EdgeDataMap, Edges } from "@/types/edgeTypes";
 
-export type ParentEdge = Edge<EdgeDataMap[Edges.PARENT_OF], Edges.PARENT_OF>;
-const ParentEdge = ({
-  id,
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  sourcePosition,
-  targetPosition,
-  data,
-}: EdgeProps<ParentEdge>) => {
+export type ParentEdgeType = Edge<EdgeDataMap[Edges.PARENT_OF], Edges.PARENT_OF>; // Renamed to avoid conflict with component name
+
+const ParentEdge = (props: EdgeProps<ParentEdgeType>) => { // Use the new type name
+  const {
+    id, // id is in props, will be spread
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    data, // data is in props, used for label
+    // markerEnd, style, className etc. are all in props
+  } = props;
+
   const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
@@ -22,12 +26,28 @@ const ParentEdge = ({
     targetPosition,
   });
 
+  // Merge styles
+  const mergedStyle = {
+    stroke: 'var(--parent-stroke-color)',
+    strokeWidth: 'var(--parent-stroke-width)',
+    strokeDasharray: 'var(--parent-stroke-dasharray)',
+    ...(props.style || {}), // Spread props.style
+  };
+
+  // Merge className
+  const customClassName = `edge-${Edges.PARENT_OF.toLowerCase()}`;
+
   return (
     <>
-      <BaseEdge id={id} path={edgePath} className={`edge-${Edges.PARENT_OF.toLowerCase()}`} style={{ stroke: 'var(--parent-stroke-color)', strokeWidth: 'var(--parent-stroke-width)', strokeDasharray: 'var(--parent-stroke-dasharray)' }} />
+      <BaseEdge
+        {...props} // Spread all original props
+        path={edgePath} // Override path
+        style={mergedStyle} // Apply merged styles
+        className={customClassName} // Apply merged class names
+      />
       <EdgeLabelRenderer>
         <div
-          className={`edge-label ${Edges.BELONGS_TO.toLowerCase()}`}
+          className={`edge-label ${Edges.PARENT_OF.toLowerCase()}`} // Corrected: was Edges.BELONGS_TO
           style={{
             position: 'absolute',
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
@@ -39,7 +59,7 @@ const ParentEdge = ({
             border: '1px solid #555',
           }}
         >
-          {[Edges.PARENT_OF]}
+          {Edges.PARENT_OF} {/* Corrected: was [Edges.PARENT_OF] */}
         </div>
       </EdgeLabelRenderer>
     </>

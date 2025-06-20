@@ -61,7 +61,7 @@ const HouseNode = ({ data }: NodeProps<HouseNode>) => {
           horizontal: "center",
         }}
       >
-        <Typography sx={{ p: 2 }}>🏡 {data.homeTown}</Typography>
+        <Typography sx={{ p: 1, fontSize: '0.7rem' }}>🏡 {data.homeTown}</Typography>
       </Popover>
 
       <Handle id="l1" type="target" position={Position.Left} />

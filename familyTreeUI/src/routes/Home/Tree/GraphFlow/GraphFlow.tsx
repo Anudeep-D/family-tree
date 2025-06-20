@@ -30,7 +30,7 @@ import { Role } from "@/types/common";
 import { getDiff } from "@/utils/common";
 
 // Define defaultMarker outside the component if it's static, or inside if it depends on props/theme
-const defaultMarker = { type: MarkerType.ArrowClosed, width: 20, height: 20, color: '#000000 !important' };
+const defaultMarker = { type: MarkerType.Arrow, width: 15, height: 15, color: '#cb4e4e' };
 
 type GraphFlowProps = {
   initialNodes: AppNode[];

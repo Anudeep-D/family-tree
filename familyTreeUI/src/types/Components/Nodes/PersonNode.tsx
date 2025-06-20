@@ -9,7 +9,7 @@ import IconButton from "@mui/material/IconButton";
 import { InfoTwoTone } from "@mui/icons-material";
 import Popover from "@mui/material/Popover";
 import Typography from "@mui/material/Typography";
-import { Button } from "@mui/material";
+import { Box, Button } from "@mui/material";
 
 export type PersonNode = Node<NodeDataMap[Nodes.Person], Nodes.Person>;
 
@@ -74,30 +74,30 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
   }, [data.imageUrl]); // Re-run if imageUrl or user changes
 
   const extraDetailsContent = (
-    <>
-      <Typography sx={{ p: 2, fontWeight: "bold" }}>{data.name}</Typography>
+    <Box>
+      <Typography  sx={{ p: 2, pb: 1, fontWeight: "bold", fontSize: '0.7rem' }}>{data.name}</Typography>
       {data.nickName && (
-        <Typography sx={{ p: 1, pt: 0 }}>({data.nickName})</Typography>
+        <Typography sx={{ p: 0.3, pl: 2, fontSize: '0.6rem' }}>({data.nickName})</Typography>
       )}
-      {data.gender && <Typography sx={{ p: 1 }}>{data.gender}</Typography>}
+      {data.gender && <Typography sx={{ p: 0.3, pl: 2, fontSize: '0.6rem' }}>{data.gender}</Typography>}
       {data.dob && (
-        <Typography sx={{ p: 1 }} className="green">{`DOB: ${dayjs(
+        <Typography sx={{ p: 0.3, pl: 2, fontSize: '0.6rem' }} className="green">{`DOB: ${dayjs(
           data.dob
         ).format("DD-MMM-YYYY")}`}</Typography>
       )}
       {data.doe && (
-        <Typography sx={{ p: 1 }} className="red">{`DOE: ${dayjs(
+        <Typography sx={{ p: 0.3, pl: 2, fontSize: '0.6rem' }} className="red">{`DOE: ${dayjs(
           data.doe
         ).format("DD-MMM-YYYY")}`}</Typography>
       )}
       {data.qualification && (
-        <Typography sx={{ p: 1 }}>{data.qualification}</Typography>
+        <Typography sx={{ p: 0.3, pl: 2, fontSize: '0.6rem' }}>{data.qualification}</Typography>
       )}
-      {data.job && <Typography sx={{ p: 1 }}>{data.job}</Typography>}
+      {data.job && <Typography sx={{ p: 0.3, pl: 2, fontSize: '0.6rem' }}>{data.job}</Typography>}
       {data.currLocation && (
-        <Typography sx={{ p: 1 }}>{data.currLocation}</Typography>
+        <Typography sx={{ p: 0.3, pl: 2, fontSize: '0.6rem' }}>{data.currLocation}</Typography>
       )}
-    </>
+    </Box>
   );
 
   const personNodeClasses = `person-node person-node-hoverable ${
