@@ -135,6 +135,11 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
             console.log("No active Supabase session found post-login by getSession, relying on refreshSession in useEffect.");
         }
 
+        if (redirectPath) {
+          window.location.href = redirectPath;
+          setRedirectPath(null); // Clear the redirect path
+        }
+
       } catch (error) {
         console.error("Login failed via RTK query:", error);
         setLocalUser(null);
@@ -144,7 +149,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
         throw error;
       }
     },
-    [rtkLoginWithGoogle, refetchSession]
+    [rtkLoginWithGoogle, refetchSession, redirectPath, setRedirectPath]
   );
 
   const logout = useCallback(async () => {

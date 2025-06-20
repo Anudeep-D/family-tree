@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Date;
 import java.util.List;
@@ -41,15 +42,25 @@ public class TreeController {
     public ResponseEntity<?> getTree(@Parameter(description = "elementId of the tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:72")
                                      @PathVariable String elementId) { // HttpSession removed
         log.info("TreeController: get tree");
-         User currentUser = commonUtils.getCurrentAuthenticatedUser();
-        commonUtils.accessCheck(elementId,null); // Example: if creating trees needs a general role
-         Optional<Tree> tree = userTreeService.getTreeWithAccess(currentUser.getElementId(),elementId);
-        if(tree.isPresent()){
-            Tree localTree = tree.get();
-            localTree.setAccess(Constants.getRoleForRel(localTree.getAccess()));
-            return ResponseEntity.ok().body(localTree);
+        User currentUser = commonUtils.getCurrentAuthenticatedUser();
+        try {
+            commonUtils.accessCheck(elementId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        } catch (Exception e) {
+            log.error("Don't have access", e);  // log stack trace
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Access denied – you currently don’t have access to this tree.", e);
         }
-        return ResponseEntity.ok().body(tree.orElseThrow());
+        try {
+            Optional<Tree> tree = userTreeService.getTreeWithAccess(currentUser.getElementId(),elementId);
+            if(tree.isPresent()){
+                Tree localTree = tree.get();
+                localTree.setAccess(Constants.getRoleForRel(localTree.getAccess()));
+                return ResponseEntity.ok().body(localTree);
+            }
+            return ResponseEntity.ok().body(tree.orElseThrow());
+        } catch (Exception e) {
+            log.error("Failed to fetch tree", e);  // log stack trace
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error getting tree", e);
+        }
     }
 
     @GetMapping("/")

@@ -48,8 +48,8 @@ public class GraphController {
             HttpSession session
     ) {
         log.info("GraphController: entered complete graph mode");
-        commonUtils.accessCheck(treeId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
         try {
+            commonUtils.accessCheck(treeId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
             log.info("GraphController: Fetching the complete graph");
             return graphService.getGraph(treeId);
         } catch (Exception e) {
