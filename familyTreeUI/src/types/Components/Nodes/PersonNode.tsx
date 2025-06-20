@@ -4,18 +4,16 @@ import "./PersonNode.scss";
 import { NodeDataMap, Nodes } from "@/types/nodeTypes";
 import { useState, useEffect } from "react";
 import dayjs from "dayjs";
-import { useAuth } from "@/hooks/useAuth";
 import { getImage } from "@/routes/common/imageStorage";
 import IconButton from "@mui/material/IconButton";
-import InfoIcon from "@mui/icons-material/Info";
+import { InfoTwoTone } from "@mui/icons-material";
 import Popover from "@mui/material/Popover";
 import Typography from "@mui/material/Typography";
+import { Button } from "@mui/material";
 
 export type PersonNode = Node<NodeDataMap[Nodes.Person], Nodes.Person>;
 
 const PersonNode = ({ data }: NodeProps<PersonNode>) => {
-  const { user } = useAuth(); // Get user object from useAuth
-
   const [imageUrlToDisplay, setImageUrlToDisplay] = useState<
     string | undefined
   >(undefined);
@@ -33,6 +31,34 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
   const openPopover = Boolean(anchorEl);
   const popoverId = openPopover ? "simple-popover" : undefined;
 
+  const hasExtraDetails =
+    data.gender ||
+    data.dob ||
+    data.doe ||
+    data.qualification ||
+    data.job ||
+    data.currLocation;
+
+  const mainContent = (
+    <div className="node-content">
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <strong>{data.name}</strong>
+        {hasExtraDetails && (
+          <IconButton
+            aria-describedby={popoverId}
+            size="small" // Keep small for now, can adjust if needed
+            onClick={handlePopoverOpen}
+            // Remove sx prop with absolute positioning and background
+            style={{ marginLeft: "4px" }} // Add some space between name and icon
+          >
+            <InfoTwoTone fontSize="small" />
+          </IconButton>
+        )}
+      </div>
+      {data.nickName && <div className="nickname">({data.nickName})</div>}
+    </div>
+  );
+
   useEffect(() => {
     if (data.imageUrl) {
       const urlPromise = getImage(data.imageUrl);
@@ -47,30 +73,22 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
     }
   }, [data.imageUrl]); // Re-run if imageUrl or user changes
 
-  const hasExtraDetails =
-    data.gender ||
-    data.dob ||
-    data.doe ||
-    data.qualification ||
-    data.job ||
-    data.currLocation;
-
   const extraDetailsContent = (
     <>
       <Typography sx={{ p: 2, fontWeight: "bold" }}>{data.name}</Typography>
-      {data.nickName && <Typography sx={{ p: 1, pt:0 }}>({data.nickName})</Typography>}
+      {data.nickName && (
+        <Typography sx={{ p: 1, pt: 0 }}>({data.nickName})</Typography>
+      )}
       {data.gender && <Typography sx={{ p: 1 }}>{data.gender}</Typography>}
       {data.dob && (
-        <Typography
-          sx={{ p: 1 }}
-          className="green"
-        >{`DOB: ${dayjs(data.dob).format("DD-MMM-YYYY")}`}</Typography>
+        <Typography sx={{ p: 1 }} className="green">{`DOB: ${dayjs(
+          data.dob
+        ).format("DD-MMM-YYYY")}`}</Typography>
       )}
       {data.doe && (
-        <Typography
-          sx={{ p: 1 }}
-          className="red"
-        >{`DOE: ${dayjs(data.doe).format("DD-MMM-YYYY")}`}</Typography>
+        <Typography sx={{ p: 1 }} className="red">{`DOE: ${dayjs(
+          data.doe
+        ).format("DD-MMM-YYYY")}`}</Typography>
       )}
       {data.qualification && (
         <Typography sx={{ p: 1 }}>{data.qualification}</Typography>
@@ -82,17 +100,12 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
     </>
   );
 
-  const mainContent = (
-    <div className="node-content">
-      <strong>{data.name}</strong>
-      {data.nickName && <div className="nickname">({data.nickName})</div>}
-    </div>
-  );
-
   const personNodeClasses = `person-node person-node-hoverable ${
     data.isAlive ? "alive" : "deceased"
   } ${imageUrlToDisplay ? "has-image" : ""}`;
 
+  const displayLabel =
+    data.name.length > 13 ? `${data.name.slice(0, 10)}...` : data.name;
   return (
     <div
       className={personNodeClasses}
@@ -104,28 +117,63 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
     >
       {imageUrlToDisplay ? (
         <div className="node-content">
-          <strong className="person-name-on-image">{data.name}</strong>
+          {/* This div will act as the new 'person-name-on-image' styled container */}
+          <div
+            className="person-name-on-image"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Button
+              variant="text"
+              className="person-name-on-image"
+              size="small"
+              disableRipple
+              disableElevation
+              sx={{
+                backgroundColor: "transparent",
+                padding: 0,
+                fontWeight: "bold",
+                fontSize: "14px",
+                textTransform: "none",
+                fontFamily: "Impact, Charcoal, sans-serif",
+                WebkitTextStroke: "0.5px #ffffff", // yellow stroke
+                color: "#111111", // inner fill
+              }}
+              onClick={handlePopoverOpen}
+              endIcon={
+                <InfoTwoTone
+                  fontSize="small"
+                  sx={{ fill: "#ffffff" }}
+                />
+              }
+            >
+              {displayLabel}
+            </Button>
+            {/* {hasExtraDetails && (
+              <IconButton
+                aria-describedby={popoverId}
+                size="small" // Consistent with the other usage
+                onClick={handlePopoverOpen}
+                // sx prop for s
+                // pecific styling on image, e.g., making icon color white if text is white
+                sx={{ 
+                  marginLeft: '4px', 
+                  color: 'white', // Assuming text on image is white
+                  // Add a subtle background to the icon if needed for contrast,
+                  // but be mindful of how it looks on various images.
+                  // backgroundColor: 'rgba(0, 0, 0, 0.2)' 
+                }}
+              >
+                <InfoTwoTone fontSize="small" />
+              </IconButton>
+            )} */}
+          </div>
         </div>
       ) : (
         mainContent
-      )}
-      {hasExtraDetails && (
-        <IconButton
-          aria-describedby={popoverId}
-          size="small"
-          onClick={handlePopoverOpen}
-          sx={{
-            position: "absolute",
-            top: 2,
-            right: 2,
-            backgroundColor: "rgba(255, 255, 255, 0.7)", // Optional: for better visibility
-            "&:hover": {
-              backgroundColor: "rgba(255, 255, 255, 1)", // Optional: for better visibility
-            },
-          }}
-        >
-          <InfoIcon fontSize="small" /> {/* Adjusted icon size */}
-        </IconButton>
       )}
       <Popover
         id={popoverId}

@@ -40,12 +40,6 @@
     color: white; // Default text color on image, can be overridden by specific elements
 
     .person-name-on-image {
-      font-weight: bold;
-      font-size: 0.9em; 
-      padding: 5px 15px; // Adjusted padding
-      background-color: rgba(0, 0, 0, 0.65); // Slightly adjusted for potentially better readability
-      color: white; // Ensure text color is white
-      z-index: 2;
       
       position: absolute;
       bottom: 5px; // Positioned closer to the bottom edge of the node
@@ -58,23 +52,7 @@
       
       text-align: center;
       white-space: nowrap;
-      overflow: hidden;
       text-overflow: ellipsis;
-
-      // --- Key change for curved appearance ---
-      // This creates a more pronounced curve on the top edges of the background.
-      // Format: border-top-left-radius border-top-right-radius border-bottom-right-radius border-bottom-left-radius
-      // The slash allows for elliptical corners: horizontal-radii / vertical-radii
-      // We want the top edge to curve, bottom edge less so or straight.
-      border-radius: 6px 6px 25px 25px / 6px 6px 18px 18px;
-      // Explanation of values:
-      // Top-left & Top-right horizontal radius: 25px
-      // Bottom-right & Bottom-left horizontal radius: 6px
-      // Top-left & Top-right vertical radius: 18px (this gives the curve height)
-      // Bottom-right & Bottom-left vertical radius: 6px
-      // This should make the top border of the text background appear curved,
-      // somewhat parallel to the main circular node's border.
-      // --- End of key change ---
     }
 
     .details-overlay {

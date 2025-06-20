@@ -34,12 +34,13 @@ const HouseNode = ({ data }: NodeProps<HouseNode>) => {
           size="small"
           onClick={handlePopoverOpen}
           sx={{
+            padding: 0,
             position: "absolute",
-            top: 2, // Adjust as needed
-            right: 2, // Adjust as needed
-            backgroundColor: "rgba(255, 255, 255, 0.7)", // Optional: for better visibility
+            top: 3, // Adjust as needed
+            right: 3, // Adjust as needed
+            backgroundColor: "#c41212b3", // Optional: for better visibility
             "&:hover": {
-              backgroundColor: "rgba(255, 255, 255, 1)", // Optional: for better visibility
+              backgroundColor: "#660e0e14", // Optional: for better visibility
             },
           }}
         >
