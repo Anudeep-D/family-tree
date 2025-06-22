@@ -14,11 +14,17 @@ import {
 import "./Options.scss";
 import AccessDialog from "./Option/AccessDialog/AccessDialog";
 import { Tree } from "@/types/entityTypes";
+import { TransPopper } from "./Popper/TransPopper";
+import { Autocomplete, ClickAwayListener, TextField } from "@mui/material";
 
 interface OptionsProps {
   tree: Tree;
   sortTree: () => void;
 }
+const options = [
+  { label: "The Godfather", id: 1 },
+  { label: "Pulp Fiction", id: 2 },
+];
 
 const actions = [
   {
@@ -35,40 +41,60 @@ const actions = [
     icon: <TuneTwoTone sx={{ color: "#64ffda" }} />,
     name: "Filter",
     actionKey: "filter",
+    airaDescribedby: "transition-popper",
   },
   {
     icon: <SearchTwoTone sx={{ color: "#ffd54f" }} />,
-    name: "Search",
-    actionKey: "search",
+    name: "Find",
+    actionKey: "find",
+    airaDescribedby: "transition-popper",
   },
   {
     icon: <PersonPinCircleTwoTone sx={{ color: "#ff9d9d" }} />,
     name: "Root",
     actionKey: "root",
+    airaDescribedby: "transition-popper",
   },
   {
     icon: <SmartToyTwoTone sx={{ color: "#82b1ff" }} />,
     name: "Chat",
     actionKey: "chat",
+    airaDescribedby: "transition-popper",
   },
 ];
 
 export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
   const [open, setOpen] = React.useState(false);
   const [isAccessDialogOpen, setAccessDialogOpen] = React.useState(false);
+  const [openPopper, setOpenPopper] = React.useState(false);
+  const [popperAnchorEl, setPopperAnchorEl] = React.useState<
+    undefined | HTMLElement
+  >(undefined);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const handleActionClick = (actionKey: string) => {
+  const handleClickAway = () => {
+    setOpenPopper(false);
+    handleClose();
+  };
+  const handleActionClick = (
+    actionKey: string,
+    event: React.MouseEvent<HTMLElement>
+  ) => {
     if (actionKey === "access") {
       setAccessDialogOpen(true);
+      handleClose();
     }
-    if(actionKey === "sort"){
+    if (actionKey === "sort") {
       sortTree();
+      handleClose();
+    }
+    if (actionKey === "find") {
+      setPopperAnchorEl(event.currentTarget);
+      setOpenPopper(true);
     }
     // Add other action handlers here if needed
-    handleClose(); // Close SpeedDial for all actions for now
   };
 
   return (
@@ -76,67 +102,79 @@ export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
       <SpeedDial
         className="flow-options-dial"
         ariaLabel="Options"
-      icon={<SpeedDialIcon icon={<ListTwoTone fontSize="small" />} />}
-      onClose={handleClose}
-      onOpen={handleOpen}
-      open={open}
-      direction="left"
-      FabProps={{
-        size: "small",
-        sx: {
-          alignItems: "flex-end",
-          backgroundColor: "transparent",
-          boxShadow: "none",
-          minHeight: "30px",
-          width: "30px",
-          height: "30px",
-          color: "primary.main",
-          "&:hover": {
+        icon={<SpeedDialIcon icon={<ListTwoTone fontSize="small" />} />}
+        onClose={handleClose}
+        onOpen={handleOpen}
+        open={open}
+        direction="left"
+        FabProps={{
+          size: "small",
+          sx: {
+            alignItems: "flex-end",
             backgroundColor: "transparent",
+            boxShadow: "none",
+            minHeight: "30px",
+            width: "30px",
+            height: "30px",
+            color: "primary.main",
+            "&:hover": {
+              backgroundColor: "transparent",
+            },
           },
-        },
-      }}
-      sx={{
-        "& .MuiFab-root": {
-          minHeight: "30px",
-          width: "30px",
-          height: "30px",
-        },
-        "& .MuiSvgIcon-root": {
-          fontSize: "1.2rem",
-        },
-      }}
-    >
-      {actions.map((action) => (
-        <SpeedDialAction
-          key={action.name}
-          icon={action.icon}
-          onClick={() => handleActionClick(action.actionKey)}
-          slotProps={{
-            tooltip: { placement: "bottom", title: action.name },
-            fab: {
-              size: "small",
-              sx: {
-                backgroundColor: "transparent",
-                color: "text.primary",
-                boxShadow: "none",
-                minHeight: "30px",
-                width: "30px",
-                height: "30px",
-                "&:hover": {
-                  backgroundColor: "action.hover",
+        }}
+        sx={{
+          "& .MuiFab-root": {
+            minHeight: "30px",
+            width: "30px",
+            height: "30px",
+          },
+          "& .MuiSvgIcon-root": {
+            fontSize: "1.2rem",
+          },
+        }}
+      >
+        {actions.map((action) => (
+          <SpeedDialAction
+            aria-describedby={action.airaDescribedby}
+            key={action.name}
+            icon={action.icon}
+            onClick={(event) => handleActionClick(action.actionKey, event)}
+            slotProps={{
+              tooltip: { placement: "bottom", title: action.name },
+              fab: {
+                size: "small",
+                sx: {
+                  backgroundColor: "transparent",
+                  color: "text.primary",
+                  boxShadow: "none",
+                  minHeight: "30px",
+                  width: "30px",
+                  height: "30px",
+                  "&:hover": {
+                    backgroundColor: "action.hover",
+                  },
                 },
               },
-            },
-          }}
-        />
-      ))}
-    </SpeedDial>
-    <AccessDialog
-      open={isAccessDialogOpen}
-      onClose={() => setAccessDialogOpen(false)}
-      tree={tree}
-    />
-  </>
+            }}
+          />
+        ))}
+      </SpeedDial>
+      <AccessDialog
+        open={isAccessDialogOpen}
+        onClose={() => setAccessDialogOpen(false)}
+        tree={tree}
+      />
+      <TransPopper open={openPopper} anchorEl={popperAnchorEl}>
+        <ClickAwayListener onClickAway={handleClickAway}>
+          <Autocomplete
+            size="small"
+            disablePortal
+            options={options}
+            sx={{ width: 300 }}
+            renderInput={(params) => <TextField {...params} label="Movie" />}
+          />
+        </ClickAwayListener>
+      </TransPopper>
+    </>
   );
 };
