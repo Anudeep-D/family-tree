@@ -3,9 +3,11 @@ import { graphApi } from "@/redux/queries/graph-endpoints";
 import { treeApi } from "@/redux/queries/tree-endpoints"; // Changed from treeApi
 import { userApi } from "@/redux/queries/user-endpoints";
 import { authApi } from "@/redux/queries/auth-endpoints";
+import treeConfigReducer from "@/redux/treeConfigSlice";
 
 export const store = configureStore({
   reducer: {
+    treeConfig: treeConfigReducer, // Add the treeConfigSlice reducer
     [userApi.reducerPath]: userApi.reducer,
     [treeApi.reducerPath]: treeApi.reducer, // Changed from treeApi
     [graphApi.reducerPath]: graphApi.reducer,

@@ -8,8 +8,10 @@ import {
   CircularProgress,
   Container,
 } from "@mui/material";
-import React from "react";
+import React, { useEffect } from "react";
 import FlowCanvas from "./GraphFlow/GraphFlow";
+import { useDispatch } from "react-redux";
+import { setCurrentTree } from "@/redux/treeConfigSlice";
 export type TreeProps = {
   tree: TreeType; // Changed
 };
@@ -22,6 +24,14 @@ const Tree: React.FC<TreeProps> = ({ tree }) => { // Changed
     isError: isGraphError,
     error: graphError,
   } = useGetGraphQuery({ treeId: tree.elementId! }, { skip: !tree }); // Changed
+
+  const dispatch = useDispatch();
+  useEffect(() => {
+    // TODO: Replace null with actual tree data when available
+    // For example, if 'tree' prop is the actual tree data: dispatch(setCurrentTree(tree));
+    dispatch(setCurrentTree(tree));
+  }, [dispatch, tree]); // Add tree to dependency array if it's used to set the current tree
+
 
   if (isGraphFetching || isGraphLoading)
     return (

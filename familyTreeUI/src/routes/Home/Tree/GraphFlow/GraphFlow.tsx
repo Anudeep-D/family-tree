@@ -17,7 +17,7 @@ import {
   XYPosition,
   MarkerType, // Added MarkerType
 } from "@xyflow/react";
-import { FC, useCallback, useRef, useState } from "react";
+import { FC, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDeleteTreeMutation } from "@/redux/queries/tree-endpoints";
 import { NodeButtons } from "./Options/NodeButtons";
@@ -29,6 +29,8 @@ import { EdgeDialog } from "./EdgeDialog/EdgeDialog";
 import { Role } from "@/types/common";
 import { getDiff } from "@/utils/common";
 import { Source } from "@mui/icons-material";
+import { setReduxNodes, setReduxEdges } from "@/redux/treeConfigSlice";
+import { useDispatch } from "react-redux";
 
 // Define defaultMarker outside the component if it's static, or inside if it depends on props/theme
 const defaultMarker = {
@@ -49,6 +51,9 @@ const GraphFlow: FC<GraphFlowProps> = ({
   initialEdges,
   tree,
 }) => {
+
+  const dispatch = useDispatch(); // Initialize useDispatch
+  
   const isViewer = tree.access === Role.Viewer;
   const [deleteTree, { isLoading: isDeleting, error: deleteError }] =
     useDeleteTreeMutation();
@@ -72,6 +77,12 @@ const GraphFlow: FC<GraphFlowProps> = ({
   const [nodes, setNodes, onNodesChange] = useNodesState(initNodes);
   // Initialize useEdgesState with edges that have markers and classNames
   const [edges, setEdges, onEdgesChange] = useEdgesState(initEdgesWithMarkers);
+
+
+  useEffect(() => {
+    dispatch(setReduxNodes(nodes));
+    dispatch(setReduxEdges(edges));
+  }, [dispatch, nodes, edges]);
 
   const [prevNodes, setPrevNodes] = useState<AppNode[]>(initNodes);
   // Initialize prevEdges with edges that have markers and classNames
