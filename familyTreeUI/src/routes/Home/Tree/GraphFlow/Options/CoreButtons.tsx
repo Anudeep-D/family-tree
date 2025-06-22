@@ -38,7 +38,7 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
   };
   return (
     <Box className="flow-save-buttons">
-      <Options />
+      <Options tree={tree} /> {/* Pass tree.id as treeId */}
       {tree.access === Role.Admin && (
         <Tooltip title="Delete">
           <IconButton

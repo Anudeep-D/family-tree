@@ -29,6 +29,7 @@ public class User implements Serializable {
     private String email;
     private String name;
     private String picture;
+    private transient String access;
 
     @Relationship(type = Constants.ADMIN_REL, direction = Relationship.Direction.OUTGOING)
     private transient Set<Tree> adminTrees = new HashSet<>();

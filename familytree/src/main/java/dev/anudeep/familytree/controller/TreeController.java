@@ -1,6 +1,7 @@
 package dev.anudeep.familytree.controller;
 
 import dev.anudeep.familytree.controller.common.CommonUtils;
+import dev.anudeep.familytree.dto.RelationChangeSummary;
 import dev.anudeep.familytree.dto.RoleAssignmentRequest;
 import dev.anudeep.familytree.model.Tree;
 import dev.anudeep.familytree.model.Role;
@@ -18,10 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Tag(name = "Trees API", description = "Endpoints for trees related")
@@ -109,6 +107,33 @@ public class TreeController {
             userTreeService.createRelationship(user.getElementId(), elementId, Constants.getRelForRole(user.getRole()));
         });
         return ResponseEntity.ok().body("success");
+    }
+
+    @PostMapping("/{elementId}/updateusers")
+    @Operation(summary = "Update users to tree")
+    public ResponseEntity<Map<String,Integer>> updateUsersToTree(@Parameter(description = "elementId of the tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:72")
+                                            @PathVariable String elementId, @RequestBody List<RoleAssignmentRequest> users) { // HttpSession removed
+        log.info("updateusers:tree {}", elementId);
+        try {
+            commonUtils.accessCheck(elementId, new Role[]{Role.ADMIN}); // Example: if creating trees needs a general role
+        } catch (Exception e) {
+            log.error("Don't have access", e);  // log stack trace
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Access denied – you currently don’t have access to this tree.", e);
+        }
+        users.forEach((user) -> {
+            user.setRelation(Constants.getRelForRole(user.getRole()));
+        });
+        log.info("TreeController: Users count {} updating to tree {}", users.size(), elementId);
+        try {
+            RelationChangeSummary summary = userTreeService.updateUsersRelationShip(elementId, users);
+            Map<String,Integer> counts = new HashMap<>();
+            counts.putIfAbsent("updated", summary.getUpdatedCount());
+            counts.putIfAbsent("removed", summary.getPermanentlyDeletedCount());
+            counts.putIfAbsent("created", summary.getNewlyCreatedCount());
+            return ResponseEntity.ok().body(counts);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating user access: "+e.getMessage(), e);
+        }
     }
 
     @DeleteMapping("/{elementId}")

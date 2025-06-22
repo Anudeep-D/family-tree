@@ -59,6 +59,22 @@ export const treeApi = createApi({
         body: args.users,
       }),
     }),
+    updateUsersToTree: builder.mutation< // Renamed from addUsersToTree
+      Record<string,number>,
+      {
+        treeId: string; // Renamed from treeId
+        users: {
+          elementId: string;
+          role: Role | null;
+        }[];
+      }
+    >({
+      query: (args) => ({
+        url: `/${args.treeId}/updateusers`, // Renamed from args.treeId
+        method: "POST",
+        body: args.users,
+      }),
+    }),
     deleteTree: builder.mutation<void, string>({
       query: (treeId) => ({
         url: `/${treeId}`,
@@ -82,6 +98,7 @@ export const {
   useGetTreesQuery, // Renamed from useGetTreesQuery
   useCreateTreeMutation, // Renamed from useCreateTreeMutation
   useAddUsersToTreeMutation, // Renamed from useAddUsersToTreeMutation
+  useUpdateUsersToTreeMutation,
   useDeleteTreeMutation,
   useDeleteMultipleTreesMutation,
 } = treeApi; // Renamed from treeApi

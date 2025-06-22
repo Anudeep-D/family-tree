@@ -9,28 +9,69 @@ import {
   SmartToyTwoTone,
   SortTwoTone,
   TuneTwoTone,
-  PersonPinCircleTwoTone
+  PersonPinCircleTwoTone,
 } from "@mui/icons-material";
 import "./Options.scss";
+import AccessDialog from "./Option/AccessDialog/AccessDialog";
+import { Tree } from "@/types/entityTypes";
+
+interface OptionsProps {
+  tree: Tree;
+}
 
 const actions = [
-  { icon: <ManageAccountsTwoTone sx={{ color: "#82b1ff" }} />, name: "Access" },
-  { icon: <SortTwoTone sx={{ color: "#e040fb" }} />, name: "Sort" },
-  { icon: <TuneTwoTone sx={{ color: "#64ffda" }} />, name: "Filter" },
-  { icon: <SearchTwoTone sx={{ color: "#ffd54f" }} />, name: "Search" },
-  { icon: <PersonPinCircleTwoTone sx={{ color: "#ff9d9d" }} />, name: "Root" },
-  { icon: <SmartToyTwoTone sx={{ color: "#82b1ff" }} />, name: "Chat" },
+  {
+    icon: <ManageAccountsTwoTone sx={{ color: "#82b1ff" }} />,
+    name: "Access",
+    actionKey: "access",
+  },
+  {
+    icon: <SortTwoTone sx={{ color: "#e040fb" }} />,
+    name: "Sort",
+    actionKey: "sort",
+  },
+  {
+    icon: <TuneTwoTone sx={{ color: "#64ffda" }} />,
+    name: "Filter",
+    actionKey: "filter",
+  },
+  {
+    icon: <SearchTwoTone sx={{ color: "#ffd54f" }} />,
+    name: "Search",
+    actionKey: "search",
+  },
+  {
+    icon: <PersonPinCircleTwoTone sx={{ color: "#ff9d9d" }} />,
+    name: "Root",
+    actionKey: "root",
+  },
+  {
+    icon: <SmartToyTwoTone sx={{ color: "#82b1ff" }} />,
+    name: "Chat",
+    actionKey: "chat",
+  },
 ];
 
-export const Options = () => {
+export const Options: React.FC<OptionsProps> = ({ tree }) => {
   const [open, setOpen] = React.useState(false);
+  const [isAccessDialogOpen, setAccessDialogOpen] = React.useState(false);
+
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
+  const handleActionClick = (actionKey: string) => {
+    if (actionKey === "access") {
+      setAccessDialogOpen(true);
+    }
+    // Add other action handlers here if needed
+    handleClose(); // Close SpeedDial for all actions for now
+  };
+
   return (
-    <SpeedDial
-      className="flow-options-dial"
-      ariaLabel="Options"
+    <>
+      <SpeedDial
+        className="flow-options-dial"
+        ariaLabel="Options"
       icon={<SpeedDialIcon icon={<ListTwoTone fontSize="small" />} />}
       onClose={handleClose}
       onOpen={handleOpen}
@@ -66,7 +107,7 @@ export const Options = () => {
         <SpeedDialAction
           key={action.name}
           icon={action.icon}
-          onClick={handleClose}
+          onClick={() => handleActionClick(action.actionKey)}
           slotProps={{
             tooltip: { placement: "bottom", title: action.name },
             fab: {
@@ -87,5 +128,11 @@ export const Options = () => {
         />
       ))}
     </SpeedDial>
+    <AccessDialog
+      open={isAccessDialogOpen}
+      onClose={() => setAccessDialogOpen(false)}
+      tree={tree}
+    />
+  </>
   );
 };

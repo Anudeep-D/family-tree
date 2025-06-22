@@ -9,6 +9,7 @@ export type User = {
   adminTrees?: any[];
   editorTrees?: any[];
   viewerTrees?: any[];
+  access?: Role;
 };
 
 export type Tree = { // Renamed from Tree

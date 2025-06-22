@@ -22,7 +22,14 @@ export const userApi = createApi({
       }),
       providesTags: ["userApi"],
     }),
+    getUsersAccessWithTree: builder.query<User[], { treeId: string }>({
+      query: (args) => ({
+        url: `/${args.treeId}`,
+        method: "GET",
+      }),
+      providesTags: ["userApi"],
+    }),
   }),
 });
 
-export const { useGetUsersQuery, } = userApi;
+export const { useGetUsersQuery, useGetUsersAccessWithTreeQuery } = userApi;

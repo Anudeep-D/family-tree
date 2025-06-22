@@ -1,5 +1,7 @@
 package dev.anudeep.familytree.service;
 
+import dev.anudeep.familytree.dto.RelationChangeSummary;
+import dev.anudeep.familytree.dto.RoleAssignmentRequest;
 import dev.anudeep.familytree.model.Tree;
 import dev.anudeep.familytree.model.Role;
 import dev.anudeep.familytree.model.User;
@@ -14,10 +16,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 // import java.util.stream.Collectors; // For potential future use with results, not needed now
 
 @Slf4j
@@ -34,6 +34,10 @@ public class UserTreeService {
 
     public List<User> getUsers() {
         return userRepo.findUsers();
+    }
+
+    public List<User> getUsersAccessWithTree(String treeId) {
+        return userRepo.findUsersAccessWithTree(treeId);
     }
 
     public Optional<Tree> getTreeByElementId(String elementId) {
@@ -93,6 +97,20 @@ public class UserTreeService {
             WHERE elementId(t) = $treeId
             MERGE (u)-[:%s]->(t)
         """, relationType)).bindAll(Map.of("userId", userId, "treeId", treeId)).run();
+    }
+
+    public RelationChangeSummary updateUsersRelationShip(String treeId, List<RoleAssignmentRequest> users) throws Exception{
+
+        List<Map<String, String>> userMaps = users.stream()
+                .map(user -> {
+                    Map<String, String> map = new HashMap<>();
+                    map.put("elementId", user.getElementId());
+                    map.put("relation", user.getRelation());
+                    return map;
+                })
+                .collect(Collectors.toList());
+        log.info("Users to update {} for treeId {}", userMaps, treeId);
+        return treeRepo.updateUsersRelationShip(treeId, userMaps);
     }
 
     @Transactional // Recommended for operations that modify data

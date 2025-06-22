@@ -14,6 +14,14 @@ public interface UserRepository extends Neo4jRepository<User, String> {
     @Query("MATCH (p:User) RETURN p {.*, elementId: elementId(p) } AS person")
     List<User> findUsers();
 
+    // Find users with access for a tree
+    @Query("""
+             MATCH (u:User)
+              OPTIONAL MATCH (u)-[r]->(m:Tree) WHERE elementId(m) = $elementId
+              RETURN u {.*, elementId: elementId(u), access:type(r) } AS user
+            """)
+    List<User> findUsersAccessWithTree(String elementId);
+
     // Find user
     @Query("MATCH (p:User) WHERE elementId(p) = $elementId RETURN p {.*, elementId: elementId(p) } AS user")
     Optional<User> findByElementId(String elementId);

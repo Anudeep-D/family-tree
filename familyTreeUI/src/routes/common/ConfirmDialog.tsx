@@ -9,7 +9,7 @@ import {
 
 export type ConfirmDialogProps = {
   open: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   onConfirm?: () => void;
   type?:
     | "inherit"
