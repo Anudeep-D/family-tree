@@ -17,6 +17,7 @@ import { Tree } from "@/types/entityTypes";
 
 interface OptionsProps {
   tree: Tree;
+  sortTree: () => void;
 }
 
 const actions = [
@@ -52,7 +53,7 @@ const actions = [
   },
 ];
 
-export const Options: React.FC<OptionsProps> = ({ tree }) => {
+export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
   const [open, setOpen] = React.useState(false);
   const [isAccessDialogOpen, setAccessDialogOpen] = React.useState(false);
 
@@ -62,6 +63,9 @@ export const Options: React.FC<OptionsProps> = ({ tree }) => {
   const handleActionClick = (actionKey: string) => {
     if (actionKey === "access") {
       setAccessDialogOpen(true);
+    }
+    if(actionKey === "sort"){
+      sortTree();
     }
     // Add other action handlers here if needed
     handleClose(); // Close SpeedDial for all actions for now

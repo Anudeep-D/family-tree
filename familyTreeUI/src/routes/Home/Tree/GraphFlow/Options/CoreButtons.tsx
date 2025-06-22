@@ -13,7 +13,8 @@ type CoreButtonsProps = {
   handleReset: () => void;
   handleSave: () => void;
   handleDelete: () => void;
-  disabled?:boolean;
+  disabled?: boolean;
+  sortTree:() => void;
 };
 export const CoreButtons: React.FC<CoreButtonsProps> = ({
   tree,
@@ -21,6 +22,7 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
   handleSave,
   handleDelete,
   disabled,
+  sortTree,
 }) => {
   //ConfirmDialog related
   const [dialogOpen, setDialogOpen] = useState<ConfirmProps>({ open: false });
@@ -38,7 +40,7 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
   };
   return (
     <Box className="flow-save-buttons">
-      <Options tree={tree} /> {/* Pass tree.id as treeId */}
+      <Options tree={tree} sortTree={sortTree}/> {/* Pass tree.id as treeId */}
       {tree.access === Role.Admin && (
         <Tooltip title="Delete">
           <IconButton
@@ -56,29 +58,37 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
               })
             }
           >
-            <DeleteTwoTone fontSize="small" color={disabled ? "disabled": "error"} />
+            <DeleteTwoTone
+              fontSize="small"
+              color={disabled ? "disabled" : "error"}
+            />
           </IconButton>
         </Tooltip>
       )}
-      <Tooltip title="Reset">
-        <IconButton
-          disabled={disabled}
-          size="small"
-          aria-label="reset"
-          onClick={() =>
-            setDialogOpen({
-              open: true,
-              type: "warning",
-              action: "Reset",
-              title: `Reset tree ${tree.name}`,
-              message:
-                "Are you sure you want to reset this tree to original? This action cannot be undone.",
-            })
-          }
-        >
-          <Restore fontSize="small" color={disabled ? "disabled": "action"} />
-        </IconButton>
-      </Tooltip>
+      {tree.access === Role.Admin && (
+        <Tooltip title="Reset">
+          <IconButton
+            disabled={disabled}
+            size="small"
+            aria-label="reset"
+            onClick={() =>
+              setDialogOpen({
+                open: true,
+                type: "warning",
+                action: "Reset",
+                title: `Reset tree ${tree.name}`,
+                message:
+                  "Are you sure you want to reset this tree to original? This action cannot be undone.",
+              })
+            }
+          >
+            <Restore
+              fontSize="small"
+              color={disabled ? "disabled" : "action"}
+            />
+          </IconButton>
+        </Tooltip>
+      )}
       {(tree.access === Role.Admin || tree.access === Role.Editor) && (
         <Tooltip title="Save">
           <IconButton
@@ -95,7 +105,10 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
               })
             }
           >
-            <SaveTwoTone fontSize="small" color={disabled ? "disabled": "primary"} />
+            <SaveTwoTone
+              fontSize="small"
+              color={disabled ? "disabled" : "primary"}
+            />
           </IconButton>
         </Tooltip>
       )}

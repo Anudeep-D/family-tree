@@ -75,43 +75,43 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
 
   const extraDetailsContent = (
     <Box>
-      <Typography sx={{ p: 2, pb: 1, fontWeight: "bold", fontSize: "0.7rem" }}>
+      <Typography sx={{ py: 1, px: 1.5, fontWeight: "bold", fontSize: "0.7rem" }}>
         {data.name}
       </Typography>
       {data.nickName && (
-        <Typography sx={{ p: 0.3, pl: 2, fontSize: "0.6rem" }}>
+        <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
           ({data.nickName})
         </Typography>
       )}
       {data.gender && (
-        <Typography sx={{ p: 0.3, pl: 2, fontSize: "0.6rem" }}>
+        <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
           {data.gender}
         </Typography>
       )}
       {data.dob && (
         <Typography
-          sx={{ p: 0.3, pl: 2, fontSize: "0.6rem" }}
+          sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}
           className="green"
         >{`DOB: ${dayjs(data.dob).format("DD-MMM-YYYY")}`}</Typography>
       )}
       {data.doe && (
         <Typography
-          sx={{ p: 0.3, pl: 2, fontSize: "0.6rem" }}
+          sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}
           className="red"
         >{`DOE: ${dayjs(data.doe).format("DD-MMM-YYYY")}`}</Typography>
       )}
       {data.qualification && (
-        <Typography sx={{ p: 0.3, pl: 2, fontSize: "0.6rem" }}>
+        <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
           {data.qualification}
         </Typography>
       )}
       {data.job && (
-        <Typography sx={{ p: 0.3, pl: 2, fontSize: "0.6rem" }}>
+        <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
           {data.job}
         </Typography>
       )}
       {data.currLocation && (
-        <Typography sx={{ p: 0.3, pl: 2, fontSize: "0.6rem" }}>
+        <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
           {data.currLocation}
         </Typography>
       )}

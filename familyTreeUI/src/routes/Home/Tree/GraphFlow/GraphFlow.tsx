@@ -165,7 +165,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
       setEdgeDialogMode("new");
     },
     // defaultMarker is a const, not reactive. Add other state setters if they are used directly.
-    [setNewEdge, setEdgeDialogMode]
+    [setNewEdge, setEdgeDialogMode, nodes]
   );
 
   const onEdgeDialogClose = () => {
@@ -283,6 +283,18 @@ const GraphFlow: FC<GraphFlowProps> = ({
       // Error will be caught and displayed by the Alert component via deleteError state
     }
   };
+
+  // Options
+  // Sort
+  const sortTree = () => {
+    const { nodes: sortedNodes, edges: sortedEdges } = getLayoutedElements(
+      nodes,
+      edges
+    );
+    setNodes(sortedNodes);
+    setEdges(sortedEdges);
+  };
+
   return (
     <Box display="flex" flexDirection="column" height="85vh" width="100vw">
       {deleteError && (
@@ -376,7 +388,6 @@ const GraphFlow: FC<GraphFlowProps> = ({
                 }
           }
           fitView
-          nodesDraggable={!isViewer}
           nodesConnectable={!isViewer}
           nodesFocusable={!isViewer}
           edgesFocusable={!isViewer}
@@ -404,6 +415,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
             handleSave={handleSave}
             handleDelete={handleDelete}
             disabled={isDeleting || isSaving} // Update disabled state
+            sortTree={sortTree}
           />
         </ReactFlow>
       </Box>
