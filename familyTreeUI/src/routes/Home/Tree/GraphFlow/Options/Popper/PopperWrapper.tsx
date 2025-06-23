@@ -2,12 +2,12 @@ import React, { ReactNode } from "react";
 import Box from "@mui/material/Box";
 import Popper from "@mui/material/Popper";
 import Fade from "@mui/material/Fade";
-export type TransPopper = {
+export type PopperWrapperProps = {
   open: boolean;
   anchorEl?: HTMLElement;
   children?: ReactNode;
 };
-export const TransPopper: React.FC<TransPopper> = ({
+export const PopperWrapper: React.FC<PopperWrapperProps> = ({
   open,
   children,
   anchorEl,

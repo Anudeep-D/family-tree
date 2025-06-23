@@ -1,17 +1,19 @@
-import { AppEdge } from '@/types/edgeTypes';
-import { Tree } from '@/types/entityTypes';
-import { AppNode } from '@/types/nodeTypes';
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { AppEdge } from "@/types/edgeTypes";
+import { Tree } from "@/types/entityTypes";
+import { AppNode } from "@/types/nodeTypes";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-interface AppState {
+export type TreeConfigState = {
   currentTree: Tree | null;
   nodes: AppNode[];
   edges: AppEdge[];
   selectedFilters: object | any[];
   selectedRoot: AppNode | null;
 }
-
-const initialState: AppState = {
+type ParameterSetState = {
+  treeConfig: TreeConfigState;
+};
+const initialState: TreeConfigState = {
   currentTree: null,
   nodes: [],
   edges: [],
@@ -20,7 +22,7 @@ const initialState: AppState = {
 };
 
 const treeConfigSlice = createSlice({
-  name: 'treeConfig',
+  name: "treeConfig",
   initialState,
   reducers: {
     setCurrentTree: (state, action: PayloadAction<Tree | null>) => {
@@ -41,11 +43,11 @@ const treeConfigSlice = createSlice({
   },
 });
 
-export const selectTree = (state: AppState) => state.currentTree;
-export const selectNodes = (state: AppState) => state.nodes;
-export const selectEdges = (state: AppState) => state.edges;
-export const selectFilters = (state: AppState) => state.selectedFilters;
-export const selectRoot = (state: AppState) => state.selectedRoot;
+export const selectTree = (state: ParameterSetState) => state.treeConfig.currentTree;
+export const selectNodes = (state: ParameterSetState) => state.treeConfig.nodes;
+export const selectEdges = (state: ParameterSetState) => state.treeConfig.edges;
+export const selectFilters = (state: ParameterSetState) => state.treeConfig.selectedFilters;
+export const selectRoot = (state: ParameterSetState) => state.treeConfig.selectedRoot;
 
 export const {
   setCurrentTree,

@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useMemo, ReactElement } from "react";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
@@ -14,17 +14,16 @@ import {
 import "./Options.scss";
 import AccessDialog from "./Option/AccessDialog/AccessDialog";
 import { Tree } from "@/types/entityTypes";
-import { TransPopper } from "./Popper/TransPopper";
+import { PopperWrapper } from "./Popper/PopperWrapper";
 import { Autocomplete, ClickAwayListener, TextField } from "@mui/material";
+import { useSelector } from "react-redux";
+import { selectNodes } from "@/redux/treeConfigSlice";
+import { FindPopper } from "./Option/Find/FindPopper";
 
 interface OptionsProps {
   tree: Tree;
   sortTree: () => void;
 }
-const options = [
-  { label: "The Godfather", id: 1 },
-  { label: "Pulp Fiction", id: 2 },
-];
 
 const actions = [
   {
@@ -70,7 +69,9 @@ export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
   const [popperAnchorEl, setPopperAnchorEl] = React.useState<
     undefined | HTMLElement
   >(undefined);
-
+  const [popperChild, setPopperChild] = React.useState<ReactElement | null>(
+    null
+  );
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
@@ -92,6 +93,7 @@ export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
     }
     if (actionKey === "find") {
       setPopperAnchorEl(event.currentTarget);
+      setPopperChild(<FindPopper />);
       setOpenPopper(true);
     }
     // Add other action handlers here if needed
@@ -140,7 +142,13 @@ export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
             icon={action.icon}
             onClick={(event) => handleActionClick(action.actionKey, event)}
             slotProps={{
-              tooltip: { placement: "bottom", title: action.name },
+              tooltip: {
+                placement: "top",
+                title: action.name,
+                sx: {
+                  gap:0,
+                },
+              },
               fab: {
                 size: "small",
                 sx: {
@@ -164,17 +172,11 @@ export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
         onClose={() => setAccessDialogOpen(false)}
         tree={tree}
       />
-      <TransPopper open={openPopper} anchorEl={popperAnchorEl}>
+      <PopperWrapper open={openPopper} anchorEl={popperAnchorEl}>
         <ClickAwayListener onClickAway={handleClickAway}>
-          <Autocomplete
-            size="small"
-            disablePortal
-            options={options}
-            sx={{ width: 300 }}
-            renderInput={(params) => <TextField {...params} label="Movie" />}
-          />
+          {popperChild ? popperChild : <div />}
         </ClickAwayListener>
-      </TransPopper>
+      </PopperWrapper>
     </>
   );
 };

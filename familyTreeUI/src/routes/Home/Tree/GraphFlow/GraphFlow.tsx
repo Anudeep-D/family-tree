@@ -28,7 +28,6 @@ import { Tree } from "@/types/entityTypes";
 import { EdgeDialog } from "./EdgeDialog/EdgeDialog";
 import { Role } from "@/types/common";
 import { getDiff } from "@/utils/common";
-import { Source } from "@mui/icons-material";
 import { setReduxNodes, setReduxEdges } from "@/redux/treeConfigSlice";
 import { useDispatch } from "react-redux";
 
@@ -80,8 +79,8 @@ const GraphFlow: FC<GraphFlowProps> = ({
 
 
   useEffect(() => {
-    dispatch(setReduxNodes(nodes));
-    dispatch(setReduxEdges(edges));
+    nodes && dispatch(setReduxNodes(nodes));
+    edges && dispatch(setReduxEdges(edges));
   }, [dispatch, nodes, edges]);
 
   const [prevNodes, setPrevNodes] = useState<AppNode[]>(initNodes);
