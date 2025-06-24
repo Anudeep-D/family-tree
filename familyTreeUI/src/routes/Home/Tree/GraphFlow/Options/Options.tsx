@@ -1,4 +1,4 @@
-import React, { useMemo, ReactElement } from "react";
+import React, { ReactElement } from "react";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
@@ -15,9 +15,7 @@ import "./Options.scss";
 import AccessDialog from "./Option/AccessDialog/AccessDialog";
 import { Tree } from "@/types/entityTypes";
 import { PopperWrapper } from "./Popper/PopperWrapper";
-import { Autocomplete, ClickAwayListener, TextField } from "@mui/material";
-import { useSelector } from "react-redux";
-import { selectNodes } from "@/redux/treeConfigSlice";
+import { ClickAwayListener } from "@mui/material";
 import { FindPopper } from "./Option/Find/FindPopper";
 
 interface OptionsProps {

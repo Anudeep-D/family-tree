@@ -40,7 +40,7 @@ public class GraphService {
         Set<FlowNodeDTO> nodes = new HashSet<>();
         Set<FlowEdgeDTO> edges = new HashSet<>();
         String cypher = String.format("""
-            MATCH (n:Person)-[:%s]->(proj:Tree)
+            MATCH (m:Person | House)-[:%s]->(proj:Tree)
             WHERE elementId(proj) = $treeId
             OPTIONAL MATCH (m)-[r:%s|%s|%s]->(n)
             RETURN n, r, m

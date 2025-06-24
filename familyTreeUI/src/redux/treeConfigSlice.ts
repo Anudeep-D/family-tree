@@ -7,6 +7,8 @@ export type TreeConfigState = {
   currentTree: Tree | null;
   nodes: AppNode[];
   edges: AppEdge[];
+  filteredNodes: AppNode[];
+  filteredEdges: AppEdge[];
   selectedFilters: object | any[];
   selectedRoot: AppNode | null;
 }
@@ -17,6 +19,8 @@ const initialState: TreeConfigState = {
   currentTree: null,
   nodes: [],
   edges: [],
+  filteredNodes: [],
+  filteredEdges: [],
   selectedFilters: {},
   selectedRoot: null,
 };
@@ -33,6 +37,12 @@ const treeConfigSlice = createSlice({
     },
     setReduxEdges: (state, action: PayloadAction<AppEdge[]>) => {
       state.edges = action.payload;
+    },
+    setFilteredNodes: (state, action: PayloadAction<AppNode[]>) => {
+      state.filteredNodes = action.payload;
+    },
+    setFilteredEdges: (state, action: PayloadAction<AppEdge[]>) => {
+      state.filteredEdges = action.payload;
     },
     setSelectedFilters: (state, action: PayloadAction<object | any[]>) => {
       state.selectedFilters = action.payload;
