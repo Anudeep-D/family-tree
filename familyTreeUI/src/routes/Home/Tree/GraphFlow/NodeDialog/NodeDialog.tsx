@@ -19,6 +19,7 @@ import {
   // Switch, // Removed unused import
   FormHelperText,
   FormControlLabel,
+  Autocomplete,
 } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
@@ -38,7 +39,7 @@ import {
 } from "@/routes/common/imageStorage";
 import CropperDialog from "./CropperDialog";
 import { useAuth } from "@/hooks/useAuth";
-
+import options from "@/constants/JobAndQualification.json";
 type NodeDialogProps = {
   treeId: string;
   nodeId: string; // elementId for Supabase path
@@ -87,12 +88,16 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
   const [cropperOpen, setCropperOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    const processData = (data: Record<string, any> | undefined, isInitial: boolean) => {
+    const processData = (
+      data: Record<string, any> | undefined,
+      isInitial: boolean
+    ) => {
       const resultState: Record<string, any> = {};
       fields.forEach((field) => {
         const hasProperty = data?.hasOwnProperty(field.name);
         if (field.type === "jobObject" || field.type === "educationObject") {
-          resultState[field.name] = (hasProperty ? data?.[field.name] : undefined) ?? {};
+          resultState[field.name] =
+            (hasProperty ? data?.[field.name] : undefined) ?? {};
         } else if (field.type === "date") {
           const fieldValue = hasProperty ? data?.[field.name] : field.default;
           if (fieldValue && typeof fieldValue === "string") {
@@ -103,9 +108,13 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
             resultState[field.name] = null; // Default for date if no value/default
           }
         } else if (field.type === "boolean") {
-          resultState[field.name] = hasProperty ? data?.[field.name] : (field.default ?? false);
+          resultState[field.name] = hasProperty
+            ? data?.[field.name]
+            : field.default ?? false;
         } else {
-          resultState[field.name] = hasProperty ? data?.[field.name] : field.default;
+          resultState[field.name] = hasProperty
+            ? data?.[field.name]
+            : field.default;
         }
       });
       return resultState;
@@ -227,7 +236,11 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
     } else {
       // If we decide to store subfield errors like "job.jobTitle", this needs adjustment.
       // For now, clearing the parent field's error, or a specific subfield error if structured that way.
-      setErrors((prev) => ({ ...prev, [`${key}.${subFieldKey}`]: "" , [key]: ""})); // Clear both specific and parent
+      setErrors((prev) => ({
+        ...prev,
+        [`${key}.${subFieldKey}`]: "",
+        [key]: "",
+      })); // Clear both specific and parent
     }
   };
 
@@ -336,24 +349,137 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                 getDefaultValueType(field.type, field.name, type);
 
               let inputComponent;
-              if (field.type === "jobObject" || field.type === "educationObject") {
+              if (
+                field.type === "jobObject" ||
+                field.type === "educationObject"
+              ) {
                 inputComponent = (
-                  <Grid sx={{ gridColumn: "span 12" }} key={field.name}>
-                    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: "medium" }}>{field.label}</Typography>
+                  <Grid
+                    container
+                    sx={{ gridColumn: "span 12" }}
+                    key={field.name}
+                  >
+                    <Typography
+                      variant="subtitle1"
+                      sx={{ mb: 1, fontWeight: "medium" }}
+                    >
+                      {field.label}
+                    </Typography>
                     <Grid container spacing={2}>
-                      {field.subFields?.map(subField => (
-                        <Grid sx={{ gridColumn: "span 12" }} key={subField.name}>
-                          <TextField
-                            label={subField.label}
-                            required={subField.required}
-                            value={formState?.[field.name]?.[subField.name] ?? ""}
-                            onChange={(e) => handleChange(field.name, e.target.value, subField.name)}
-                            fullWidth
-                            InputLabelProps={{ shrink: !!(formState?.[field.name]?.[subField.name] || formState?.[field.name]?.[subField.name] === "") }}
-                            // Add error/helperText if validation is applied at sub-field level
-                            // error={!!errors[`${field.name}.${subField.name}`]}
-                            // helperText={errors[`${field.name}.${subField.name}`]}
-                          />
+                      {field.subFields?.map((subField) => (
+                        <Grid sx={{ gridColumn: "span 6" }} key={subField.name}>
+                          {subField.name === "jobType" && (
+                            <Autocomplete
+                              value={formState?.[field.name]?.[subField.name]}
+                              autoComplete
+                              autoHighlight
+                              fullWidth
+                              disablePortal
+                              options={options.JobTypeOptions}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  label="Select job type"
+                                />
+                              )}
+                              onChange={(
+                                _e,
+                                newValue: { id: string; label: string } | null
+                              ) =>
+                                handleChange(
+                                  field.name,
+                                  newValue?.id,
+                                  subField.name
+                                )
+                              }
+                            />
+                          )}
+                          {subField.name === "fieldOfStudy" && (
+                            <Autocomplete
+                              value={formState?.[field.name]?.[subField.name]}
+                              autoComplete
+                              autoHighlight
+                              fullWidth
+                              disablePortal
+                              options={options.fieldOfStudyOptions}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  label="Select field of study"
+                                />
+                              )}
+                              onChange={(
+                                _e,
+                                newValue: { id: string; label: string } | null
+                              ) =>
+                                handleChange(
+                                  field.name,
+                                  newValue?.id,
+                                  subField.name
+                                )
+                              }
+                            />
+                          )}
+                          {subField.name === "highestQualification" && (
+                            <Autocomplete
+                              value={formState?.[field.name]?.[subField.name]}
+                              autoComplete
+                              autoHighlight
+                              fullWidth
+                              disablePortal
+                              options={options.QualificationOptions}
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  label="Select highest qualification"
+                                />
+                              )}
+                              onChange={(
+                                _e,
+                                newValue: { id: string; label: string } | null
+                              ) =>
+                                handleChange(
+                                  field.name,
+                                  newValue?.id,
+                                  subField.name
+                                )
+                              }
+                            />
+                          )}
+                          {![
+                            "highestQualification",
+                            "fieldOfStudy",
+                            "jobType",
+                          ].includes(subField.name) && (
+                            <TextField
+                              label={subField.label}
+                              required={subField.required}
+                              value={
+                                formState?.[field.name]?.[subField.name] ?? ""
+                              }
+                              onChange={(e) =>
+                                handleChange(
+                                  field.name,
+                                  e.target.value,
+                                  subField.name
+                                )
+                              }
+                              fullWidth
+                              slotProps={{
+                                inputLabel: {
+                                  shrink: !!(
+                                    formState?.[field.name]?.[subField.name] ||
+                                    formState?.[field.name]?.[subField.name] ===
+                                      ""
+                                  ),
+                                },
+                              }}
+
+                              // Add error/helperText if validation is applied at sub-field level
+                              // error={!!errors[`${field.name}.${subField.name}`]}
+                              // helperText={errors[`${field.name}.${subField.name}`]}
+                            />
+                          )}
                         </Grid>
                       ))}
                     </Grid>
@@ -444,7 +570,10 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
               }
 
               // For jobObject/educationObject, the component is already wrapped in a full-width Grid
-              if (field.type === "jobObject" || field.type === "educationObject") {
+              if (
+                field.type === "jobObject" ||
+                field.type === "educationObject"
+              ) {
                 return inputComponent; // This is already a <Grid> element spanning 12 columns
               } else {
                 return (

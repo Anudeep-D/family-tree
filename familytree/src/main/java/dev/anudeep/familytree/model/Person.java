@@ -25,7 +25,7 @@ public class Person {
     private String name;
     private String gender;
     private String nickName;
-    private boolean isAlive;
+    private String isAlive;
     private Date dob;
     private Date doe;
     private Education education;

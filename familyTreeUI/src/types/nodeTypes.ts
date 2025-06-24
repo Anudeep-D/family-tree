@@ -74,6 +74,22 @@ export const nodeFieldsMetadata = {
       isField:true,
     },
     {
+      name: "isAlive",
+      type: ["Yes", "No"],
+      required: false,
+      label: "Is alive?",
+      default: "Yes",
+      isField:true,
+    },
+    {
+      name: "doe",
+      type: "date",
+      required: false,
+      label: "Died on",
+      default: undefined,
+      isField:true,
+    },
+    {
       name: "education",
       label: "Education Details",
       type: "educationObject",
@@ -99,22 +115,6 @@ export const nodeFieldsMetadata = {
         { name: "employer", label: "Employer", type: "string", required: false, isField: true },
         { name: "jobTitle", label: "Job Title", type: "string", required: false, isField: true }
       ]
-    },
-    {
-      name: "isAlive",
-      type: ["Yes", "No"],
-      required: false,
-      label: "Is alive?",
-      default: "Yes",
-      isField:true,
-    },
-    {
-      name: "doe",
-      type: "date",
-      required: false,
-      label: "Died on",
-      default: undefined,
-      isField:true,
     },
     {
       name: "imageUrl",

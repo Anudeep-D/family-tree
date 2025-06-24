@@ -1,0 +1,516 @@
+{
+    "fieldOfStudyOptions": [
+        {
+            "id": "arts",
+            "label": "Arts & Humanities"
+        },
+        {
+            "id": "sci",
+            "label": "Science"
+        },
+        {
+            "id": "comm",
+            "label": "Commerce"
+        },
+        {
+            "id": "comp",
+            "label": "Computer Science / IT"
+        },
+        {
+            "id": "engg",
+            "label": "Engineering"
+        },
+        {
+            "id": "med",
+            "label": "Medicine / Health Sciences"
+        },
+        {
+            "id": "law",
+            "label": "Law / Legal Studies"
+        },
+        {
+            "id": "mgmt",
+            "label": "Management / Business Studies"
+        },
+        {
+            "id": "edu",
+            "label": "Education / Teaching"
+        },
+        {
+            "id": "arch",
+            "label": "Architecture / Planning"
+        },
+        {
+            "id": "pharm",
+            "label": "Pharmacy"
+        },
+        {
+            "id": "agri",
+            "label": "Agriculture / Forestry"
+        },
+        {
+            "id": "vetsci",
+            "label": "Veterinary Science"
+        },
+        {
+            "id": "soc",
+            "label": "Sociology / Social Work"
+        },
+        {
+            "id": "psy",
+            "label": "Psychology"
+        },
+        {
+            "id": "econ",
+            "label": "Economics"
+        },
+        {
+            "id": "stat",
+            "label": "Statistics / Mathematics"
+        },
+        {
+            "id": "phys",
+            "label": "Physics"
+        },
+        {
+            "id": "chem",
+            "label": "Chemistry"
+        },
+        {
+            "id": "bio",
+            "label": "Biology / Life Sciences"
+        },
+        {
+            "id": "lit",
+            "label": "Languages / Literature"
+        },
+        {
+            "id": "hist",
+            "label": "History"
+        },
+        {
+            "id": "geo",
+            "label": "Geography"
+        },
+        {
+            "id": "polsci",
+            "label": "Political Science"
+        },
+        {
+            "id": "phil",
+            "label": "Philosophy"
+        },
+        {
+            "id": "masscom",
+            "label": "Mass Communication / Journalism"
+        },
+        {
+            "id": "finearts",
+            "label": "Fine Arts / Performing Arts"
+        },
+        {
+            "id": "env",
+            "label": "Environmental Science / Sustainability"
+        },
+        {
+            "id": "aviation",
+            "label": "Aviation"
+        },
+        {
+            "id": "hospitality",
+            "label": "Hospitality / Hotel Management"
+        },
+        {
+            "id": "sports",
+            "label": "Sports Science / Physical Education"
+        },
+        {
+            "id": "lib",
+            "label": "Library & Information Science"
+        },
+        {
+            "id": "anthro",
+            "label": "Anthropology / Archaeology"
+        },
+        {
+            "id": "intl",
+            "label": "International Relations"
+        },
+        {
+            "id": "pubadmin",
+            "label": "Public Administration"
+        }
+    ],
+    "QualificationOptions": [
+        {
+            "id": "10",
+            "label": "High School (10)"
+        },
+        {
+            "id": "12",
+            "label": "12th Pass (12)"
+        },
+        {
+            "id": "Dip",
+            "label": "Diploma (Dip)"
+        },
+        {
+            "id": "ITI",
+            "label": "Industrial Training Institute (ITI)"
+        },
+        {
+            "id": "BA",
+            "label": "Bachelor of Arts (BA)"
+        },
+        {
+            "id": "BSc",
+            "label": "Bachelor of Science (BSc)"
+        },
+        {
+            "id": "BCom",
+            "label": "Bachelor of Commerce (BCom)"
+        },
+        {
+            "id": "BBA",
+            "label": "Bachelor of Business Administration (BBA)"
+        },
+        {
+            "id": "BCA",
+            "label": "Bachelor of Computer Applications (BCA)"
+        },
+        {
+            "id": "BE",
+            "label": "Bachelor of Engineering (BE)"
+        },
+        {
+            "id": "MBBS",
+            "label": "Bachelor of Medicine, Bachelor of Surgery (MBBS)"
+        },
+        {
+            "id": "BPharm",
+            "label": "Bachelor of Pharmacy (BPharm)"
+        },
+        {
+            "id": "LLB",
+            "label": "Bachelor of Law (LLB)"
+        },
+        {
+            "id": "MA",
+            "label": "Master of Arts (MA)"
+        },
+        {
+            "id": "MSc",
+            "label": "Master of Science (MSc)"
+        },
+        {
+            "id": "MCom",
+            "label": "Master of Commerce (MCom)"
+        },
+        {
+            "id": "MBA",
+            "label": "Master of Business Administration (MBA)"
+        },
+        {
+            "id": "MCA",
+            "label": "Master of Computer Applications (MCA)"
+        },
+        {
+            "id": "ME",
+            "label": "Master of Engineering (ME)"
+        },
+        {
+            "id": "MPharm",
+            "label": "Master of Pharmacy (MPharm)"
+        },
+        {
+            "id": "LLM",
+            "label": "Master of Law (LLM)"
+        },
+        {
+            "id": "PhD",
+            "label": "Doctor of Philosophy (PhD)"
+        },
+        {
+            "id": "DSc",
+            "label": "Doctor of Science (DSc)"
+        },
+        {
+            "id": "CA",
+            "label": "Chartered Accountant (CA)"
+        },
+        {
+            "id": "CS",
+            "label": "Company Secretary (CS)"
+        },
+        {
+            "id": "CFA",
+            "label": "Chartered Financial Analyst (CFA)"
+        },
+        {
+            "id": "UPSC",
+            "label": "UPSC Qualified (UPSC)"
+        },
+        {
+            "id": "NET",
+            "label": "UGC NET Qualified (NET)"
+        },
+        {
+            "id": "GED",
+            "label": "General Education Development (GED)"
+        },
+        {
+            "id": "ADeg",
+            "label": "Associate Degree (ADeg)"
+        },
+        {
+            "id": "BHon",
+            "label": "Bachelor\u2019s (Hons) (BHon)"
+        },
+        {
+            "id": "MS",
+            "label": "Master of Science (MS) (MS)"
+        },
+        {
+            "id": "JD",
+            "label": "Juris Doctor (JD)"
+        },
+        {
+            "id": "MD",
+            "label": "Doctor of Medicine (MD)"
+        },
+        {
+            "id": "PostDoc",
+            "label": "Postdoctoral Research Fellow (PostDoc)"
+        },
+        {
+            "id": "PMP",
+            "label": "Project Management Professional (PMP)"
+        },
+        {
+            "id": "AWS",
+            "label": "AWS Certified (AWS)"
+        },
+        {
+            "id": "MCP",
+            "label": "Microsoft Certified (MCP)"
+        },
+        {
+            "id": "GCP",
+            "label": "Google Cloud Certified (GCP)"
+        },
+        {
+            "id": "OTHER",
+            "label": "Other"
+        }
+    ],
+    "JobTypeOptions": [
+        {
+            "id": "SWEng",
+            "label": "Software Engineer (SWEng)"
+        },
+        {
+            "id": "Doc",
+            "label": "Doctor (Doc)"
+        },
+        {
+            "id": "Teach",
+            "label": "Teacher (Teach)"
+        },
+        {
+            "id": "Lect",
+            "label": "Lecturer (Lect)"
+        },
+        {
+            "id": "Prof",
+            "label": "Professor (Prof)"
+        },
+        {
+            "id": "CivEng",
+            "label": "Civil Engineer (CivEng)"
+        },
+        {
+            "id": "MechEng",
+            "label": "Mechanical Engineer (MechEng)"
+        },
+        {
+            "id": "ElecEng",
+            "label": "Electrical Engineer (ElecEng)"
+        },
+        {
+            "id": "Nurse",
+            "label": "Nurse (Nurse)"
+        },
+        {
+            "id": "Govt",
+            "label": "Government Employee (Govt)"
+        },
+        {
+            "id": "IAS",
+            "label": "IAS Officer (IAS)"
+        },
+        {
+            "id": "IPS",
+            "label": "IPS Officer (IPS)"
+        },
+        {
+            "id": "IFS",
+            "label": "IFS Officer (IFS)"
+        },
+        {
+            "id": "Clerk",
+            "label": "Clerk (Clerk)"
+        },
+        {
+            "id": "Police",
+            "label": "Police Officer (Police)"
+        },
+        {
+            "id": "Army",
+            "label": "Army Personnel (Army)"
+        },
+        {
+            "id": "CA",
+            "label": "Chartered Accountant (CA)"
+        },
+        {
+            "id": "Law",
+            "label": "Lawyer (Law)"
+        },
+        {
+            "id": "Farmer",
+            "label": "Farmer (Farmer)"
+        },
+        {
+            "id": "Biz",
+            "label": "Business Owner (Biz)"
+        },
+        {
+            "id": "Sales",
+            "label": "Sales Executive (Sales)"
+        },
+        {
+            "id": "HR",
+            "label": "HR Executive (HR)"
+        },
+        {
+            "id": "Support",
+            "label": "Customer Support (Support)"
+        },
+        {
+            "id": "Bank",
+            "label": "Bank Officer (Bank)"
+        },
+        {
+            "id": "Shop",
+            "label": "Retailer (Shop)"
+        },
+        {
+            "id": "Driver",
+            "label": "Driver (Driver)"
+        },
+        {
+            "id": "Labor",
+            "label": "Laborer (Labor)"
+        },
+        {
+            "id": "Artist",
+            "label": "Artist (Artist)"
+        },
+        {
+            "id": "Actor",
+            "label": "Actor (Actor)"
+        },
+        {
+            "id": "Journal",
+            "label": "Journalist (Journal)"
+        },
+        {
+            "id": "Writer",
+            "label": "Writer (Writer)"
+        },
+        {
+            "id": "Free",
+            "label": "Freelancer (Free)"
+        },
+        {
+            "id": "Consult",
+            "label": "Consultant (Consult)"
+        },
+        {
+            "id": "Arch",
+            "label": "Software Architect (Arch)"
+        },
+        {
+            "id": "DevOps",
+            "label": "DevOps Engineer (DevOps)"
+        },
+        {
+            "id": "DS",
+            "label": "Data Scientist (DS)"
+        },
+        {
+            "id": "PM",
+            "label": "Product Manager (PM)"
+        },
+        {
+            "id": "UX",
+            "label": "UX Designer (UX)"
+        },
+        {
+            "id": "Cyber",
+            "label": "Cybersecurity Analyst (Cyber)"
+        },
+        {
+            "id": "Cloud",
+            "label": "Cloud Engineer (Cloud)"
+        },
+        {
+            "id": "Fin",
+            "label": "Financial Analyst (Fin)"
+        },
+        {
+            "id": "MedRes",
+            "label": "Medical Researcher (MedRes)"
+        },
+        {
+            "id": "Thera",
+            "label": "Therapist (Thera)"
+        },
+        {
+            "id": "YT",
+            "label": "Content Creator (YT)"
+        },
+        {
+            "id": "GameDev",
+            "label": "Game Developer (GameDev)"
+        },
+        {
+            "id": "ResSci",
+            "label": "Research Scientist (ResSci)"
+        },
+        {
+            "id": "Remote",
+            "label": "Remote Worker (Remote)"
+        },
+        {
+            "id": "Chef",
+            "label": "Chef (Chef)"
+        },
+        {
+            "id": "Pilot",
+            "label": "Pilot (Pilot)"
+        },
+        {
+            "id": "SCM",
+            "label": "Supply Chain Analyst (SCM)"
+        },
+        {
+            "id": "FAtt",
+            "label": "Flight Attendant (FAtt)"
+        },
+        {
+            "id": "OTHER",
+            "label": "Other"
+        }
+    ]
+}

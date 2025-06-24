@@ -3,11 +3,14 @@ package dev.anudeep.familytree.service;
 import dev.anudeep.familytree.dto.FlowEdgeDTO;
 import dev.anudeep.familytree.dto.FlowGraphDTO;
 import dev.anudeep.familytree.dto.FlowNodeDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.anudeep.familytree.dto.FlowPositionDTO;
 import dev.anudeep.familytree.dto.GraphDiffDTO;
+import com.fasterxml.jackson.core.type.TypeReference;
 import dev.anudeep.familytree.model.Person;
 import dev.anudeep.familytree.repository.GraphRepository;
 import dev.anudeep.familytree.utils.Constants;
+import dev.anudeep.familytree.utils.PersonNodeConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.neo4j.driver.types.Node;
 import org.neo4j.driver.types.Relationship;
@@ -18,15 +21,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap; // Added this import
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
 public class GraphService {
     private final GraphRepository repository;
+    private final ObjectMapper objectMapper;
 
-    public GraphService(GraphRepository repository) {
+    public GraphService(GraphRepository repository, ObjectMapper objectMapper) {
         this.repository = repository;
+        this.objectMapper = objectMapper;
     }
 
     public List<Person> getFamily(String elementId) {
@@ -46,7 +50,6 @@ public class GraphService {
             RETURN n, r, m
             """,Constants.PART_OF,Constants.MARRIED_REL, Constants.PARENT_REL, Constants.BELONGS_REL);
         log.info("Cypher to get the full graph: \n {}", cypher);
-        AtomicInteger line= new AtomicInteger(1);
         neo4jClient.query(cypher).bind(treeId).to("treeId").fetch()
                 .all()
                 .forEach(row -> {
@@ -68,10 +71,24 @@ public class GraphService {
             String id = node.elementId();
             String name = node.get("name").asString("");
             String type = node.labels().iterator().next();
-            Map<String, Object> data = node.asMap();
-            FlowNodeDTO flowNode = new FlowNodeDTO(id, name, type, data, new FlowPositionDTO());
-            // log.info("node identified {}",flowNode);
-            nodes.add(flowNode);
+
+            if ("Person".equalsIgnoreCase(type)) {
+                try {
+                    // String id, name, type are already defined before this block
+                    Person person = PersonNodeConverter.flattenedMapToPerson(new HashMap<>(node.asMap()), id);
+                    Map<String, Object> dataForDto = objectMapper.convertValue(person, new TypeReference<Map<String, Object>>() {});
+                    FlowNodeDTO flowNode = new FlowNodeDTO(id, name, type, dataForDto, new FlowPositionDTO());
+                    nodes.add(flowNode);
+                } catch (Exception e) {
+                    log.error("Error processing Person node ID={} for addNode: {}. Falling back to raw properties.", id, e.getMessage());
+                    FlowNodeDTO flowNode = new FlowNodeDTO(id, name, type, new HashMap<>(node.asMap()), new FlowPositionDTO());
+                    nodes.add(flowNode);
+                }
+            } else {
+                // For non-Person nodes, keep the existing behavior
+                FlowNodeDTO flowNode = new FlowNodeDTO(id, name, type, new HashMap<>(node.asMap()), new FlowPositionDTO());
+                nodes.add(flowNode);
+            }
         }
     }
 
@@ -84,10 +101,8 @@ public class GraphService {
             String edgeId = relation.elementId();
             Map<String, Object> data = Map.of("label", relation.type());
             FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, relation.type(),data);
-            if (!edges.contains(flowEdge)) {
-                // log.info("edge identified {}",flowEdge);
-                edges.add(flowEdge);
-            }
+            // log.info("edge identified {}",flowEdge);
+            edges.add(flowEdge);
         }
     }
 
@@ -108,10 +123,10 @@ public class GraphService {
                 .fetch()
                 .all()
                 .forEach(row -> {
-                    addPersonNode(row.get("root"), nodes);
-                    addPersonNode(row.get("spouse"), nodes);
-                    addPersonNode(row.get("descendant"), nodes);
-                    addPersonNode(row.get("descendantSpouse"), nodes);
+                    addPersonNode((Node) row.get("root"), nodes);
+                    addPersonNode((Node) row.get("spouse"), nodes);
+                    addPersonNode((Node) row.get("descendant"), nodes);
+                    addPersonNode((Node) row.get("descendantSpouse"), nodes);
 
                     addMarriageEdge(row.get("root"), row.get("spouse"), edges);
                     addParentEdges(row.get("root"), row.get("descendant"), edges);
@@ -122,14 +137,27 @@ public class GraphService {
         return new FlowGraphDTO(new ArrayList<>(nodes), new ArrayList<>(edges));
     }
 
-    private void addPersonNode(Object obj, Set<FlowNodeDTO> nodes) {
-        Optional<Object> node = Optional.ofNullable(obj);
-        if (node.isPresent() && node.get() instanceof Node person) {
-            String id = person.elementId();
-            String name = person.get("name").asString("");
-            Map<String, Object> data = Map.of("name", name);
-            FlowNodeDTO flowNode = new FlowNodeDTO(id, name, "person", data, new FlowPositionDTO());
-            // log.info("person node identified {}",flowNode);
+    private void addPersonNode(Node personNode, Set<FlowNodeDTO> nodes) {
+        if (personNode == null) {
+            return; // Or handle as appropriate if null nodes shouldn't occur here
+        }
+
+        String id = personNode.elementId();
+        String name = personNode.get("name").asString("");
+        // String type = personNode.labels().iterator().next(); // Should always be "Person"
+
+        try {
+            // String id, name are already defined
+            Person person = PersonNodeConverter.flattenedMapToPerson(new HashMap<>(personNode.asMap()), id);
+            Map<String, Object> dataForDto = objectMapper.convertValue(person, new TypeReference<Map<String, Object>>() {});
+            FlowNodeDTO flowNode = new FlowNodeDTO(id, name, "Person", dataForDto, new FlowPositionDTO()); // Type is "Person"
+            nodes.add(flowNode);
+        } catch (Exception e) {
+            log.error("Error processing Person node ID={} in addPersonNode: {}. Falling back to raw properties.", id, e.getMessage());
+            Map<String, Object> fallbackData = new HashMap<>(personNode.asMap());
+            // Ensure name is in fallback, though it's also passed to FlowNodeDTO constructor
+            fallbackData.putIfAbsent("name", name);
+            FlowNodeDTO flowNode = new FlowNodeDTO(id, name, "Person", fallbackData, new FlowPositionDTO());
             nodes.add(flowNode);
         }
     }
@@ -181,16 +209,14 @@ public class GraphService {
                 log.info("Adding node: ID_DUMMY={} TYPE={} DATA={}", nodeDTO.getId(), nodeDTO.getType(), nodeDTO.getData());
                 String nodeLabel = (nodeDTO.getType() != null && !nodeDTO.getType().trim().isEmpty()) ? nodeDTO.getType() : "Person";
 
-                Map<String, Object> properties = nodeDTO.getData() != null ? new HashMap<>(nodeDTO.getData()) : new HashMap<>();
-                properties.remove("id"); // Remove dummy ID if present in data properties
-                properties.putIfAbsent("name", "Unnamed");
-//                if (nodeDTO.getPosition() != null) {
-//                    properties.put("x", nodeDTO.getPosition().getX());
-//                    properties.put("y", nodeDTO.getPosition().getY());
-//                } else {
-//                    properties.put("x", 0.0);
-//                    properties.put("y", 0.0);
-//                }
+                Map<String, Object> propertiesToSave;
+                if ("Person".equalsIgnoreCase(nodeLabel)) {
+                    Person person = objectMapper.convertValue(nodeDTO.getData(), Person.class);
+                    propertiesToSave = PersonNodeConverter.personToFlattenedMap(person);
+                } else {
+                    propertiesToSave = nodeDTO.getData() != null ? new HashMap<>(nodeDTO.getData()) : new HashMap<>();
+                }
+                propertiesToSave.remove("id"); // Ensure dummy ID is not saved
 
                 String createNodeCypher =
                         "MATCH (t:Tree) WHERE elementId(t) = $treeId " +
@@ -199,7 +225,7 @@ public class GraphService {
                                 "RETURN elementId(n) as actualId";
 
                 String actualId = neo4jClient.query(createNodeCypher)
-                        .bind(treeId).to(treeId).bind(properties).to("props")
+                        .bind(treeId).to("treeId").bind(propertiesToSave).to("props")
                         .fetch()
                         .one().orElseThrow().get("actualId").toString();
 
@@ -255,24 +281,30 @@ public class GraphService {
                 // ID for existing nodes is the actual elementId
                 String nodeId = nodeDTO.getId();
 
-                Map<String, Object> propertiesToUpdate = nodeDTO.getData() != null ? new HashMap<>(nodeDTO.getData()) : new HashMap<>();
-                // Remove fields that should not be directly set or are part of the MATCH clause
-                propertiesToUpdate.remove("id");
-                // Add position data if available
+                Map<String, Object> propertiesToSet;
+                if ("Person".equalsIgnoreCase(nodeDTO.getType())) { // Assuming type is reliable
+                    Person person = objectMapper.convertValue(nodeDTO.getData(), Person.class);
+                    propertiesToSet = PersonNodeConverter.personToFlattenedMap(person);
+                } else {
+                    propertiesToSet = nodeDTO.getData() != null ? new HashMap<>(nodeDTO.getData()) : new HashMap<>();
+                }
+                propertiesToSet.remove("id"); // ID for existing nodes is nodeId, not part of SET properties normally.
+
+                // Add position data if available - this must be done AFTER propertiesToSet is initialized
                 if (nodeDTO.getPosition() != null) {
-                    propertiesToUpdate.put("x", nodeDTO.getPosition().getX());
-                    propertiesToUpdate.put("y", nodeDTO.getPosition().getY());
+                    propertiesToSet.put("x", nodeDTO.getPosition().getX());
+                    propertiesToSet.put("y", nodeDTO.getPosition().getY());
                 }
                 // Node type (label) changes are complex and usually handled by deleting and recreating the node.
                 // For simplicity, we are not handling label changes here. We only update properties.
-                // If propertiesToUpdate is empty, Neo4j might remove all properties. Consider this behavior.
+                // If propertiesToSet is empty, Neo4j might remove all properties. Consider this behavior.
                 // If you want to only update specific fields, build the SET clause dynamically.
 
                 String updateNodeCypher = "MATCH (n) WHERE elementId(n) = $nodeId SET n += $props";
 
                 neo4jClient.query(updateNodeCypher)
                         .bind(nodeId).to("nodeId")
-                        .bind(propertiesToUpdate).to("props")
+                        .bind(propertiesToSet).to("props")
                         .run();
                 log.info("Updated node with ID {}", nodeId);
             }

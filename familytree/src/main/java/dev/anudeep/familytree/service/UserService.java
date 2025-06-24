@@ -45,7 +45,7 @@ public class UserService {
                     .orElseGet(() -> userRepository.save(new User(email, name, picture)));
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to verify token", e);
+            throw new RuntimeException("Failed to verify token: "+e.getMessage(), e);
         }
     }
 }

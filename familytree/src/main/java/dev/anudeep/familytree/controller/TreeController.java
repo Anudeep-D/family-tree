@@ -57,7 +57,7 @@ public class TreeController {
             return ResponseEntity.ok().body(tree.orElseThrow());
         } catch (Exception e) {
             log.error("Failed to fetch tree", e);  // log stack trace
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error getting tree", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error getting tree: "+e.getMessage(), e);
         }
     }
 
