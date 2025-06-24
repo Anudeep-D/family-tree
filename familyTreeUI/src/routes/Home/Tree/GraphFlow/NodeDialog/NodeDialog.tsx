@@ -365,12 +365,14 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                     >
                       {field.label}
                     </Typography>
-                    <Grid container spacing={2}>
+                    <Grid container spacing={2} sx={{ width: "100%", display: "grid" }}>
                       {field.subFields?.map((subField) => (
-                        <Grid sx={{ gridColumn: "span 6" }} key={subField.name}>
+                        <Grid sx={{ gridColumn: "span 12" }} key={subField.name}>
                           {subField.name === "jobType" && (
                             <Autocomplete
-                              value={formState?.[field.name]?.[subField.name]}
+                              value={
+                                formState?.[field.name]?.[subField.name] ?? null
+                              }
                               autoComplete
                               autoHighlight
                               fullWidth
@@ -396,7 +398,9 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                           )}
                           {subField.name === "fieldOfStudy" && (
                             <Autocomplete
-                              value={formState?.[field.name]?.[subField.name]}
+                              value={
+                                formState?.[field.name]?.[subField.name] ?? null
+                              }
                               autoComplete
                               autoHighlight
                               fullWidth
@@ -422,7 +426,9 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                           )}
                           {subField.name === "highestQualification" && (
                             <Autocomplete
-                              value={formState?.[field.name]?.[subField.name]}
+                              value={
+                                formState?.[field.name]?.[subField.name] ?? null
+                              }
                               autoComplete
                               autoHighlight
                               fullWidth
@@ -467,17 +473,14 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                               fullWidth
                               slotProps={{
                                 inputLabel: {
-                                  shrink: !!(
+                                  shrink: Boolean(
                                     formState?.[field.name]?.[subField.name] ||
-                                    formState?.[field.name]?.[subField.name] ===
-                                      ""
+                                      formState?.[field.name]?.[
+                                        subField.name
+                                      ] === ""
                                   ),
                                 },
                               }}
-
-                              // Add error/helperText if validation is applied at sub-field level
-                              // error={!!errors[`${field.name}.${subField.name}`]}
-                              // helperText={errors[`${field.name}.${subField.name}`]}
                             />
                           )}
                         </Grid>

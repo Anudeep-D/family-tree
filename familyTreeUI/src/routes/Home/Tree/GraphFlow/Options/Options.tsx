@@ -17,6 +17,7 @@ import { Tree } from "@/types/entityTypes";
 import { PopperWrapper } from "./Popper/PopperWrapper";
 import { ClickAwayListener } from "@mui/material";
 import { FindPopper } from "./Option/Find/FindPopper";
+import FiltersPopper from "./Option/Filter/FiltersPopper";
 
 interface OptionsProps {
   tree: Tree;
@@ -94,6 +95,20 @@ export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
       setPopperChild(<FindPopper />);
       setOpenPopper(true);
     }
+    if (actionKey === "filter") {
+      setPopperAnchorEl(event.currentTarget);
+      setPopperChild(
+        <FiltersPopper
+          houseOptions={[]}
+          personOptions={[]}
+          savedFilters={[]}
+          onSaveAsNew={() => null}
+          onUpdate={() => null}
+          onApplyFilters={() => null}
+        />
+      );
+      setOpenPopper(true);
+    }
     // Add other action handlers here if needed
   };
 
@@ -144,7 +159,7 @@ export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
                 placement: "top",
                 title: action.name,
                 sx: {
-                  gap:0,
+                  gap: 0,
                 },
               },
               fab: {
