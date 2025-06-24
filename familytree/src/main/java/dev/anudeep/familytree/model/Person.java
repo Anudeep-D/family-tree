@@ -1,6 +1,9 @@
 package dev.anudeep.familytree.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import dev.anudeep.familytree.dto.FlowEdgeDTO;
+import dev.anudeep.familytree.model.Education;
+import dev.anudeep.familytree.model.Job;
 import dev.anudeep.familytree.utils.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,6 +16,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Node("Person")
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Setter @Getter @AllArgsConstructor @NoArgsConstructor
 public class Person {
 
@@ -24,8 +28,8 @@ public class Person {
     private boolean isAlive;
     private Date dob;
     private Date doe;
-    private String qualification;
-    private String job;
+    private Education education;
+    private Job job;
     private String currLocation;
     private String character; //temporary or optional
     private String imageUrl;
@@ -61,8 +65,8 @@ public class Person {
                 ", isAlive='" + isAlive + '\'' +
                 ", dob='" + dob + '\'' +
                 ", doe='" + doe + '\'' +
-                ", qualification='" + qualification + '\'' +
-                ", job='" + job + '\'' +
+                ", education=" + education +
+                ", job=" + job +
                 ", currLocation='" + currLocation + '\'' +
                 ", character='" + character + '\'' +
                 '}';

@@ -1,21 +1,32 @@
 import type { NodeTypes, Position, XYPosition } from "@xyflow/react";
 import PersonNode from "./Components/Nodes/PersonNode";
 import HouseNode from "./Components/Nodes/HouseNode";
-import { FromFieldList } from "./common";
+import { FromFieldList, FieldDef, FieldTypeMap } from "./common"; // Import FieldDef and FieldTypeMap
+
 export enum Nodes {
   Person = "Person",
   House = "House",
 }
 
 // Definition for a single field in the metadata
+// This type should be compatible with FieldDef for FromFieldList to work correctly.
 export type NodeFieldDefinition = {
   readonly name: string;
   readonly label: string;
-  readonly type: "string" | "date" | "boolean" | readonly string[];
+  readonly type: keyof FieldTypeMap | readonly string[]; // Aligns with FieldDef['type']
   readonly required: boolean;
-  readonly default?: string | boolean | Date | undefined; // Note: readonly string[] for default if type is readonly string[] might be needed if such defaults exist. Currently, 'gender' default is "male" (string).
+  readonly default?: any; // Aligns with FieldDef['default']
   readonly isField: boolean;
+  readonly subFields?: readonly NodeFieldDefinition[]; // subFields are also NodeFieldDefinitions (recursive)
+                                                     // This also needs to be compatible with FieldDef's subFields.
+                                                     // If FieldDef.subFields is readonly FieldDef[], then this should be too.
+                                                     // Let's ensure NodeFieldDefinition itself is a valid FieldDef.
 };
+
+// Helper type to ensure NodeFieldDefinition is a valid FieldDef
+type AssertNodeFieldDefIsFieldDef = NodeFieldDefinition extends FieldDef ? true : false;
+const _assert: AssertNodeFieldDefIsFieldDef = true; // This will error if NodeFieldDefinition is not compatible with FieldDef
+
 
 // This type can be used to ensure nodeFieldsMetadata conforms to a structure where each Node type maps to an array of NodeFieldDefinition.
 // However, 'as const' provides stronger literal typing for 'type' and 'name' which is beneficial.
@@ -63,20 +74,31 @@ export const nodeFieldsMetadata = {
       isField:true,
     },
     {
-      name: "qualification",
-      type: "string",
+      name: "education",
+      label: "Education Details",
+      type: "educationObject",
       required: false,
-      label: "Education qualification",
       default: undefined,
-      isField:true,
+      isField: true,
+      subFields: [
+        { name: "fieldOfStudy", label: "Field of Study", type: "string", required: false, isField: true },
+        { name: "highestQualification", label: "Highest Qualification", type: "string", required: false, isField: true },
+        { name: "institution", label: "Institution", type: "string", required: false, isField: true },
+        { name: "location", label: "Location (Institution)", type: "string", required: false, isField: true }
+      ]
     },
     {
       name: "job",
-      type: "string",
+      label: "Job Details",
+      type: "jobObject",
       required: false,
-      label: "Job",
       default: undefined,
-      isField:true,
+      isField: true,
+      subFields: [
+        { name: "jobType", label: "Job Type", type: "string", required: false, isField: true },
+        { name: "employer", label: "Employer", type: "string", required: false, isField: true },
+        { name: "jobTitle", label: "Job Title", type: "string", required: false, isField: true }
+      ]
     },
     {
       name: "isAlive",

@@ -87,55 +87,37 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
   const [cropperOpen, setCropperOpen] = useState<boolean>(false);
 
   useEffect(() => {
+    const processData = (data: Record<string, any> | undefined, isInitial: boolean) => {
+      const resultState: Record<string, any> = {};
+      fields.forEach((field) => {
+        const hasProperty = data?.hasOwnProperty(field.name);
+        if (field.type === "jobObject" || field.type === "educationObject") {
+          resultState[field.name] = (hasProperty ? data?.[field.name] : undefined) ?? {};
+        } else if (field.type === "date") {
+          const fieldValue = hasProperty ? data?.[field.name] : field.default;
+          if (fieldValue && typeof fieldValue === "string") {
+            resultState[field.name] = dayjs(fieldValue);
+          } else if (fieldValue) {
+            resultState[field.name] = fieldValue; // Already a Dayjs object or null/undefined
+          } else {
+            resultState[field.name] = null; // Default for date if no value/default
+          }
+        } else if (field.type === "boolean") {
+          resultState[field.name] = hasProperty ? data?.[field.name] : (field.default ?? false);
+        } else {
+          resultState[field.name] = hasProperty ? data?.[field.name] : field.default;
+        }
+      });
+      return resultState;
+    };
+
     if (initialData) {
-      const processedInitialData: Record<string, any> = {};
-      fields.forEach((field) => {
-        // field is now NodeFieldDefinition
-        if (initialData.hasOwnProperty(field.name)) {
-          if (
-            field.type === "date" &&
-            initialData[field.name] &&
-            typeof initialData[field.name] === "string"
-          ) {
-            processedInitialData[field.name] = dayjs(initialData[field.name]);
-          } else {
-            processedInitialData[field.name] = initialData[field.name];
-          }
-        } else {
-          // If initialData doesn't have a field defined in 'fields', initialize with default
-          if (field.type === "date" && typeof field.default === "string") {
-            processedInitialData[field.name] = dayjs(field.default);
-          } else if (
-            field.type === "boolean" &&
-            typeof field.default === "undefined"
-          ) {
-            processedInitialData[field.name] = false;
-          } else {
-            processedInitialData[field.name] = field.default;
-          }
-        }
-      });
-      setFormState(processedInitialData);
+      setFormState(processData(initialData, true));
     } else {
-      // Initialize form with default values
-      const defaultState: Record<string, any> = {};
-      fields.forEach((field) => {
-        // field is now NodeFieldDefinition
-        if (field.type === "date" && typeof field.default === "string") {
-          defaultState[field.name] = dayjs(field.default);
-        } else if (
-          field.type === "boolean" &&
-          typeof field.default === "undefined"
-        ) {
-          defaultState[field.name] = false;
-        } else {
-          defaultState[field.name] = field.default;
-        }
-      });
-      setFormState(defaultState);
+      setFormState(processData(undefined, false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialData, type, fields]); // 'type' is a dependency for 'fields', 'fields' itself is stable if type doesn't change.
+  }, [initialData, fields]); // Removed 'type' as 'fields' already depends on it
 
   const setPublicUrl = async (url: string, isLocal: boolean) => {
     const publicUrl = await getImage(url);
@@ -216,16 +198,37 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
     }
   };
 
-  const handleChange = (key: string, value: any) => {
+  const handleChange = (key: string, value: any, subFieldKey?: string) => {
     setFormState((prevFormState) => {
-      const newState = { ...prevFormState, [key]: value };
+      let newState;
+      if (subFieldKey) {
+        newState = {
+          ...prevFormState,
+          [key]: {
+            ...(prevFormState?.[key] as Record<string, any>), // Type assertion
+            [subFieldKey]: value,
+          },
+        };
+      } else {
+        newState = { ...prevFormState, [key]: value };
+      }
+
       // If 'isAlive' is changed to 'Yes', clear 'doe'
       if (key === "isAlive" && value === "Yes") {
         newState.doe = null; // Or undefined, depending on how you want to handle it
       }
       return newState;
     });
-    setErrors((prev) => ({ ...prev, [key]: "" }));
+    // Clear error for the main field or subfield.
+    // For subfields, errors might be stored like "job.jobTitle". This needs consideration.
+    // For now, only clearing top-level errors.
+    if (!subFieldKey) {
+      setErrors((prev) => ({ ...prev, [key]: "" }));
+    } else {
+      // If we decide to store subfield errors like "job.jobTitle", this needs adjustment.
+      // For now, clearing the parent field's error, or a specific subfield error if structured that way.
+      setErrors((prev) => ({ ...prev, [`${key}.${subFieldKey}`]: "" , [key]: ""})); // Clear both specific and parent
+    }
   };
 
   const handleSubmit = async () => {
@@ -333,7 +336,30 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                 getDefaultValueType(field.type, field.name, type);
 
               let inputComponent;
-              if (field.type === "string") {
+              if (field.type === "jobObject" || field.type === "educationObject") {
+                inputComponent = (
+                  <Grid sx={{ gridColumn: "span 12" }} key={field.name}>
+                    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: "medium" }}>{field.label}</Typography>
+                    <Grid container spacing={2}>
+                      {field.subFields?.map(subField => (
+                        <Grid sx={{ gridColumn: "span 12" }} key={subField.name}>
+                          <TextField
+                            label={subField.label}
+                            required={subField.required}
+                            value={formState?.[field.name]?.[subField.name] ?? ""}
+                            onChange={(e) => handleChange(field.name, e.target.value, subField.name)}
+                            fullWidth
+                            InputLabelProps={{ shrink: !!(formState?.[field.name]?.[subField.name] || formState?.[field.name]?.[subField.name] === "") }}
+                            // Add error/helperText if validation is applied at sub-field level
+                            // error={!!errors[`${field.name}.${subField.name}`]}
+                            // helperText={errors[`${field.name}.${subField.name}`]}
+                          />
+                        </Grid>
+                      ))}
+                    </Grid>
+                  </Grid>
+                );
+              } else if (field.type === "string") {
                 // Ensure displayValue is always a string for TextField's value prop
                 const displayValue = value ?? "";
                 // Determine if the field has a meaningful value to make the label shrink
@@ -417,11 +443,16 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                 );
               }
 
-              return (
-                <Grid sx={{ gridColumn: "span 6" }} key={field.name}>
-                  {inputComponent}
-                </Grid>
-              );
+              // For jobObject/educationObject, the component is already wrapped in a full-width Grid
+              if (field.type === "jobObject" || field.type === "educationObject") {
+                return inputComponent; // This is already a <Grid> element spanning 12 columns
+              } else {
+                return (
+                  <Grid sx={{ gridColumn: "span 6" }} key={field.name}>
+                    {inputComponent}
+                  </Grid>
+                );
+              }
             })}
             {type === Nodes.Person && (
               <Grid sx={{ gridColumn: "span 12" }}>

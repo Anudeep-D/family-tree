@@ -115,7 +115,7 @@ public class GraphController {
         } catch (Exception e) {
             log.error("GraphController: Failed to update graph for treeId {}: {}", treeId, e.getMessage(), e); // Log full stack trace
             // Consider a more specific exception if possible, or a generic internal server error.
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating graph", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating graph: "+e.getMessage(), e);
         }
     }
 }

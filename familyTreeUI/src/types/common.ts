@@ -7,15 +7,28 @@ export enum Role {
 export type FieldTypeMap = {
   string: string;
   boolean: boolean;
-  date: Date;
+  date: Date; // Assuming Date objects are used in form state, adjust if serialized to string
+  jobObject: {
+    jobType?: string;
+    employer?: string;
+    jobTitle?: string;
+  };
+  educationObject: {
+    fieldOfStudy?: string;
+    highestQualification?: string;
+    institution?: string;
+    location?: string;
+  };
 };
 
 export type FieldDef = {
-  name: string;
-  type: keyof FieldTypeMap | readonly string[]; // Support for string enums
-  required: boolean;
-  label: string;
-  default: string | boolean | Date | undefined;
+  readonly name: string; // Make fields readonly as in NodeFieldDefinition
+  readonly label: string;
+  readonly type: keyof FieldTypeMap | readonly string[];
+  readonly required: boolean;
+  readonly default?: any; // Using 'any' for default as it can be string, boolean, Date, or undefined. Specificity can be improved if needed.
+  readonly isField: boolean; // Added isField
+  readonly subFields?: readonly FieldDef[]; // Added optional subFields
 };
 
 export type FromFieldList<T extends readonly FieldDef[]> = {

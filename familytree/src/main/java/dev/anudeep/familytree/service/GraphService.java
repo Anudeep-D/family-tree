@@ -192,10 +192,14 @@ public class GraphService {
 //                    properties.put("y", 0.0);
 //                }
 
-                String createNodeCypher = "CREATE (n:" + nodeLabel + " $props) RETURN elementId(n) as actualId";
+                String createNodeCypher =
+                        "MATCH (t:Tree) WHERE elementId(t) = $treeId " +
+                                "CREATE (n:" + nodeLabel + " $props) " +
+                                "CREATE (n)-[:PART_OF]->(t) " +
+                                "RETURN elementId(n) as actualId";
 
                 String actualId = neo4jClient.query(createNodeCypher)
-                        .bind(properties).to("props")
+                        .bind(treeId).to(treeId).bind(properties).to("props")
                         .fetch()
                         .one().orElseThrow().get("actualId").toString();
 

@@ -35,8 +35,8 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
     data.gender ||
     data.dob ||
     data.doe ||
-    data.qualification ||
-    data.job ||
+    (data.education && (data.education.fieldOfStudy || data.education.highestQualification || data.education.institution || data.education.location)) ||
+    (data.job && (data.job.jobType || data.job.employer || data.job.jobTitle)) ||
     data.currLocation;
 
   const mainContent = (
@@ -100,15 +100,32 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
           className="red"
         >{`DOE: ${dayjs(data.doe).format("DD-MMM-YYYY")}`}</Typography>
       )}
-      {data.qualification && (
-        <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
-          {data.qualification}
-        </Typography>
+      {data.education && (
+        <>
+          {data.education.highestQualification && (
+            <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
+              Education: {data.education.highestQualification}
+              {data.education.fieldOfStudy && ` in ${data.education.fieldOfStudy}`}
+            </Typography>
+          )}
+          {data.education.institution && (
+            <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
+              Institution: {data.education.institution}
+              {data.education.location && `, ${data.education.location}`}
+            </Typography>
+          )}
+        </>
       )}
       {data.job && (
-        <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
-          {data.job}
-        </Typography>
+        <>
+          {data.job.jobTitle && (
+            <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
+              Job: {data.job.jobTitle}
+              {data.job.employer && ` at ${data.job.employer}`}
+              {data.job.jobType && ` (${data.job.jobType})`}
+            </Typography>
+          )}
+        </>
       )}
       {data.currLocation && (
         <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
