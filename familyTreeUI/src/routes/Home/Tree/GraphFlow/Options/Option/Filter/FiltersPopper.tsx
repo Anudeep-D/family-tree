@@ -132,16 +132,17 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         />
 
         <Typography variant="subtitle1">Person Filters</Typography>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={married === true}
-              onChange={() => setMarried(married === true ? null : true)}
-              indeterminate={married === null}
-            />
-          }
-          label="Married"
-        />
+        <ToggleButtonGroup
+          value={married === null ? "" : married}
+          exclusive
+          onChange={(_, val) => setMarried(val === "" ? null : val)}
+          size="small"
+          fullWidth
+        >
+          <ToggleButton value="">Any</ToggleButton>
+          <ToggleButton value={false}>Single</ToggleButton>
+          <ToggleButton value={true}>Married</ToggleButton>
+        </ToggleButtonGroup>
 
         <Autocomplete
           options={["male", "female"]}
@@ -170,7 +171,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           onChange={(e) => setBornAfter(e.target.value)}
           fullWidth
           size="small"
-          InputLabelProps={{ shrink: true }}
+          slotProps={{ inputLabel: { shrink: true } }}
           sx={{ mb: 1 }}
         />
 
@@ -181,7 +182,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           onChange={(e) => setBornBefore(e.target.value)}
           fullWidth
           size="small"
-          InputLabelProps={{ shrink: true }}
+          slotProps={{ inputLabel: { shrink: true } }}
           sx={{ mb: 2 }}
         />
 
@@ -203,16 +204,17 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           sx={{ mb: 2 }}
         />
 
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={isAlive === true}
-              onChange={() => setIsAlive(isAlive === true ? null : true)}
-              indeterminate={isAlive === null}
-            />
-          }
-          label="Is Alive"
-        />
+        <ToggleButtonGroup
+          value={isAlive === null ? "" : isAlive}
+          exclusive
+          onChange={(_, val) => setIsAlive(val === "" ? null : val)}
+          size="small"
+          fullWidth
+        >
+          <ToggleButton value="">Any</ToggleButton>
+          <ToggleButton value={true}>Alive</ToggleButton>
+          <ToggleButton value={false}>Expired</ToggleButton>
+        </ToggleButtonGroup>
 
         <Divider sx={{ my: 2 }} />
 
