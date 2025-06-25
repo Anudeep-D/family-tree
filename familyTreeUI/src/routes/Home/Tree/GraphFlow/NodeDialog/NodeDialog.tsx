@@ -365,9 +365,19 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                     >
                       {field.label}
                     </Typography>
-                    <Grid container spacing={2} sx={{ width: "100%", display: "grid" }}>
+                    <Grid
+                      columns={12}
+                      columnSpacing={2}
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(12, 1fr)",
+                        gap: 2,
+                        width: "100%"
+                      }}
+                      container
+                    >
                       {field.subFields?.map((subField) => (
-                        <Grid sx={{ gridColumn: "span 12" }} key={subField.name}>
+                        <Grid sx={{ gridColumn: "span 6" }} key={subField.name}>
                           {subField.name === "jobType" && (
                             <Autocomplete
                               value={
@@ -390,7 +400,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                               ) =>
                                 handleChange(
                                   field.name,
-                                  newValue?.id,
+                                  newValue?.label,
                                   subField.name
                                 )
                               }
@@ -418,7 +428,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                               ) =>
                                 handleChange(
                                   field.name,
-                                  newValue?.id,
+                                  newValue?.label,
                                   subField.name
                                 )
                               }
@@ -446,7 +456,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                               ) =>
                                 handleChange(
                                   field.name,
-                                  newValue?.id,
+                                  newValue?.label,
                                   subField.name
                                 )
                               }

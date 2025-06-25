@@ -182,7 +182,10 @@ export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
       </SpeedDial>
       <AccessDialog
         open={isAccessDialogOpen}
-        onClose={() => setAccessDialogOpen(false)}
+        onClose={() => {
+          setAccessDialogOpen(false);
+          handleClose();
+        }}
         tree={tree}
       />
       <PopperWrapper open={openPopper} anchorEl={popperAnchorEl}>
