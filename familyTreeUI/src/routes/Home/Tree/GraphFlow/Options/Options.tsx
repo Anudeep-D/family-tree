@@ -9,7 +9,6 @@ import {
   SmartToyTwoTone,
   SortTwoTone,
   TuneTwoTone,
-  PersonPinCircleTwoTone,
 } from "@mui/icons-material";
 import "./Options.scss";
 import AccessDialog from "./Option/AccessDialog/AccessDialog";
@@ -45,12 +44,6 @@ const actions = [
     icon: <SearchTwoTone sx={{ color: "#ffd54f" }} />,
     name: "Find",
     actionKey: "find",
-    airaDescribedby: "transition-popper",
-  },
-  {
-    icon: <PersonPinCircleTwoTone sx={{ color: "#ff9d9d" }} />,
-    name: "Root",
-    actionKey: "root",
     airaDescribedby: "transition-popper",
   },
   {

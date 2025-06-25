@@ -35,8 +35,13 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
     data.gender ||
     data.dob ||
     data.doe ||
-    (data.education && (data.education.fieldOfStudy || data.education.highestQualification || data.education.institution || data.education.location)) ||
-    (data.job && (data.job.jobType || data.job.employer || data.job.jobTitle)) ||
+    (data.education &&
+      (data.education.fieldOfStudy ||
+        data.education.highestQualification ||
+        data.education.institution ||
+        data.education.location)) ||
+    (data.job &&
+      (data.job.jobType || data.job.employer || data.job.jobTitle)) ||
     data.currLocation;
 
   const mainContent = (
@@ -75,60 +80,92 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
 
   const extraDetailsContent = (
     <Box>
-      <Typography sx={{ py: 1, px: 1.5, fontWeight: "bold", fontSize: "0.7rem" }}>
+      <Typography
+        sx={{
+          py: 1,
+          px: 1.5,
+          fontWeight: "bold",
+          fontSize: "0.7rem",
+          color: "#fff",
+        }}
+      >
         {data.name}
       </Typography>
+
       {data.nickName && (
-        <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
+        <Typography
+          sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem", color: "#ccc" }}
+        >
           ({data.nickName})
         </Typography>
       )}
+
       {data.gender && (
-        <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
+        <Typography
+          sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem", color: "#80d8ff" }}
+        >
           {data.gender}
         </Typography>
       )}
-      {data.dob && (
+
+      {(data.dob || data.doe) && (
         <Typography
-          sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}
-          className="green"
-        >{`DOB: ${dayjs(data.dob).format("DD-MMM-YYYY")}`}</Typography>
+          sx={{
+            pb: 0.6,
+            px: 1.5,
+            fontSize: "0.6rem",
+            color: data.doe ? "#ef9a9a" : data.dob ? "#a5d6a7" : "#ffecb3", // red if deceased, green if alive, amber otherwise
+          }}
+        >
+          {`Lifespan: ${
+            data.dob ? dayjs(data.dob).format("DD-MMM-YYYY") : "?"
+          } - ${data.doe ? dayjs(data.doe).format("DD-MMM-YYYY") : ""} ${
+            data.dob
+              ? `(${dayjs(data.doe || new Date()).diff(
+                  dayjs(data.dob),
+                  "year"
+                )} yrs)`
+              : ""
+          }`}
+        </Typography>
       )}
-      {data.doe && (
-        <Typography
-          sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}
-          className="red"
-        >{`DOE: ${dayjs(data.doe).format("DD-MMM-YYYY")}`}</Typography>
-      )}
+
       {data.education && (
         <>
           {data.education.highestQualification && (
-            <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
+            <Typography
+              sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem", color: "#e1bee7" }}
+            >
               Education: {data.education.highestQualification}
-              {data.education.fieldOfStudy && ` in ${data.education.fieldOfStudy}`}
+              {data.education.fieldOfStudy &&
+                ` in ${data.education.fieldOfStudy}`}
             </Typography>
           )}
           {data.education.institution && (
-            <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
+            <Typography
+              sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem", color: "#e1bee7" }}
+            >
               Institution: {data.education.institution}
               {data.education.location && `, ${data.education.location}`}
             </Typography>
           )}
         </>
       )}
-      {data.job && (
-        <>
-          {data.job.jobTitle && (
-            <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
-              Job: {data.job.jobTitle}
-              {data.job.employer && ` at ${data.job.employer}`}
-              {data.job.jobType && ` (${data.job.jobType})`}
-            </Typography>
-          )}
-        </>
+
+      {data.job?.jobTitle && (
+        <Typography
+          sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem", color: "#ffcc80" }}
+        >
+          Job: {data.job.jobTitle}
+          {data.job.employer && ` at ${data.job.employer}`}
+          {data.job.jobType && ` (${data.job.jobType})`}
+        </Typography>
       )}
+
       {data.currLocation && (
-        <Typography sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem" }}>
+        <Typography
+          sx={{ pb: 0.6, px: 1.5, fontSize: "0.6rem", color: "#80cbc4" }}
+        >
           {data.currLocation}
         </Typography>
       )}

@@ -17,6 +17,7 @@ import {
   Switch,
 } from "@mui/material";
 import { forwardRef, useState } from "react";
+import options from "@/constants/JobAndQualification.json";
 
 export type FiltersPopperProps = {
   houseOptions: string[];
@@ -49,8 +50,14 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
     const [ageRange, setAgeRange] = useState<number[]>([0, 100]);
     const [bornAfter, setBornAfter] = useState<string>("");
     const [bornBefore, setBornBefore] = useState<string>("");
-    const [job, setJob] = useState<string>("");
-    const [education, setEducation] = useState<string>("");
+    const [job, setJob] = useState<{ id: string; label: string } | null>(null);
+    const [study, setStudy] = useState<{ id: string; label: string } | null>(
+      null
+    );
+    const [qualification, setQualification] = useState<{
+      id: string;
+      label: string;
+    } | null>(null);
     const [isAlive, setIsAlive] = useState<boolean | null>(null);
     const [startPerson, setStartPerson] = useState<string | null>(null);
     const [treeDepth, setTreeDepth] = useState<"full" | "immediate">("full");
@@ -84,7 +91,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             sx={{ ml: 1 }}
           />
         </Box>
-
         <Autocomplete
           options={savedFilters}
           value={selectedFilter}
@@ -94,9 +100,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           )}
           sx={{ mb: 2 }}
         />
-
         <Divider sx={{ mb: 2 }} />
-
         <Typography variant="subtitle1">Show Node Types</Typography>
         <FormControlLabel
           control={
@@ -116,9 +120,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           }
           label="Houses"
         />
-
         <Divider sx={{ my: 2 }} />
-
         <Typography variant="subtitle1">Filter by House</Typography>
         <Autocomplete
           multiple
@@ -130,30 +132,46 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           )}
           sx={{ mb: 2 }}
         />
-
+        <Divider sx={{ my: 2 }} />
         <Typography variant="subtitle1">Person Filters</Typography>
-        <ToggleButtonGroup
-          value={married === null ? "" : married}
-          exclusive
-          onChange={(_, val) => setMarried(val === "" ? null : val)}
-          size="small"
-          fullWidth
-        >
-          <ToggleButton value="">Any</ToggleButton>
-          <ToggleButton value={false}>Single</ToggleButton>
-          <ToggleButton value={true}>Married</ToggleButton>
-        </ToggleButtonGroup>
 
-        <Autocomplete
-          options={["male", "female"]}
-          value={gender}
-          onChange={(_, val) => setGender(val)}
-          renderInput={(params) => (
-            <TextField {...params} label="Gender" size="small" />
-          )}
-          sx={{ mt: 1, mb: 2 }}
-        />
-
+        <Stack spacing={1.2}>
+          {" "}
+          {/* Adjust spacing as needed */}
+          <ToggleButtonGroup
+            value={gender === null ? "" : gender}
+            exclusive
+            onChange={(_, val) => setGender(val === "" ? null : val)}
+            size="small"
+            fullWidth
+          >
+            <ToggleButton value="">Any</ToggleButton>
+            <ToggleButton value="male">Male</ToggleButton>
+            <ToggleButton value="female">Female</ToggleButton>
+          </ToggleButtonGroup>
+          <ToggleButtonGroup
+            value={isAlive === null ? "" : isAlive}
+            exclusive
+            onChange={(_, val) => setIsAlive(val === "" ? null : val)}
+            size="small"
+            fullWidth
+          >
+            <ToggleButton value="">Any</ToggleButton>
+            <ToggleButton value={true}>Alive</ToggleButton>
+            <ToggleButton value={false}>Expired</ToggleButton>
+          </ToggleButtonGroup>
+          <ToggleButtonGroup
+            value={married === null ? "" : married}
+            exclusive
+            onChange={(_, val) => setMarried(val === "" ? null : val)}
+            size="small"
+            fullWidth
+          >
+            <ToggleButton value="">Any</ToggleButton>
+            <ToggleButton value={false}>Single</ToggleButton>
+            <ToggleButton value={true}>Married</ToggleButton>
+          </ToggleButtonGroup>
+        </Stack>
         <Typography variant="body2">Age Range</Typography>
         <Slider
           value={ageRange}
@@ -163,7 +181,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           max={120}
           sx={{ mb: 2 }}
         />
-
         <TextField
           label="Born After"
           type="date"
@@ -174,7 +191,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           slotProps={{ inputLabel: { shrink: true } }}
           sx={{ mb: 1 }}
         />
-
         <TextField
           label="Born Before"
           type="date"
@@ -185,41 +201,55 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           slotProps={{ inputLabel: { shrink: true } }}
           sx={{ mb: 2 }}
         />
-
-        <TextField
-          label="Job Type"
-          value={job}
-          onChange={(e) => setJob(e.target.value)}
-          fullWidth
-          size="small"
+        <Autocomplete
+          options={options.JobTypeOptions}
+          autoHighlight
+          autoComplete
+          value={job ?? null}
+          onChange={(_, val: { id: string; label: string } | null) =>
+            setJob(val ?? null)
+          }
+          renderInput={(params) => (
+            <TextField {...params} label="Job Type" size="small" />
+          )}
           sx={{ mb: 2 }}
         />
-
-        <TextField
-          label="Education"
-          value={education}
-          onChange={(e) => setEducation(e.target.value)}
-          fullWidth
-          size="small"
+        <Autocomplete
+          options={options.fieldOfStudyOptions}
+          autoHighlight
+          autoComplete
+          value={study ?? null}
+          onChange={(_, val: { id: string; label: string } | null) =>
+            setStudy(val ?? null)
+          }
+          renderInput={(params) => (
+            <TextField {...params} label="Select field of study" size="small" />
+          )}
           sx={{ mb: 2 }}
         />
-
-        <ToggleButtonGroup
-          value={isAlive === null ? "" : isAlive}
-          exclusive
-          onChange={(_, val) => setIsAlive(val === "" ? null : val)}
-          size="small"
-          fullWidth
-        >
-          <ToggleButton value="">Any</ToggleButton>
-          <ToggleButton value={true}>Alive</ToggleButton>
-          <ToggleButton value={false}>Expired</ToggleButton>
-        </ToggleButtonGroup>
+        <Autocomplete
+          options={options.QualificationOptions}
+          autoHighlight
+          autoComplete
+          value={qualification ?? null}
+          onChange={(_, val: { id: string; label: string } | null) =>
+            setQualification(val ?? null)
+          }
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Select highest qualification"
+              size="small"
+            />
+          )}
+          sx={{ mb: 2 }}
+        />
 
         <Divider sx={{ my: 2 }} />
-
         <Typography variant="subtitle1">Start From Person</Typography>
         <Autocomplete
+          autoHighlight
+          autoComplete
           options={personOptions}
           value={startPerson}
           onChange={(_, val) => setStartPerson(val)}
@@ -228,7 +258,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           )}
           sx={{ mb: 2 }}
         />
-
         <ToggleButtonGroup
           value={treeDepth}
           exclusive
@@ -239,7 +268,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           <ToggleButton value="immediate">Immediate Family</ToggleButton>
           <ToggleButton value="full">Full Tree</ToggleButton>
         </ToggleButtonGroup>
-
         <Stack
           direction="row"
           spacing={1}
@@ -253,9 +281,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             Save As New
           </Button>
         </Stack>
-
         <Divider sx={{ my: 2 }} />
-
         <Button
           fullWidth
           variant="contained"

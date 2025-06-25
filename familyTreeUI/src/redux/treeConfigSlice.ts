@@ -1,6 +1,6 @@
 import { AppEdge } from "@/types/edgeTypes";
 import { Tree } from "@/types/entityTypes";
-import { AppNode } from "@/types/nodeTypes";
+import { AppNode, Nodes } from "@/types/nodeTypes";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export type TreeConfigState = {
@@ -10,8 +10,35 @@ export type TreeConfigState = {
   filteredNodes: AppNode[];
   filteredEdges: AppEdge[];
   selectedFilters: object | any[];
-  selectedRoot: AppNode | null;
-}
+  filters: FilterProps;
+};
+
+export type FilterProps = {
+  enabled: boolean;
+  filterBy: {
+    nodeTypes: { [K in Nodes]: boolean };
+    nodeProps: {
+      [Nodes.House]: {
+        names: string[];
+      };
+      [Nodes.Person]: {
+        married: boolean | null;
+        gender: "male" | "female" | null;
+        age: { start: number; end: number };
+        bornAfter: Date | null;
+        bornBefore: Date | null;
+        isAlive: boolean | null;
+        jobType: string | null;
+        study: string | null;
+        qualification: string | null;
+      };
+    };
+    rootPerson: {
+      person: string | null;
+      onlyImmediate: boolean;
+    };
+  };
+};
 type ParameterSetState = {
   treeConfig: TreeConfigState;
 };
@@ -22,7 +49,32 @@ const initialState: TreeConfigState = {
   filteredNodes: [],
   filteredEdges: [],
   selectedFilters: {},
-  selectedRoot: null,
+  filters: {
+    enabled: false,
+    filterBy: {
+      nodeTypes: { [Nodes.Person]: true, [Nodes.House]: true },
+      nodeProps: {
+        [Nodes.House]: {
+          names: [],
+        },
+        [Nodes.Person]: {
+          married: null,
+          gender: null,
+          age: { start: 0, end: 100 },
+          bornAfter: null,
+          bornBefore: null,
+          isAlive: null,
+          jobType: null,
+          study: null,
+          qualification: null,
+        },
+      },
+      rootPerson: {
+        person: null,
+        onlyImmediate: false,
+      },
+    },
+  },
 };
 
 const treeConfigSlice = createSlice({
@@ -47,24 +99,21 @@ const treeConfigSlice = createSlice({
     setSelectedFilters: (state, action: PayloadAction<object | any[]>) => {
       state.selectedFilters = action.payload;
     },
-    setSelectedRoot: (state, action: PayloadAction<AppNode | null>) => {
-      state.selectedRoot = action.payload;
-    },
   },
 });
 
-export const selectTree = (state: ParameterSetState) => state.treeConfig.currentTree;
+export const selectTree = (state: ParameterSetState) =>
+  state.treeConfig.currentTree;
 export const selectNodes = (state: ParameterSetState) => state.treeConfig.nodes;
 export const selectEdges = (state: ParameterSetState) => state.treeConfig.edges;
-export const selectFilters = (state: ParameterSetState) => state.treeConfig.selectedFilters;
-export const selectRoot = (state: ParameterSetState) => state.treeConfig.selectedRoot;
+export const selectFilters = (state: ParameterSetState) =>
+  state.treeConfig.selectedFilters;
 
 export const {
   setCurrentTree,
   setReduxNodes,
   setReduxEdges,
   setSelectedFilters,
-  setSelectedRoot,
 } = treeConfigSlice.actions;
 
 export default treeConfigSlice.reducer;
