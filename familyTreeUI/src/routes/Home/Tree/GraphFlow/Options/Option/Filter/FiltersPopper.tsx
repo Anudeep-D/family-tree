@@ -3,8 +3,6 @@ import {
   Typography,
   FormControlLabel,
   Checkbox,
-  Select,
-  MenuItem,
   Autocomplete,
   TextField,
   ToggleButtonGroup,
@@ -18,50 +16,69 @@ import {
 } from "@mui/material";
 import { forwardRef, useState } from "react";
 import options from "@/constants/JobAndQualification.json";
+import { useSelector } from "react-redux";
+import { selectNodes } from "@/redux/treeConfigSlice";
+import { Nodes } from "@/types/nodeTypes";
+import { CheckBoxOutlineBlank, CheckBox } from "@mui/icons-material";
 
-export type FiltersPopperProps = {
-  houseOptions: string[];
-  personOptions: string[];
-  savedFilters: string[];
-  onSaveAsNew: () => void;
-  onUpdate: () => void;
-  onApplyFilters: () => void;
-};
+export type FiltersPopperProps = {};
+
+const icon = <CheckBoxOutlineBlank fontSize="small" />;
+const checkedIcon = <CheckBox fontSize="small" />;
 
 const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
-  (
-    {
-      houseOptions,
-      personOptions,
-      savedFilters,
-      onSaveAsNew,
-      onUpdate,
-      onApplyFilters,
-    },
-    ref
-  ) => {
+  ({}, ref) => {
     const [filtersEnabled, setFiltersEnabled] = useState(true);
-    const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+    const [selectedFilter, setSelectedFilter] = useState<{
+      id: string;
+      label: string;
+    } | null>(null);
     const [showPersons, setShowPersons] = useState(true);
     const [showHouses, setShowHouses] = useState(true);
-    const [selectedHouses, setSelectedHouses] = useState<string[]>([]);
+    const [selectedHouses, setSelectedHouses] = useState<
+      { id: string; label: string }[]
+    >([]);
     const [married, setMarried] = useState<boolean | null>(null);
     const [gender, setGender] = useState<string | null>(null);
     const [ageRange, setAgeRange] = useState<number[]>([0, 100]);
     const [bornAfter, setBornAfter] = useState<string>("");
     const [bornBefore, setBornBefore] = useState<string>("");
-    const [job, setJob] = useState<{ id: string; label: string } | null>(null);
-    const [study, setStudy] = useState<{ id: string; label: string } | null>(
-      null
-    );
-    const [qualification, setQualification] = useState<{
+    const [jobs, setJobs] = useState<
+      { id: string; label: string; group: string }[]
+    >([]);
+    const [studies, setStudies] = useState<
+      { id: string; label: string; group: string }[]
+    >([]);
+    const [qualifications, setQualifications] = useState<
+      {
+        id: string;
+        label: string;
+        group: string;
+      }[]
+    >([]);
+    const [isAlive, setIsAlive] = useState<boolean | null>(null);
+    const [startPerson, setStartPerson] = useState<{
       id: string;
       label: string;
     } | null>(null);
-    const [isAlive, setIsAlive] = useState<boolean | null>(null);
-    const [startPerson, setStartPerson] = useState<string | null>(null);
     const [treeDepth, setTreeDepth] = useState<"full" | "immediate">("full");
 
+    const allNodes = useSelector(selectNodes);
+
+    const persons: { id: string; label: string }[] = [];
+    const houses: { id: string; label: string }[] = [];
+
+    allNodes.forEach((eachNode) => {
+      if (eachNode.type === Nodes.House) {
+        houses.push({ id: eachNode.id, label: eachNode.data["name"] });
+      }
+
+      if (eachNode.type === Nodes.Person) {
+        persons.push({ id: eachNode.id, label: eachNode.data["name"] });
+      }
+    });
+
+    const savedFilters: { id: string; label: string }[] = [];
     return (
       <Paper
         ref={ref}
@@ -94,6 +111,10 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         <Autocomplete
           options={savedFilters}
           value={selectedFilter}
+          disablePortal
+          getOptionLabel={(option) => option.label}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          filterSelectedOptions
           onChange={(_, val) => setSelectedFilter(val)}
           renderInput={(params) => (
             <TextField {...params} label="Select filter" size="small" />
@@ -124,9 +145,31 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         <Typography variant="subtitle1">Filter by House</Typography>
         <Autocomplete
           multiple
-          options={houseOptions}
+          limitTags={1}
+          options={houses}
+          autoHighlight
+          autoComplete
           value={selectedHouses}
-          onChange={(_, val) => setSelectedHouses(val)}
+          disableCloseOnSelect
+          getOptionLabel={(option) => option.label}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          renderOption={(props, option, { selected }) => {
+            const { key, ...optionProps } = props;
+            console.log("Houses: ", props, option, selected, selectedHouses);
+            return (
+              <li key={key} {...optionProps}>
+                <Checkbox
+                  icon={icon}
+                  checkedIcon={checkedIcon}
+                  style={{ marginRight: 8 }}
+                  checked={selected}
+                />
+                {option.label}
+              </li>
+            );
+          }}
+          disablePortal
+          onChange={(_, vals) => setSelectedHouses(vals)}
           renderInput={(params) => (
             <TextField {...params} label="Houses" size="small" />
           )}
@@ -178,7 +221,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           onChange={(_, val) => setAgeRange(val as number[])}
           valueLabelDisplay="auto"
           min={0}
-          max={120}
+          max={100}
           sx={{ mb: 2 }}
         />
         <TextField
@@ -202,39 +245,103 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           sx={{ mb: 2 }}
         />
         <Autocomplete
-          options={options.JobTypeOptions}
+          multiple
+          limitTags={1}
+          options={options.JobTypeOptions.sort((a, b) =>
+            a.group.localeCompare(b.group)
+          )}
           autoHighlight
           autoComplete
-          value={job ?? null}
-          onChange={(_, val: { id: string; label: string } | null) =>
-            setJob(val ?? null)
-          }
+          value={jobs}
+          disableCloseOnSelect
+          groupBy={(option) => option.group}
+          getOptionLabel={(option) => option.label}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          renderOption={(props, option, { selected }) => {
+            console.log("Jobs: ", props, option, selected, jobs);
+            const { key, ...optionProps } = props;
+            return (
+              <li key={key} {...optionProps}>
+                <Checkbox
+                  icon={icon}
+                  checkedIcon={checkedIcon}
+                  style={{ marginRight: 8 }}
+                  checked={selected}
+                />
+                {option.label}
+              </li>
+            );
+          }}
+          disablePortal
+          onChange={(_, vals) => setJobs(vals)}
           renderInput={(params) => (
             <TextField {...params} label="Job Type" size="small" />
           )}
           sx={{ mb: 2 }}
         />
         <Autocomplete
-          options={options.fieldOfStudyOptions}
+          multiple
+          limitTags={1}
+          options={options.fieldOfStudyOptions.sort((a, b) =>
+            a.group.localeCompare(b.group)
+          )}
           autoHighlight
           autoComplete
-          value={study ?? null}
-          onChange={(_, val: { id: string; label: string } | null) =>
-            setStudy(val ?? null)
-          }
+          value={studies}
+          disableCloseOnSelect
+          groupBy={(option) => option.group}
+          getOptionLabel={(option) => option.label}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          renderOption={(props, option, { selected }) => {
+            const { key, ...optionProps } = props;
+            return (
+              <li key={key} {...optionProps}>
+                <Checkbox
+                  icon={icon}
+                  checkedIcon={checkedIcon}
+                  style={{ marginRight: 8 }}
+                  checked={selected}
+                />
+                {option.label}
+              </li>
+            );
+          }}
+          disablePortal
+          onChange={(_, vals) => setStudies(vals)}
           renderInput={(params) => (
             <TextField {...params} label="Select field of study" size="small" />
           )}
           sx={{ mb: 2 }}
         />
         <Autocomplete
-          options={options.QualificationOptions}
+          multiple
+          limitTags={1}
+          options={options.QualificationOptions.sort((a, b) =>
+            a.group.localeCompare(b.group)
+          )}
           autoHighlight
           autoComplete
-          value={qualification ?? null}
-          onChange={(_, val: { id: string; label: string } | null) =>
-            setQualification(val ?? null)
-          }
+          value={qualifications}
+          disableCloseOnSelect
+          groupBy={(option) => option.group}
+          getOptionLabel={(option) => option.label}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          renderOption={(props, option, { selected }) => {
+            const { key, ...optionProps } = props;
+            return (
+              <li key={key} {...optionProps}>
+                <Checkbox
+                  icon={icon}
+                  checkedIcon={checkedIcon}
+                  style={{ marginRight: 8 }}
+                  checked={selected}
+                />
+                {option.label}
+              </li>
+            );
+          }}
+          disablePortal
+          onChange={(_, vals) => setQualifications(vals)}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -250,8 +357,12 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         <Autocomplete
           autoHighlight
           autoComplete
-          options={personOptions}
+          options={persons}
           value={startPerson}
+          getOptionLabel={(option) => option.label}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          filterSelectedOptions
+          disablePortal
           onChange={(_, val) => setStartPerson(val)}
           renderInput={(params) => (
             <TextField {...params} label="Start Person" size="small" />
@@ -274,10 +385,18 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           justifyContent="space-between"
           sx={{ mt: 3 }}
         >
-          <Button variant="outlined" color="secondary" onClick={onUpdate}>
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={() => console.log("clicked Update")}
+          >
             Update
           </Button>
-          <Button variant="contained" color="primary" onClick={onSaveAsNew}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => console.log("clicked Save As New")}
+          >
             Save As New
           </Button>
         </Stack>
@@ -286,7 +405,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           fullWidth
           variant="contained"
           color="success"
-          onClick={onApplyFilters}
+          onClick={() => console.log("clicked Apply Filters")}
           disabled={!filtersEnabled}
           sx={{ color: "#ffffff" }}
         >

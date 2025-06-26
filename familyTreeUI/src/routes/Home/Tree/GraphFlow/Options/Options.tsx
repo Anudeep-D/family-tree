@@ -90,16 +90,7 @@ export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
     }
     if (actionKey === "filter") {
       setPopperAnchorEl(event.currentTarget);
-      setPopperChild(
-        <FiltersPopper
-          houseOptions={[]}
-          personOptions={[]}
-          savedFilters={[]}
-          onSaveAsNew={() => null}
-          onUpdate={() => null}
-          onApplyFilters={() => null}
-        />
-      );
+      setPopperChild(<FiltersPopper />);
       setOpenPopper(true);
     }
     // Add other action handlers here if needed

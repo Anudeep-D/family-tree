@@ -372,7 +372,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                         display: "grid",
                         gridTemplateColumns: "repeat(12, 1fr)",
                         gap: 2,
-                        width: "100%"
+                        width: "100%",
                       }}
                       container
                     >
@@ -387,7 +387,14 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                               autoHighlight
                               fullWidth
                               disablePortal
-                              options={options.JobTypeOptions}
+                              groupBy={(option) => option.group}
+                              getOptionLabel={(option) => option.label}
+                              isOptionEqualToValue={(option, value) =>
+                                option.id === value.id
+                              }
+                              options={options.JobTypeOptions.sort(
+                                (a, b) => a.group.localeCompare(b.group)
+                              )}
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
@@ -415,7 +422,14 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                               autoHighlight
                               fullWidth
                               disablePortal
-                              options={options.fieldOfStudyOptions}
+                              groupBy={(option) => option.group}
+                              getOptionLabel={(option) => option.label}
+                              isOptionEqualToValue={(option, value) =>
+                                option.id === value.id
+                              }
+                              options={options.fieldOfStudyOptions.sort(
+                                (a, b) => a.group.localeCompare(b.group)
+                              )}
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
@@ -443,7 +457,14 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                               autoHighlight
                               fullWidth
                               disablePortal
-                              options={options.QualificationOptions}
+                              groupBy={(option) => option.group}
+                              getOptionLabel={(option) => option.label}
+                              isOptionEqualToValue={(option, value) =>
+                                option.id === value.id
+                              }
+                              options={options.QualificationOptions.sort(
+                                (a, b) => a.group.localeCompare(b.group)
+                              )}
                               renderInput={(params) => (
                                 <TextField
                                   {...params}

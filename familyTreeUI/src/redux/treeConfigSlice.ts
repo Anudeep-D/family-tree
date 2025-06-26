@@ -28,9 +28,9 @@ export type FilterProps = {
         bornAfter: Date | null;
         bornBefore: Date | null;
         isAlive: boolean | null;
-        jobType: string | null;
-        study: string | null;
-        qualification: string | null;
+        jobType: string[];
+        study: string[];
+        qualification: string[];
       };
     };
     rootPerson: {
@@ -64,9 +64,9 @@ const initialState: TreeConfigState = {
           bornAfter: null,
           bornBefore: null,
           isAlive: null,
-          jobType: null,
-          study: null,
-          qualification: null,
+          jobType: [],
+          study: [],
+          qualification: [],
         },
       },
       rootPerson: {
