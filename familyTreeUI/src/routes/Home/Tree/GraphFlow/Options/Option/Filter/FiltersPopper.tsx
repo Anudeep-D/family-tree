@@ -13,13 +13,26 @@ import {
   Stack,
   Paper,
   Switch,
+  IconButton,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
 } from "@mui/material";
 import { forwardRef, useState } from "react";
 import options from "@/constants/JobAndQualification.json";
 import { useSelector } from "react-redux";
-import { selectNodes } from "@/redux/treeConfigSlice";
+import {
+  FilterProps,
+  initialState as initialFilters,
+  selectNodes,
+} from "@/redux/treeConfigSlice";
 import { Nodes } from "@/types/nodeTypes";
-import { CheckBoxOutlineBlank, CheckBox } from "@mui/icons-material";
+import {
+  CheckBoxOutlineBlank,
+  CheckBox,
+  DeleteForeverTwoTone,
+} from "@mui/icons-material";
 
 export type FiltersPopperProps = {};
 
@@ -28,40 +41,28 @@ const checkedIcon = <CheckBox fontSize="small" />;
 
 const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
   ({}, ref) => {
-    const [filtersEnabled, setFiltersEnabled] = useState(true);
+    const [filters, setFilters] = useState<FilterProps>(
+      initialFilters.currentFilter
+    );
+
+    const handleChange = (keys: string[], value: any) => {
+      setFilters((prev) => {
+        const newState = { ...prev };
+        let curr: any = newState;
+
+        for (let i = 0; i < keys.length - 1; i++) {
+          curr[keys[i]] = { ...curr[keys[i]] };
+          curr = curr[keys[i]];
+        }
+
+        curr[keys[keys.length - 1]] = value;
+        return newState;
+      });
+    };
     const [selectedFilter, setSelectedFilter] = useState<{
       id: string;
       label: string;
     } | null>(null);
-    const [showPersons, setShowPersons] = useState(true);
-    const [showHouses, setShowHouses] = useState(true);
-    const [selectedHouses, setSelectedHouses] = useState<
-      { id: string; label: string }[]
-    >([]);
-    const [married, setMarried] = useState<boolean | null>(null);
-    const [gender, setGender] = useState<string | null>(null);
-    const [ageRange, setAgeRange] = useState<number[]>([0, 100]);
-    const [bornAfter, setBornAfter] = useState<string>("");
-    const [bornBefore, setBornBefore] = useState<string>("");
-    const [jobs, setJobs] = useState<
-      { id: string; label: string; group: string }[]
-    >([]);
-    const [studies, setStudies] = useState<
-      { id: string; label: string; group: string }[]
-    >([]);
-    const [qualifications, setQualifications] = useState<
-      {
-        id: string;
-        label: string;
-        group: string;
-      }[]
-    >([]);
-    const [isAlive, setIsAlive] = useState<boolean | null>(null);
-    const [startPerson, setStartPerson] = useState<{
-      id: string;
-      label: string;
-    } | null>(null);
-    const [treeDepth, setTreeDepth] = useState<"full" | "immediate">("full");
 
     const allNodes = useSelector(selectNodes);
 
@@ -79,6 +80,22 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
     });
 
     const savedFilters: { id: string; label: string }[] = [];
+
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [filtersToDelete, setFiltersToDelete] = useState<string[]>([]); // IDs of filters to delete
+
+    const handleToggleFilter = (id: string) => {
+      setFiltersToDelete((prev) =>
+        prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
+      );
+    };
+
+    const handleDeleteFilters = () => {
+      // handle delete logic here using filtersToDelete
+      console.log("Deleting filters: ", filtersToDelete);
+      setDeleteDialogOpen(false);
+      setFiltersToDelete([]);
+    };
     return (
       <Paper
         ref={ref}
@@ -93,14 +110,19 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         }}
       >
         {/* Header Row */}
-        <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ mv: 1 }}
+        >
           <Typography variant="subtitle1">Presaved Filters</Typography>
           <FormControlLabel
             control={
               <Switch
                 size="small"
-                checked={filtersEnabled}
-                onChange={(e) => setFiltersEnabled(e.target.checked)}
+                checked={filters.enabled}
+                onChange={(e) => handleChange(["enabled"], e.target.checked)}
               />
             }
             label="Enabled"
@@ -108,26 +130,49 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             sx={{ ml: 1 }}
           />
         </Box>
-        <Autocomplete
-          options={savedFilters}
-          value={selectedFilter}
-          disablePortal
-          getOptionLabel={(option) => option.label}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          filterSelectedOptions
-          onChange={(_, val) => setSelectedFilter(val)}
-          renderInput={(params) => (
-            <TextField {...params} label="Select filter" size="small" />
+        <Box display="flex" alignItems="center" sx={{ mb: 1 }}>
+          <Autocomplete
+            options={savedFilters}
+            value={selectedFilter}
+            disablePortal
+            getOptionLabel={(option) => option.label}
+            isOptionEqualToValue={(option, value) => option.id === value.id}
+            filterSelectedOptions
+            onChange={(_, val) => setSelectedFilter(val)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Select filter"
+                size="small"
+                fullWidth
+              />
+            )}
+            sx={{ flex: 1 }}
+          />
+          {savedFilters.length > 0 && (
+            <IconButton
+              color="error"
+              sx={{ ml: 1 }}
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <DeleteForeverTwoTone />
+            </IconButton>
           )}
-          sx={{ mb: 2 }}
-        />
+        </Box>
         <Divider sx={{ mb: 2 }} />
-        <Typography variant="subtitle1">Show Node Types</Typography>
+        <Typography variant="subtitle1" sx={{ mv: 1 }}>
+          Show Node Types
+        </Typography>
         <FormControlLabel
           control={
             <Checkbox
-              checked={showPersons}
-              onChange={(e) => setShowPersons(e.target.checked)}
+              checked={filters.filterBy.nodeTypes.Person}
+              onChange={(e) =>
+                handleChange(
+                  ["filterBy", "nodeTypes", Nodes.Person],
+                  e.target.checked
+                )
+              }
             />
           }
           label="Persons"
@@ -135,21 +180,28 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         <FormControlLabel
           control={
             <Checkbox
-              checked={showHouses}
-              onChange={(e) => setShowHouses(e.target.checked)}
+              checked={filters.filterBy.nodeTypes.House}
+              onChange={(e) =>
+                handleChange(
+                  ["filterBy", "nodeTypes", Nodes.House],
+                  e.target.checked
+                )
+              }
             />
           }
           label="Houses"
         />
         <Divider sx={{ my: 2 }} />
-        <Typography variant="subtitle1">Filter by House</Typography>
+        <Typography variant="subtitle1" sx={{ mv: 1 }}>
+          Filter by House
+        </Typography>
         <Autocomplete
           multiple
           limitTags={1}
           options={houses}
           autoHighlight
           autoComplete
-          value={selectedHouses}
+          value={filters.filterBy.nodeProps.House.selectedHouses}
           disableCloseOnSelect
           getOptionLabel={(option) => option.label}
           isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -168,22 +220,34 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             );
           }}
           disablePortal
-          onChange={(_, vals) => setSelectedHouses(vals)}
+          onChange={(_, vals) =>
+            handleChange(
+              ["filterBy", "nodeProps", Nodes.House, "selectedHouses"],
+              vals
+            )
+          }
           renderInput={(params) => (
             <TextField {...params} label="Houses" size="small" />
           )}
           sx={{ mb: 2 }}
         />
         <Divider sx={{ my: 2 }} />
-        <Typography variant="subtitle1">Person Filters</Typography>
+        <Typography variant="subtitle1" sx={{ mv: 1 }}>
+          Person Filters
+        </Typography>
 
         <Stack spacing={1.2}>
           {" "}
           {/* Adjust spacing as needed */}
           <ToggleButtonGroup
-            value={gender === null ? "" : gender}
+            value={filters.filterBy.nodeProps.Person.gender ?? ""}
             exclusive
-            onChange={(_, val) => setGender(val === "" ? null : val)}
+            onChange={(_, val) =>
+              handleChange(
+                ["filterBy", "nodeProps", Nodes.Person, "gender"],
+                val === "" ? null : val
+              )
+            }
             size="small"
             fullWidth
           >
@@ -192,9 +256,14 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             <ToggleButton value="female">Female</ToggleButton>
           </ToggleButtonGroup>
           <ToggleButtonGroup
-            value={isAlive === null ? "" : isAlive}
+            value={filters.filterBy.nodeProps.Person.isAlive ?? ""}
             exclusive
-            onChange={(_, val) => setIsAlive(val === "" ? null : val)}
+            onChange={(_, val) =>
+              handleChange(
+                ["filterBy", "nodeProps", Nodes.Person, "isAlive"],
+                val === "" ? null : val
+              )
+            }
             size="small"
             fullWidth
           >
@@ -203,9 +272,14 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             <ToggleButton value={false}>Expired</ToggleButton>
           </ToggleButtonGroup>
           <ToggleButtonGroup
-            value={married === null ? "" : married}
+            value={filters.filterBy.nodeProps.Person.married ?? ""}
             exclusive
-            onChange={(_, val) => setMarried(val === "" ? null : val)}
+            onChange={(_, val) =>
+              handleChange(
+                ["filterBy", "nodeProps", Nodes.Person, "married"],
+                val === "" ? null : val
+              )
+            }
             size="small"
             fullWidth
           >
@@ -214,10 +288,17 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             <ToggleButton value={true}>Married</ToggleButton>
           </ToggleButtonGroup>
         </Stack>
-        <Typography variant="body2">Age Range</Typography>
+        <Typography variant="body2" sx={{ mv: 0.6 }}>
+          Age Range
+        </Typography>
         <Slider
-          value={ageRange}
-          onChange={(_, val) => setAgeRange(val as number[])}
+          value={filters.filterBy.nodeProps.Person.age}
+          onChange={(_, val) =>
+            handleChange(
+              ["filterBy", "nodeProps", Nodes.Person, "age"],
+              typeof val === "number" ? [val, val] : val
+            )
+          }
           valueLabelDisplay="auto"
           min={0}
           max={100}
@@ -226,8 +307,13 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         <TextField
           label="Born After"
           type="date"
-          value={bornAfter}
-          onChange={(e) => setBornAfter(e.target.value)}
+          value={filters.filterBy.nodeProps.Person.bornAfter}
+          onChange={(e) =>
+            handleChange(
+              ["filterBy", "nodeProps", Nodes.Person, "bornAfter"],
+              e.target.value
+            )
+          }
           fullWidth
           size="small"
           slotProps={{ inputLabel: { shrink: true } }}
@@ -236,8 +322,13 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         <TextField
           label="Born Before"
           type="date"
-          value={bornBefore}
-          onChange={(e) => setBornBefore(e.target.value)}
+          value={filters.filterBy.nodeProps.Person.bornBefore}
+          onChange={(e) =>
+            handleChange(
+              ["filterBy", "nodeProps", Nodes.Person, "bornBefore"],
+              e.target.value
+            )
+          }
           fullWidth
           size="small"
           slotProps={{ inputLabel: { shrink: true } }}
@@ -251,7 +342,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           )}
           autoHighlight
           autoComplete
-          value={jobs}
+          value={filters.filterBy.nodeProps.Person.jobTypes}
           disableCloseOnSelect
           groupBy={(option) => option.group}
           getOptionLabel={(option) => option.label}
@@ -271,7 +362,12 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             );
           }}
           disablePortal
-          onChange={(_, vals) => setJobs(vals)}
+          onChange={(_, vals) =>
+            handleChange(
+              ["filterBy", "nodeProps", Nodes.Person, "jobTypes"],
+              vals
+            )
+          }
           renderInput={(params) => (
             <TextField {...params} label="Job Type" size="small" />
           )}
@@ -285,7 +381,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           )}
           autoHighlight
           autoComplete
-          value={studies}
+          value={filters.filterBy.nodeProps.Person.studies}
           disableCloseOnSelect
           groupBy={(option) => option.group}
           getOptionLabel={(option) => option.label}
@@ -305,7 +401,12 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             );
           }}
           disablePortal
-          onChange={(_, vals) => setStudies(vals)}
+          onChange={(_, vals) =>
+            handleChange(
+              ["filterBy", "nodeProps", Nodes.Person, "studies"],
+              vals
+            )
+          }
           renderInput={(params) => (
             <TextField {...params} label="Select field of study" size="small" />
           )}
@@ -319,7 +420,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           )}
           autoHighlight
           autoComplete
-          value={qualifications}
+          value={filters.filterBy.nodeProps.Person.qualifications}
           disableCloseOnSelect
           groupBy={(option) => option.group}
           getOptionLabel={(option) => option.label}
@@ -339,7 +440,12 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             );
           }}
           disablePortal
-          onChange={(_, vals) => setQualifications(vals)}
+          onChange={(_, vals) =>
+            handleChange(
+              ["filterBy", "nodeProps", Nodes.Person, "qualifications"],
+              vals
+            )
+          }
           renderInput={(params) => (
             <TextField
               {...params}
@@ -351,32 +457,69 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         />
 
         <Divider sx={{ my: 2 }} />
-        <Typography variant="subtitle1">Start From Person</Typography>
+        <Typography variant="subtitle1" sx={{ mv: 1 }}>
+          Start From Person
+        </Typography>
         <Autocomplete
           autoHighlight
           autoComplete
           options={persons}
-          value={startPerson}
+          value={filters.filterBy.rootPerson.person}
           getOptionLabel={(option) => option.label}
           isOptionEqualToValue={(option, value) => option.id === value.id}
           filterSelectedOptions
           disablePortal
-          onChange={(_, val) => setStartPerson(val)}
+          onChange={(_, val) =>
+            handleChange(["filterBy", "rootPerson", "person"], val)
+          }
           renderInput={(params) => (
             <TextField {...params} label="Start Person" size="small" />
           )}
           sx={{ mb: 2 }}
         />
         <ToggleButtonGroup
-          value={treeDepth}
+          value={
+            filters.filterBy.rootPerson.onlyImmediate ? "immediate" : "full"
+          }
           exclusive
-          onChange={(_, val) => val && setTreeDepth(val)}
+          onChange={(_, val) =>
+            handleChange(
+              ["filterBy", "rootPerson", "onlyImmediate"],
+              val === "immediate" ? true : false
+            )
+          }
           size="small"
           fullWidth
         >
           <ToggleButton value="immediate">Immediate Family</ToggleButton>
           <ToggleButton value="full">Full Tree</ToggleButton>
         </ToggleButtonGroup>
+        <Divider sx={{ my: 2 }} />
+        <Stack
+          direction="row"
+          spacing={1}
+          justifyContent="space-between"
+          sx={{ mt: 3 }}
+        >
+          <Button
+            variant="outlined"
+            fullWidth
+            onClick={() => console.log("clicked Reset")}
+          >
+            Reset
+          </Button>
+          <Button
+            fullWidth
+            variant="contained"
+            color="success"
+            onClick={() => console.log("clicked Apply Filters")}
+            disabled={!filters.enabled}
+            sx={{ color: "#ffffff" }}
+          >
+            Apply Filters
+          </Button>
+        </Stack>
+        
         <Stack
           direction="row"
           spacing={1}
@@ -398,17 +541,38 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             Save As New
           </Button>
         </Stack>
-        <Divider sx={{ my: 2 }} />
-        <Button
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          maxWidth="xs"
           fullWidth
-          variant="contained"
-          color="success"
-          onClick={() => console.log("clicked Apply Filters")}
-          disabled={!filtersEnabled}
-          sx={{ color: "#ffffff" }}
         >
-          Apply Filters
-        </Button>
+          <DialogTitle>Delete Filters</DialogTitle>
+          <DialogContent dividers>
+            {savedFilters.map((filter) => (
+              <FormControlLabel
+                key={filter.id}
+                control={
+                  <Checkbox
+                    checked={filtersToDelete.includes(filter.id)}
+                    onChange={() => handleToggleFilter(filter.id)}
+                  />
+                }
+                label={filter.label}
+              />
+            ))}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleDeleteFilters}
+              color="error"
+              disabled={filtersToDelete.length === 0}
+            >
+              Delete Selected
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Paper>
     );
   }

@@ -9,32 +9,34 @@ export type TreeConfigState = {
   edges: AppEdge[];
   filteredNodes: AppNode[];
   filteredEdges: AppEdge[];
-  selectedFilters: object | any[];
-  filters: FilterProps;
+  savedFilters: { id: string; data: FilterProps }[];
+  selectedFilter: string | null;
+  currentFilter: FilterProps;
 };
 
 export type FilterProps = {
+  filterName: string | null;
   enabled: boolean;
   filterBy: {
     nodeTypes: { [K in Nodes]: boolean };
     nodeProps: {
       [Nodes.House]: {
-        names: string[];
+        selectedHouses: { id: string; label: string }[];
       };
       [Nodes.Person]: {
         married: boolean | null;
         gender: "male" | "female" | null;
-        age: { start: number; end: number };
+        age: number[];
         bornAfter: Date | null;
         bornBefore: Date | null;
         isAlive: boolean | null;
-        jobType: string[];
-        study: string[];
-        qualification: string[];
+        jobTypes: { id: string; label: string; group: string }[];
+        studies: { id: string; label: string; group: string }[];
+        qualifications: { id: string; label: string; group: string }[];
       };
     };
     rootPerson: {
-      person: string | null;
+      person: { id: string; label: string } | null;
       onlyImmediate: boolean;
     };
   };
@@ -42,31 +44,33 @@ export type FilterProps = {
 type ParameterSetState = {
   treeConfig: TreeConfigState;
 };
-const initialState: TreeConfigState = {
+export const initialState: TreeConfigState = {
   currentTree: null,
   nodes: [],
   edges: [],
   filteredNodes: [],
   filteredEdges: [],
-  selectedFilters: {},
-  filters: {
+  savedFilters: [],
+  selectedFilter: null,
+  currentFilter: {
+    filterName: null,
     enabled: false,
     filterBy: {
       nodeTypes: { [Nodes.Person]: true, [Nodes.House]: true },
       nodeProps: {
         [Nodes.House]: {
-          names: [],
+          selectedHouses: [],
         },
         [Nodes.Person]: {
           married: null,
           gender: null,
-          age: { start: 0, end: 100 },
+          age: [0, 100],
           bornAfter: null,
           bornBefore: null,
           isAlive: null,
-          jobType: [],
-          study: [],
-          qualification: [],
+          jobTypes: [],
+          studies: [],
+          qualifications: [],
         },
       },
       rootPerson: {
@@ -96,8 +100,8 @@ const treeConfigSlice = createSlice({
     setFilteredEdges: (state, action: PayloadAction<AppEdge[]>) => {
       state.filteredEdges = action.payload;
     },
-    setSelectedFilters: (state, action: PayloadAction<object | any[]>) => {
-      state.selectedFilters = action.payload;
+    setSelectedFilter: (state, action: PayloadAction<string | null>) => {
+      state.selectedFilter = action.payload;
     },
   },
 });
@@ -106,14 +110,15 @@ export const selectTree = (state: ParameterSetState) =>
   state.treeConfig.currentTree;
 export const selectNodes = (state: ParameterSetState) => state.treeConfig.nodes;
 export const selectEdges = (state: ParameterSetState) => state.treeConfig.edges;
-export const selectFilters = (state: ParameterSetState) =>
-  state.treeConfig.selectedFilters;
+export const selectSavedFilters = (state: ParameterSetState) => state.treeConfig.savedFilters;
+export const selectFilter = (state: ParameterSetState) =>
+  state.treeConfig.selectedFilter;
 
 export const {
   setCurrentTree,
   setReduxNodes,
   setReduxEdges,
-  setSelectedFilters,
+  setSelectedFilter,
 } = treeConfigSlice.actions;
 
 export default treeConfigSlice.reducer;
