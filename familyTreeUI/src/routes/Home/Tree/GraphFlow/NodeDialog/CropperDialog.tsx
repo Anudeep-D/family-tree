@@ -125,10 +125,6 @@ const CropperDialog: React.FC<CropperDialogProps> = ({
       if (finalFile) {
         console.log(`Original cropped file size: ${finalFile.size / 1024} KB`);
         if (finalFile.size > 500 * 1024) {
-          // If file size is greater than 500KB
-          console.log(
-            "Cropped image is larger than 500KB, attempting compression."
-          );
           const options = {
             maxSizeMB: 0.5, // Max size in MB
             // maxWidthOrHeight: 1920, // You can set max dimensions if needed

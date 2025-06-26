@@ -155,7 +155,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           isOptionEqualToValue={(option, value) => option.id === value.id}
           renderOption={(props, option, { selected }) => {
             const { key, ...optionProps } = props;
-            console.log("Houses: ", props, option, selected, selectedHouses);
             return (
               <li key={key} {...optionProps}>
                 <Checkbox
@@ -258,7 +257,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           getOptionLabel={(option) => option.label}
           isOptionEqualToValue={(option, value) => option.id === value.id}
           renderOption={(props, option, { selected }) => {
-            console.log("Jobs: ", props, option, selected, jobs);
             const { key, ...optionProps } = props;
             return (
               <li key={key} {...optionProps}>
