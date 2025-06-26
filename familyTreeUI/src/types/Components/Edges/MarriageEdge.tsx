@@ -74,7 +74,7 @@ const MarriageEdge = (props: EdgeProps<MarriageEdgeType>) => {
             label={
               data?.dateOfMarriage
                 ? dayjs(data?.dateOfMarriage).format("DD-MMM-YYYY")
-                : Edges.MARRIED_TO
+                : "married"
             }
           />
         </div>

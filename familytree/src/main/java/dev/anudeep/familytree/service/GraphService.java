@@ -99,8 +99,7 @@ public class GraphService {
             String srcId = relation.startNodeElementId();
             String tgtId = relation.endNodeElementId();
             String edgeId = relation.elementId();
-            Map<String, Object> data = Map.of("label", relation.type());
-            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, relation.type(),data);
+            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, relation.type(),relation.asMap());
             // log.info("edge identified {}",flowEdge);
             edges.add(flowEdge);
         }
@@ -109,11 +108,22 @@ public class GraphService {
     public FlowGraphDTO getFamilyTree(String elementId) {
         String cypher = String.format("""
                 MATCH (root:Person)
-                WHERE elementID(root) = $elementId
-                OPTIONAL MATCH (root)-[:%s]-(spouse:Person)
-                OPTIONAL MATCH (root)-[:%s*1..]->(descendant:Person)
-                OPTIONAL MATCH (descendant)-[:%s]-(descendantSpouse:Person)
-                RETURN DISTINCT root, spouse, descendant, descendantSpouse
+                    WHERE elementId(root) = $elementId
+                    // Root <-> Spouse
+                    OPTIONAL MATCH (root)-[spouseRel:%s]-(spouse:Person)                
+                    // Root -> Descendants
+                    OPTIONAL MATCH path=(root)-[descendantRel:%s*1..]->(descendant:Person)                
+                    // Descendant <-> Spouse
+                    OPTIONAL MATCH (descendant)-[descendantSpouseRel:%s]-(descendantSpouse:Person)                
+                    // Return all nodes and relationships
+                    RETURN DISTINCT
+                      root,
+                      spouse,
+                      descendant,
+                      descendantSpouse,
+                      spouseRel,
+                      descendantRel,
+                      descendantSpouseRel                
             """, Constants.MARRIED_REL, Constants.PARENT_REL, Constants.MARRIED_REL);
         log.info("Cypher to fetch family tree:\n {}", cypher);
         Set<FlowNodeDTO> nodes = new HashSet<>();
@@ -128,9 +138,9 @@ public class GraphService {
                     addPersonNode((Node) row.get("descendant"), nodes);
                     addPersonNode((Node) row.get("descendantSpouse"), nodes);
 
-                    addMarriageEdge(row.get("root"), row.get("spouse"), edges);
-                    addParentEdges(row.get("root"), row.get("descendant"), edges);
-                    addMarriageEdge(row.get("descendant"), row.get("descendantSpouse"), edges);
+                    addEdge((Relationship) row.get("spouseRel"),edges);
+                    addEdge((Relationship) row.get("descendantRel"),edges);
+                    addEdge((Relationship) row.get("descendantSpouseRel"),edges);
                 });
 
         log.info("Graph generated with {} nodes and {} edges",nodes.size(), edges.size());

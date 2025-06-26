@@ -1,7 +1,8 @@
 import { type Edge, getBezierPath, type EdgeProps, BaseEdge, EdgeLabelRenderer } from "@xyflow/react";
 import './RelationEdge.scss';
 import { EdgeDataMap, Edges } from "@/types/edgeTypes";
-import { Chip } from "@mui/material";
+import { Chip, SvgIcon } from "@mui/material";
+import ParentIcon from "@/styles/svg/ParentIcon";
 
 export type ParentEdgeType = Edge<EdgeDataMap[Edges.PARENT_OF], Edges.PARENT_OF>; // Renamed to avoid conflict with component name
 
@@ -58,10 +59,11 @@ const ParentEdge = (props: EdgeProps<ParentEdgeType>) => { // Use the new type n
           }}
         >
           <Chip
+            icon={<SvgIcon component={ParentIcon} inheritViewBox />}
             sx={{
               background: "#c19600a3",
             }}
-            label={Edges.PARENT_OF}
+            label="parent"
           />
         </div>
       </EdgeLabelRenderer>

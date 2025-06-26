@@ -83,9 +83,10 @@ const GraphFlow: FC<GraphFlowProps> = ({
     edges && dispatch(setReduxEdges(edges));
   }, [dispatch, nodes, edges]);
 
-  const [prevNodes, setPrevNodes] = useState<AppNode[]>(initNodes);
+
+  const [prevNodes, setPrevNodes] = useNodesState(initNodes);
   // Initialize prevEdges with edges that have markers and classNames
-  const [prevEdges, setPrevEdges] = useState<AppEdge[]>(initEdgesWithMarkers);
+  const [prevEdges, setPrevEdges] = useEdgesState(initEdgesWithMarkers);
   const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
   const { screenToFlowPosition } = useReactFlow();
 

@@ -7,7 +7,8 @@ import {
 } from "@xyflow/react";
 import { EdgeDataMap, Edges } from "@/types/edgeTypes";
 import "./RelationEdge.scss";
-import { Chip } from "@mui/material";
+import { Chip, SvgIcon } from "@mui/material";
+import BelongsIcon from "@/styles/svg/BelongsIcon";
 
 export type BelongsEdgeType = Edge<
   EdgeDataMap[Edges.BELONGS_TO],
@@ -68,10 +69,11 @@ const BelongsEdge = (props: EdgeProps<BelongsEdgeType>) => {
           }}
         >
           <Chip
+            icon={<SvgIcon component={BelongsIcon} inheritViewBox />}
             sx={{
               background: "#044d71a3",
             }}
-            label={Edges.BELONGS_TO}
+            label="belongs to"
           />
         </div>
       </EdgeLabelRenderer>
