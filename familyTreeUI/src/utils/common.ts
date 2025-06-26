@@ -31,6 +31,21 @@ export const getDiff = <T extends { id: string; data?: Record<string, any> }>(
   const removed = prev.filter((item) => !currentMap.has(item.id));
   const updated = current.filter((item) => {
     const prevItem = prevMap.get(item.id);
+    if(prevItem && JSON.stringify(prevItem.data ?? {}) !== JSON.stringify(item.data ?? {})){
+      const diff: Record<string, { prev: any; current: any }> = {};
+      const prevData =prevItem.data ?? {};
+      const currentData =item.data ?? {};
+      const allKeys = new Set([...Object.keys(prevData), ...Object.keys(currentData)]);
+      for (const key of allKeys) {
+        if (prevData[key] !== currentData[key]) {
+          diff[key] = {
+            prev: prevData[key],
+            current: currentData[key],
+          };
+        }
+      }
+      console.log(diff);
+    }
     return (
       prevItem &&
       JSON.stringify(prevItem.data ?? {}) !== JSON.stringify(item.data ?? {})

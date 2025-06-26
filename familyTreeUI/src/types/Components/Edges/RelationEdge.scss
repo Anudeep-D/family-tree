@@ -1,11 +1,13 @@
 .edge-label {
-  &.married_to {
-    background-color: #a25300 !important;
-  }
-  &.parent_of {
-    background-color: #c19600 !important;
-  }
-  &.belongs_to {
-    background-color: #044d71 !important;
-  }
+  background-color: transparent !important;
+  border: 0 !important;
+  // &.married_to {
+  //   background-color: #a25300 !important;
+  // }
+  // &.parent_of {
+  //   background-color: #c19600 !important;
+  // }
+  // &.belongs_to {
+  //   background-color: #044d71 !important;
+  // }
 }

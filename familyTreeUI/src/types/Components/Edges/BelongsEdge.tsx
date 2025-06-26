@@ -1,10 +1,21 @@
-import { type Edge, getBezierPath, type EdgeProps, BaseEdge, EdgeLabelRenderer } from "@xyflow/react";
+import {
+  type Edge,
+  getBezierPath,
+  type EdgeProps,
+  BaseEdge,
+  EdgeLabelRenderer,
+} from "@xyflow/react";
 import { EdgeDataMap, Edges } from "@/types/edgeTypes";
-import './RelationEdge.scss';
+import "./RelationEdge.scss";
+import { Chip } from "@mui/material";
 
-export type BelongsEdgeType = Edge<EdgeDataMap[Edges.BELONGS_TO], Edges.BELONGS_TO>; // Renamed to avoid conflict
+export type BelongsEdgeType = Edge<
+  EdgeDataMap[Edges.BELONGS_TO],
+  Edges.BELONGS_TO
+>; // Renamed to avoid conflict
 
-const BelongsEdge = (props: EdgeProps<BelongsEdgeType>) => { // Use the new type name
+const BelongsEdge = (props: EdgeProps<BelongsEdgeType>) => {
+  // Use the new type name
   const {
     id, // id is in props, will be spread
     sourceX,
@@ -13,8 +24,13 @@ const BelongsEdge = (props: EdgeProps<BelongsEdgeType>) => { // Use the new type
     targetY,
     sourcePosition,
     targetPosition,
-    data, // data is in props, used for label
-    // markerEnd, style, className etc. are all in props
+    style,
+    markerEnd,
+    markerStart,
+    interactionWidth,
+    // data, // data is used for the custom label via EdgeLabelRenderer, not directly by BaseEdge
+    // selected, // Not a BaseEdge prop. Used by React Flow.
+    // className, // Can be passed if needed: className={props.className}
   } = props;
 
   const [edgePath, labelX, labelY] = getBezierPath({
@@ -29,24 +45,34 @@ const BelongsEdge = (props: EdgeProps<BelongsEdgeType>) => { // Use the new type
   return (
     <>
       <BaseEdge
-        {...props} // Spread all original props
-        path={edgePath} // Override path
+        id={id}
+        path={edgePath}
+        style={style}
+        markerEnd={markerEnd}
+        markerStart={markerStart}
+        interactionWidth={interactionWidth}
+        // className={props.className} // Example: if you need to pass it
       />
       <EdgeLabelRenderer>
         <div
           className={`edge-label ${Edges.BELONGS_TO.toLowerCase()}`}
           style={{
-            position: 'absolute',
+            position: "absolute",
             transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
             fontSize: 12,
-            background: '#333',
-            padding: '2px 6px',
+            background: "#333",
+            padding: "2px 6px",
             borderRadius: 4,
-            color: '#fff',
-            border: '1px solid #555',
+            color: "#fff",
+            border: "1px solid #555",
           }}
         >
-          {Edges.BELONGS_TO} {/* Corrected: was [Edges.BELONGS_TO] */}
+          <Chip
+            sx={{
+              background: "#044d71a3",
+            }}
+            label={Edges.BELONGS_TO}
+          />
         </div>
       </EdgeLabelRenderer>
     </>

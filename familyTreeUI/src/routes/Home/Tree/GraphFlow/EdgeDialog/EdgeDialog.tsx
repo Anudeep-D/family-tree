@@ -58,7 +58,6 @@ export const EdgeDialog: React.FC<EdgeDialogProps> = ({
     initialData
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
-  console.log("nodes?.source, nodes?.target",nodes?.source, nodes?.target);
   useEffect(() => {
     // No need for currentFields, 'fields' is already correctly typed and available
     if (initialData) {

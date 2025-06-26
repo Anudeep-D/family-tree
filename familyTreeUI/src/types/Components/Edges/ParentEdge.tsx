@@ -1,20 +1,26 @@
 import { type Edge, getBezierPath, type EdgeProps, BaseEdge, EdgeLabelRenderer } from "@xyflow/react";
 import './RelationEdge.scss';
 import { EdgeDataMap, Edges } from "@/types/edgeTypes";
+import { Chip } from "@mui/material";
 
 export type ParentEdgeType = Edge<EdgeDataMap[Edges.PARENT_OF], Edges.PARENT_OF>; // Renamed to avoid conflict with component name
 
 const ParentEdge = (props: EdgeProps<ParentEdgeType>) => { // Use the new type name
   const {
-    id, // id is in props, will be spread
+    id,
     sourceX,
     sourceY,
     targetX,
     targetY,
     sourcePosition,
     targetPosition,
-    data, // data is in props, used for label
-    // markerEnd, style, className etc. are all in props
+    style,
+    markerEnd,
+    markerStart,
+    interactionWidth,
+    // data, // data is used for the custom label via EdgeLabelRenderer, not directly by BaseEdge
+    // selected, // Not a BaseEdge prop. Used by React Flow.
+    // className, // Can be passed if needed: className={props.className}
   } = props;
 
   const [edgePath, labelX, labelY] = getBezierPath({
@@ -29,8 +35,13 @@ const ParentEdge = (props: EdgeProps<ParentEdgeType>) => { // Use the new type n
   return (
     <>
       <BaseEdge
-        {...props} // Spread all original props
-        path={edgePath} // Override path
+        id={id}
+        path={edgePath}
+        style={style}
+        markerEnd={markerEnd}
+        markerStart={markerStart}
+        interactionWidth={interactionWidth}
+        // className={props.className} // Example: if you need to pass it
       />
       <EdgeLabelRenderer>
         <div
@@ -46,7 +57,12 @@ const ParentEdge = (props: EdgeProps<ParentEdgeType>) => { // Use the new type n
             border: '1px solid #555',
           }}
         >
-          {Edges.PARENT_OF} {/* Corrected: was [Edges.PARENT_OF] */}
+          <Chip
+            sx={{
+              background: "#c19600a3",
+            }}
+            label={Edges.PARENT_OF}
+          />
         </div>
       </EdgeLabelRenderer>
     </>
