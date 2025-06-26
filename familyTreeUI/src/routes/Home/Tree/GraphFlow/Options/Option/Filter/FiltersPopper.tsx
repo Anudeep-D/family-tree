@@ -18,14 +18,17 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Alert,
+  CircularProgress,
 } from "@mui/material";
-import { forwardRef, useState } from "react";
+import { forwardRef, useRef, useState } from "react";
 import options from "@/constants/JobAndQualification.json";
 import { useSelector } from "react-redux";
 import {
   FilterProps,
   initialState as initialFilters,
   selectNodes,
+  selectSavedFilters,
 } from "@/redux/treeConfigSlice";
 import { Nodes } from "@/types/nodeTypes";
 import {
@@ -96,6 +99,52 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
       setDeleteDialogOpen(false);
       setFiltersToDelete([]);
     };
+
+    const [filterName, setFilterName] = useState("");
+    const [checking, setChecking] = useState(false);
+    const [nameExists, setNameExists] = useState<boolean | null>(null);
+    const [saveAsOpen, setSaveAsOpen] = useState(false);
+    const [saving, setSaving] = useState(false);
+
+    const existingFilters = useSelector(selectSavedFilters);
+
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const handleSaveNameChange = async (
+      e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+      const name = e.target.value;
+      setFilterName(name);
+      setNameExists(null);
+
+      if (name.trim().length === 0) return;
+
+      setChecking(true);
+      const exists = Boolean(
+        existingFilters.find(
+          (existingFilter) => existingFilter.data.filterName === name
+        )
+      );
+      setChecking(false);
+      setNameExists(exists);
+    };
+    const handleSave = async () => {
+      setSaving(true);
+      // Call your actual save logic here
+      await new Promise((res) => setTimeout(res, 500));
+      setSaving(false);
+      alert(`Filter "${filterName}" saved successfully`);
+      setFilterName("");
+      setNameExists(null);
+    };
+     const handleSaveAs = () => {
+      setSaveAsOpen((prev) => !prev);
+      setChecking(false);
+      setFilterName("");
+      setNameExists(null);
+      setSaving(false);
+    };
+
     return (
       <Paper
         ref={ref}
@@ -114,7 +163,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           display="flex"
           justifyContent="space-between"
           alignItems="center"
-          sx={{ mv: 1 }}
+          sx={{ my: 2 }}
         >
           <Typography variant="subtitle1">Presaved Filters</Typography>
           <FormControlLabel
@@ -160,7 +209,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           )}
         </Box>
         <Divider sx={{ mb: 2 }} />
-        <Typography variant="subtitle1" sx={{ mv: 1 }}>
+        <Typography variant="subtitle1" sx={{ my: 2 }}>
           Show Node Types
         </Typography>
         <FormControlLabel
@@ -192,7 +241,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           label="Houses"
         />
         <Divider sx={{ my: 2 }} />
-        <Typography variant="subtitle1" sx={{ mv: 1 }}>
+        <Typography variant="subtitle1" sx={{ my: 2 }}>
           Filter by House
         </Typography>
         <Autocomplete
@@ -232,7 +281,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           sx={{ mb: 2 }}
         />
         <Divider sx={{ my: 2 }} />
-        <Typography variant="subtitle1" sx={{ mv: 1 }}>
+        <Typography variant="subtitle1" sx={{ my: 2 }}>
           Person Filters
         </Typography>
 
@@ -288,7 +337,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             <ToggleButton value={true}>Married</ToggleButton>
           </ToggleButtonGroup>
         </Stack>
-        <Typography variant="body2" sx={{ mv: 0.6 }}>
+        <Typography variant="body2" sx={{ my: 1 }}>
           Age Range
         </Typography>
         <Slider
@@ -457,7 +506,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         />
 
         <Divider sx={{ my: 2 }} />
-        <Typography variant="subtitle1" sx={{ mv: 1 }}>
+        <Typography variant="subtitle1" sx={{ my: 2 }}>
           Start From Person
         </Typography>
         <Autocomplete
@@ -519,7 +568,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             Apply Filters
           </Button>
         </Stack>
-        
+
         <Stack
           direction="row"
           spacing={1}
@@ -530,17 +579,55 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             variant="outlined"
             color="secondary"
             onClick={() => console.log("clicked Update")}
+            disabled={!selectedFilter}
           >
             Update
           </Button>
           <Button
             variant="contained"
-            color="primary"
-            onClick={() => console.log("clicked Save As New")}
+            color={saveAsOpen ? "error" : "primary"}
+            onClick={handleSaveAs}
+            disabled={saving}
           >
-            Save As New
+            {saveAsOpen ? "Close" : "Save As New"}
           </Button>
         </Stack>
+        {saveAsOpen && (
+          <Box>
+          <Divider sx={{ my: 2 }} />
+          <Stack>
+            <TextField
+              label="Filter name"
+              focused
+              placeholder="Filter name"
+              value={filterName}
+              inputRef={inputRef}
+              onChange={handleSaveNameChange}
+              fullWidth
+              size="small"
+              slotProps={{ inputLabel: { shrink: true } }}
+              sx={{ mb: 1 }}
+            />
+            <Button
+              variant="contained"
+              size="small"
+              onClick={handleSave}
+              loading={saving}
+              disabled={
+                saving || filterName.trim().length === 0 || nameExists === true
+              }
+            >
+              Save
+            </Button>
+          </Stack>
+          </Box>
+        )}
+        {checking && <CircularProgress size={20} sx={{ mt: 1 }} />}
+        {nameExists === true && (
+          <Alert severity="error" sx={{ mt: 1 }}>
+            Name already exists
+          </Alert>
+        )}
         <Dialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
