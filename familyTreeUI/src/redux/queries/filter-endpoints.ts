@@ -18,34 +18,36 @@ export const filterApi = createApi({
   endpoints: (builder) => ({
     getFilters: builder.query<
       Pick<TreeConfigState, "savedFilters">,
-      { userId: string; treeId: string }
+      string
     >({
       // Renamed from getFilters, changed Filter[] to Filter[]
-      query: (args) => ({
+      query: (treeId) => ({
         url: "/",
         method: "GET",
         params: {
-          user_id: args.userId,
-          tree_id: args.treeId,
+          tree_id: treeId,
         },
       }),
       providesTags: ["filterApi"], // Changed from filterApi
     }),
     createFilter: builder.mutation<
       Pick<TreeConfigState, "savedFilters">,
-      FilterProps
+      { treeId: string; filter: FilterProps }
     >({
       // Renamed from createFilter
-      query: (filter) => ({
+      query: (args) => ({
         // Renamed from filter
         url: "/create",
         method: "POST",
-        body: filter,
+        params: {
+          tree_id: args.treeId,
+        },
+        body: args.filter,
       }),
     }),
     updateFilter: builder.mutation<
       Pick<TreeConfigState, "savedFilters">,
-      {filterId:string, filter: FilterProps}
+      { filterId: string; filter: FilterProps }
     >({
       // Renamed from createFilter
       query: (args) => ({
@@ -58,7 +60,7 @@ export const filterApi = createApi({
     deleteMultipleFilters: builder.mutation<void, { ids: string[] }>({
       query: (body) => ({
         url: "/delete-multiple", // Assuming this endpoint for bulk delete
-        method: "POST", // Using POST as per example, adjust if backend uses DELETE with body
+        method: "DELETE", // Using POST as per example, adjust if backend uses DELETE with body
         body: body,
       }),
       invalidatesTags: ["filterApi"],
