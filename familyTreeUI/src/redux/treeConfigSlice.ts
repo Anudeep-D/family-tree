@@ -9,7 +9,7 @@ export type TreeConfigState = {
   edges: AppEdge[];
   filteredNodes: AppNode[];
   filteredEdges: AppEdge[];
-  savedFilters: { id: string; data: FilterProps }[];
+  savedFilters: (FilterProps & { elementId: string })[];
   selectedFilter: { id: string; label: string } | null;
   currentFilter: FilterProps;
 };
@@ -103,7 +103,7 @@ const treeConfigSlice = createSlice({
     setSelectedFilter: (state, action: PayloadAction<{ id: string; label: string } | null>) => {
       state.selectedFilter = action.payload;
     },
-    setSavedFilters: (state, action: PayloadAction<{ id: string; data: FilterProps }[]>) => {
+    setSavedFilters: (state, action: PayloadAction<(FilterProps & { elementId: string })[]>) => {
       state.savedFilters = action.payload;
     },
     setCurrentFilter: (state, action: PayloadAction<FilterProps>) => {

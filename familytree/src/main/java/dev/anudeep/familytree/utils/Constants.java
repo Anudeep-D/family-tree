@@ -14,6 +14,7 @@ public class Constants {
     public static final String MARRIED_REL = "MARRIED_TO";
     public static final String BELONGS_REL = "BELONGS_TO";
     public static final String PART_OF = "PART_OF";
+
     // User, Tree relationships
     private Constants() {
     }

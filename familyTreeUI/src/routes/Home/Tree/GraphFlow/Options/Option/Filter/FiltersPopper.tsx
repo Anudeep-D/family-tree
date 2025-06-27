@@ -63,8 +63,8 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
     const savedFilters = useMemo(
       () =>
         existingFilters.map((existingFilter) => ({
-          id: existingFilter.id,
-          label: existingFilter.data.filterName!,
+          id: existingFilter.elementId,
+          label: existingFilter.filterName!,
         })),
       [existingFilters]
     );
@@ -81,11 +81,12 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
       if (!(isErrorOnCreate || isCreating) && newFilter) {
         dispatch(
           setSelectedFilter({
-            id: newFilter.id,
-            label: newFilter.data.filterName!,
+            id: newFilter.elementId,
+            label: newFilter.filterName!,
           })
         );
-        dispatch(setCurrentFilter(newFilter.data));
+        const { elementId, ...newActualFilter } = newFilter;
+        dispatch(setCurrentFilter(newActualFilter));
         handleSaveAs();
       }
     }, [isErrorOnCreate, isCreating, newFilter]);
@@ -117,9 +118,12 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
       dispatch(setSelectedFilter(val));
       if (val) {
         const currFilter = existingFilters.find(
-          (existingFilter) => existingFilter.id === val.id
+          (existingFilter) => existingFilter.elementId === val.id
         );
-        currFilter && dispatch(setCurrentFilter(currFilter.data));
+        if (currFilter) {
+          const { elementId, ...newActualFilter } = currFilter;
+          dispatch(setCurrentFilter(newActualFilter));
+        }
       }
     };
     const handleChange = (keys: string[], value: any) => {
@@ -187,7 +191,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
       setChecking(true);
       const exists = Boolean(
         existingFilters.find(
-          (existingFilter) => existingFilter.data.filterName === name
+          (existingFilter) => existingFilter.filterName === name
         )
       );
       setChecking(false);

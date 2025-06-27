@@ -1,7 +1,6 @@
 import { baseUrl } from "@/constants/constants";
-import { Role } from "@/types/common"; // Changed from Filter
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { FilterProps, TreeConfigState } from "../treeConfigSlice";
+import { FilterProps } from "../treeConfigSlice";
 
 export const filterApi = createApi({
   reducerPath: "filterApi",
@@ -17,7 +16,7 @@ export const filterApi = createApi({
   tagTypes: ["filterApi"], // Changed from filterApi
   endpoints: (builder) => ({
     getFilters: builder.query<
-      { id: string; data: FilterProps }[],
+      (FilterProps & { elementId: string })[],
       string
     >({
       // Renamed from getFilters, changed Filter[] to Filter[]
@@ -31,7 +30,7 @@ export const filterApi = createApi({
       providesTags: ["filterApi"], // Changed from filterApi
     }),
     createFilter: builder.mutation<
-      { id: string; data: FilterProps },
+      (FilterProps & { elementId: string }),
       { treeId: string; filter: FilterProps }
     >({
       // Renamed from createFilter
@@ -47,7 +46,7 @@ export const filterApi = createApi({
       invalidatesTags: ["filterApi"],
     }),
     updateFilter: builder.mutation<
-      { id: string; data: FilterProps },
+      (FilterProps & { elementId: string }),
       { filterId: string; filter: FilterProps }
     >({
       // Renamed from createFilter

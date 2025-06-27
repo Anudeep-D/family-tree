@@ -7,75 +7,76 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Node("Filter")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @AllArgsConstructor
-@NoArgsConstructor // For Spring Data Neo4j and Jackson
+@NoArgsConstructor
 public class Filter {
 
     @Id
     private String elementId;
 
-    private String filterName;
-    private boolean enabled;
-    private FilterBy filterBy;
+    private String filterName = null;
+    private boolean enabled = false;
+    private FilterBy filterBy = new FilterBy();
 
     public Filter(String filterName, boolean enabled, FilterBy filterBy) {
-        this.setFilterName(filterName);
-        this.setEnabled(enabled);
-        this.setFilterBy(filterBy);
+        this.filterName = filterName;
+        this.enabled = enabled;
+        this.filterBy = filterBy;
     }
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class FilterBy {
-        private Map<String, Boolean> nodeTypes; // Keys: "Person", "House"
-        private NodeProps nodeProps;
-        private RootPerson rootPerson;
+        private Map<String, Boolean> nodeTypes = new HashMap<String, Boolean>() {{
+            put("Person", true);
+            put("House", true);
+        }};
+        private NodeProps nodeProps = new NodeProps();
+        private RootPerson rootPerson = new RootPerson();
     }
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class NodeProps {
-        private HouseFilter house;
-        private PersonFilter person;
+        private HouseFilter house = new HouseFilter();
+        private PersonFilter person = new PersonFilter();
     }
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class HouseFilter {
-        private List<LabelledItem> selectedHouses;
+        private List<LabelledItem> selectedHouses = new ArrayList<>();
     }
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class PersonFilter {
-        private Boolean married;
-        private String gender; // "male", "female", or null
-        private List<Integer> age; // [minAge, maxAge]
-        private Date bornAfter;
-        private Date bornBefore;
-        private Boolean isAlive;
-        private List<GroupedLabelItem> jobTypes;
-        private List<GroupedLabelItem> studies;
-        private List<GroupedLabelItem> qualifications;
+        private Boolean married = null;
+        private String gender = null;
+        private List<Integer> age = Arrays.asList(0, 100);
+        private Date bornAfter = null;
+        private Date bornBefore = null;
+        private Boolean isAlive = null;
+        private List<GroupedLabelItem> jobTypes = new ArrayList<>();
+        private List<GroupedLabelItem> studies = new ArrayList<>();
+        private List<GroupedLabelItem> qualifications = new ArrayList<>();
     }
 
     @Data
     @NoArgsConstructor
     @AllArgsConstructor
     public static class RootPerson {
-        private LabelledItem person;
-        private boolean onlyImmediate;
+        private LabelledItem person = null;
+        private boolean onlyImmediate = false;
     }
 
     @Data

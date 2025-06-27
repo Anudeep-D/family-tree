@@ -1,6 +1,5 @@
 package dev.anudeep.familytree.repository;
 
-import dev.anudeep.familytree.dto.FilterDTO;
 import dev.anudeep.familytree.model.Filter;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
@@ -13,16 +12,7 @@ import java.util.Map;
 @Repository
 public interface FilterRepository extends Neo4jRepository<Filter, String> {
 
-    @Query("""
-                MATCH (u:User) WHERE elementId(u) = $userId
-                MATCH (t:Tree) WHERE elementId(t) = $treeId
-                CREATE (f:Filter)
-                SET f += $props
-                CREATE (u)-[:FILTER_BY]->(f)
-                CREATE (f)-[:FILTER_FOR]->(t)
-                RETURN f {.*, elementId: elementId(f) } AS f
-            """)
-    Map<String, Object> createFilter(@Param("userId") String userId, @Param("treeId") String treeId, @Param("props") Map<String, Object> props);
+    // createFilter method removed as it's now handled by Neo4jClient in FilterService
 
     @Query("""
                 MATCH (f:Filter) WHERE elementId(f) = $filterId

@@ -1,7 +1,6 @@
 package dev.anudeep.familytree.service;
 
 import dev.anudeep.familytree.ErrorHandling.dto.EntityNotFoundException;
-import dev.anudeep.familytree.dto.FilterDTO;
 import dev.anudeep.familytree.dto.FilterRequestDTO;
 import dev.anudeep.familytree.dto.FilterUpdateRequestDTO;
 import dev.anudeep.familytree.model.Filter;
@@ -10,6 +9,7 @@ import dev.anudeep.familytree.repository.TreeRepository;
 import dev.anudeep.familytree.repository.UserRepository;
 import dev.anudeep.familytree.utils.FilterNodeConverter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,71 +23,113 @@ import java.util.Optional;
 public class FilterService {
 
     private final FilterRepository filterRepository;
-    private final UserRepository userRepository; // Placeholder
-    private final TreeRepository treeRepository;   // Placeholder
-
-    private final FilterNodeConverter filterNodeConverter;
+    private final UserRepository userRepository;
+    private final TreeRepository treeRepository;
+    private final Neo4jClient neo4jClient; // Added Neo4jClient
 
     public FilterService(FilterRepository filterRepository,
                          UserRepository userRepository,
                          TreeRepository treeRepository,
-            FilterNodeConverter filterNodeConverter ) {
+                         Neo4jClient neo4jClient) { // Added Neo4jClient to constructor
         this.filterRepository = filterRepository;
         this.userRepository = userRepository;
         this.treeRepository = treeRepository;
-        this.filterNodeConverter = filterNodeConverter;
+        this.neo4jClient = neo4jClient; // Initialize Neo4jClient
     }
 
     @Transactional
-    public Filter createFilter(String userId, String treeId, FilterRequestDTO dto) throws Exception {
-        // 1. Validate user (exists? active?) - UserNodeId is Neo4j internal ID
-        // User user = userRepository.findById(userNodeId)
-        // .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userNodeId));
-
-        // 2. Validate treeId (does tree exist? does user have access to it?)
-        // Tree tree = treeRepository.findByBusinessId(dto.getTreeId()) // Assuming Tree has a business ID like UUID
-        // .orElseThrow(() -> new EntityNotFoundException("Tree not found with ID: " + dto.getTreeId()));
-        // Add access control logic here if necessary, e.g., check if user is linked to the tree.
+    public Filter createFilter(String userId, String treeId, FilterRequestDTO dto) {
+        // User/Tree validation logic would go here (e.g., check existence)
 
         Filter filter = new Filter(dto.getFilterName(), dto.getEnabled(), dto.getFilterBy());
-        Map<String, Object> props = filterNodeConverter.flatten(filter);
-        Map<String, Object> filterResponse = filterRepository.createFilter(userId, treeId, props);
-        Filter savedFilter = filterNodeConverter.unflatten(filterResponse);
-        log.info("id {} ,savedFilter {}", savedFilter.getElementId(), savedFilter);
+        Map<String, Object> propsToSave = FilterNodeConverter.filterToFlattenedMap(filter);
+
+        String createFilterCypher = """
+                    MATCH (u:User) WHERE elementId(u) = $userId
+                    MATCH (t:Tree) WHERE elementId(t) = $treeId
+                    CREATE (f:Filter)
+                    SET f += $props
+                    CREATE (u)-[:FILTER_BY]->(f)
+                    CREATE (f)-[:FILTER_FOR]->(t)
+                    RETURN f {.*, elementId: elementId(f) } AS createdFilter
+                """;
+
+        Optional<Map<String, Object>> resultOptional = neo4jClient.query(createFilterCypher)
+                .bind(userId).to("userId")
+                .bind(treeId).to("treeId")
+                .bind(propsToSave).to("props")
+                .fetch()
+                .one();
+
+        if (resultOptional.isEmpty() || resultOptional.get().get("createdFilter") == null) {
+            log.error("Failed to create filter for user {} and tree {}. Neo4jClient query returned no data or null filter.", userId, treeId);
+            throw new RuntimeException("Filter creation failed, Neo4jClient query returned no data.");
+        }
+
+        // The result is a Map<String, Object> where the key "createdFilter" holds the properties of the node.
+        @SuppressWarnings("unchecked")
+        Map<String, Object> createdNodeMap = (Map<String, Object>) resultOptional.get().get("createdFilter");
+
+        if (createdNodeMap == null || createdNodeMap.isEmpty()) {
+            log.error("Failed to create filter for user {} and tree {}. Result map for createdFilter is null or empty.", userId, treeId);
+            throw new RuntimeException("Filter creation failed, result map for createdFilter is null or empty.");
+        }
+
+        String elementId = (String) createdNodeMap.get("elementId");
+        Filter savedFilter = FilterNodeConverter.flattenedMapToFilter(createdNodeMap, elementId);
+        log.info("Created filter with id {} for user {} and tree {}", elementId, userId, treeId);
         return savedFilter;
     }
 
     @Transactional(readOnly = true)
-    public List<Filter> getFilters(String userId, String treeId) throws Exception {
-        // Validate user if necessary
-        // userRepository.findById(userNodeId).orElseThrow(() -> new EntityNotFoundException("User not found"));
-        List<Map<String, Object>> filtersResponse =  filterRepository.findAllByTreeIdAndUserId(userId, treeId);
+    public List<Filter> getFilters(String userId, String treeId) {
+        // User/Tree validation logic
+        List<Map<String, Object>> filtersResponseMaps = filterRepository.findAllByTreeIdAndUserId(userId, treeId);
         List<Filter> savedFilters = new ArrayList<>();
-        filtersResponse.forEach(filterRes -> savedFilters.add(filterNodeConverter.unflatten(filterRes)));
+        for (Map<String, Object> filterMap : filtersResponseMaps) {
+            String elementId = (String) filterMap.get("elementId");
+            savedFilters.add(FilterNodeConverter.flattenedMapToFilter(filterMap, elementId));
+        }
         return savedFilters;
     }
 
-
     @Transactional
-    public Filter updateFilter(String filterElementId, FilterUpdateRequestDTO dto) throws Exception { // Changed from Long to String
-        Map<String, Object> props = filterRepository.findFilterById(filterElementId);
+    public Filter updateFilter(String filterElementId, FilterUpdateRequestDTO dto) {
+        Map<String, Object> currentFilterMap = filterRepository.findFilterById(filterElementId);
+        if (currentFilterMap == null || currentFilterMap.isEmpty()) {
+            throw new EntityNotFoundException("Filter not found with ID: " + filterElementId);
+        }
 
-        boolean updated = dto.getFilterName() != null;
-        if (dto.getEnabled() != null) {
+        Filter currentFilter = FilterNodeConverter.flattenedMapToFilter(currentFilterMap, filterElementId);
 
+        boolean updated = false;
+        if (dto.getFilterName() != null && !dto.getFilterName().equals(currentFilter.getFilterName())) {
+            currentFilter.setFilterName(dto.getFilterName());
+            updated = true;
+        }
+        if (dto.getEnabled() != null && !dto.getEnabled().equals(currentFilter.isEnabled())) {
+            currentFilter.setEnabled(dto.getEnabled());
             updated = true;
         }
         if (dto.getFilterBy() != null) {
-
+            // For simplicity, if filterBy is in DTO, we consider it an update.
+            // More granular comparison could be done here if needed.
+            currentFilter.setFilterBy(dto.getFilterBy());
             updated = true;
         }
 
         if (updated) {
-            props.remove("elementId");
-            Map<String, Object> updatedProps = filterRepository.updateFilter(filterElementId, props);
-            return filterNodeConverter.unflatten(updatedProps);
+            Map<String, Object> propsToUpdate = FilterNodeConverter.filterToFlattenedMap(currentFilter);
+            propsToUpdate.remove("elementId"); // elementId should not be in the properties map for SET f += $props
+
+            Map<String, Object> updatedNodeMap = filterRepository.updateFilter(filterElementId, propsToUpdate);
+            if (updatedNodeMap == null || updatedNodeMap.isEmpty()) {
+                log.error("Failed to update filter with id {}. Repository returned empty map.", filterElementId);
+                throw new RuntimeException("Filter update failed, repository returned no data.");
+            }
+            return FilterNodeConverter.flattenedMapToFilter(updatedNodeMap, filterElementId);
         }
-        return filterNodeConverter.unflatten(props);
+        return currentFilter; // No changes were made
     }
 
     @Transactional

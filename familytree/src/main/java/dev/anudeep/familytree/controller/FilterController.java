@@ -34,7 +34,7 @@ public class FilterController {
      * Creates a new filter for the authenticated user and a specified tree.
      */
     @PostMapping("/create")
-    public ResponseEntity<Filter> createFilter(@Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")  @RequestParam("treeId") String treeId, @Valid @RequestBody FilterRequestDTO filterRequestDTO) {
+    public ResponseEntity<Filter> createFilter(@Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45") @RequestParam("treeId") String treeId, @Valid @RequestBody FilterRequestDTO filterRequestDTO) {
         try {
             User currentUser = commonUtils.getCurrentAuthenticatedUser();
             Filter createdFilter = filterService.createFilter(currentUser.getElementId(), treeId, filterRequestDTO);

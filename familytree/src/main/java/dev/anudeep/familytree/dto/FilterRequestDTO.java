@@ -13,11 +13,11 @@ import lombok.NoArgsConstructor;
 public class FilterRequestDTO {
 
     @NotBlank(message = "Filter name is mandatory")
-    private String filterName;
+    private String filterName = null;
 
     @NotNull(message = "Enabled status is mandatory")
-    private Boolean enabled;
+    private Boolean enabled = false;
 
     @NotNull(message = "FilterBy criteria are mandatory")
-    private Filter.FilterBy filterBy;
+    private Filter.FilterBy filterBy = new Filter.FilterBy();
 }
