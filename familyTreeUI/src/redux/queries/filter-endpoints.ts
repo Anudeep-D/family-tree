@@ -25,7 +25,7 @@ export const filterApi = createApi({
         url: "/",
         method: "GET",
         params: {
-          tree_id: treeId,
+          treeId: treeId,
         },
       }),
       providesTags: ["filterApi"], // Changed from filterApi
@@ -40,7 +40,7 @@ export const filterApi = createApi({
         url: "/create",
         method: "POST",
         params: {
-          tree_id: args.treeId,
+          treeId: args.treeId,
         },
         body: args.filter,
       }),

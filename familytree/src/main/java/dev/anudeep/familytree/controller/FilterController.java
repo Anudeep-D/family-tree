@@ -34,7 +34,7 @@ public class FilterController {
      * Creates a new filter for the authenticated user and a specified tree.
      */
     @PostMapping("/create")
-    public ResponseEntity<Filter> createFilter(@Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45") @RequestParam String treeId, @Valid @RequestBody FilterRequestDTO filterRequestDTO) {
+    public ResponseEntity<Filter> createFilter(@Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")  @RequestParam("treeId") String treeId, @Valid @RequestBody FilterRequestDTO filterRequestDTO) {
         try {
             User currentUser = commonUtils.getCurrentAuthenticatedUser();
             Filter createdFilter = filterService.createFilter(currentUser.getElementId(), treeId, filterRequestDTO);
@@ -50,7 +50,7 @@ public class FilterController {
      * Gets all filters for the currently authenticated user.
      */
     @GetMapping("/")
-    public ResponseEntity<List<Filter>> getFilters(@Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45") @RequestParam String treeId) {
+    public ResponseEntity<List<Filter>> getFilters(@Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45") @RequestParam("treeId") String treeId) {
         try {
             User currentUser = commonUtils.getCurrentAuthenticatedUser();
             List<Filter> filters = filterService.getFilters(currentUser.getElementId(), treeId);
@@ -62,21 +62,6 @@ public class FilterController {
         }
     }
 
-
-    /**
-     * Gets a specific filter by its ID.
-     * Note: Consider adding user ownership check here or rely on service layer if it does.
-     * For now, assuming service layer might not check ownership for a direct GET by ID if IDs are unique.
-     */
-    @GetMapping("/{filterId}")
-    public ResponseEntity<Filter> getFilterById(@Parameter(description = "Filter Id of a filter", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45") @PathVariable String filterId) { // Changed Long to String
-        // Optional: Add ownership check here or ensure service does it if filters are not public.
-        // Long userNodeId = userNodeIdResolver.getUserNodeId(authentication);
-        // filterService.getFilterByIdAndUser(filterId, userNodeId) // Would need service method adjustment
-        return filterService.getFilterById(filterId) // Service now expects String
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
 
     /**
      * Updates an existing filter.

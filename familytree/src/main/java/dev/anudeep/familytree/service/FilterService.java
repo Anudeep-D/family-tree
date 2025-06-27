@@ -1,17 +1,21 @@
 package dev.anudeep.familytree.service;
 
 import dev.anudeep.familytree.ErrorHandling.dto.EntityNotFoundException;
+import dev.anudeep.familytree.dto.FilterDTO;
 import dev.anudeep.familytree.dto.FilterRequestDTO;
 import dev.anudeep.familytree.dto.FilterUpdateRequestDTO;
 import dev.anudeep.familytree.model.Filter;
 import dev.anudeep.familytree.repository.FilterRepository;
 import dev.anudeep.familytree.repository.TreeRepository;
 import dev.anudeep.familytree.repository.UserRepository;
+import dev.anudeep.familytree.utils.FilterNodeConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -22,17 +26,16 @@ public class FilterService {
     private final UserRepository userRepository; // Placeholder
     private final TreeRepository treeRepository;   // Placeholder
 
-    // Assuming FilterNodeConverter might be used for complex transformations if needed later
-    // private final FilterNodeConverter filterNodeConverter;
+    private final FilterNodeConverter filterNodeConverter;
 
     public FilterService(FilterRepository filterRepository,
                          UserRepository userRepository,
-                         TreeRepository treeRepository
-            /* FilterNodeConverter filterNodeConverter */) {
+                         TreeRepository treeRepository,
+            FilterNodeConverter filterNodeConverter ) {
         this.filterRepository = filterRepository;
         this.userRepository = userRepository;
         this.treeRepository = treeRepository;
-        // this.filterNodeConverter = filterNodeConverter;
+        this.filterNodeConverter = filterNodeConverter;
     }
 
     @Transactional
@@ -47,11 +50,10 @@ public class FilterService {
         // Add access control logic here if necessary, e.g., check if user is linked to the tree.
 
         Filter filter = new Filter(dto.getFilterName(), dto.getEnabled(), dto.getFilterBy());
-        Filter savedFilter = filterRepository.save(filter);
+        Map<String, Object> props = filterNodeConverter.flatten(filter);
+        Map<String, Object> filterResponse = filterRepository.createFilter(userId, treeId, props);
+        Filter savedFilter = filterNodeConverter.unflatten(filterResponse);
         log.info("id {} ,savedFilter {}", savedFilter.getElementId(), savedFilter);
-        // Create relationships
-        filterRepository.createFilterRelationship(userId, treeId, savedFilter.getElementId());
-        log.info("created relationship successfully");
         return savedFilter;
     }
 
@@ -59,37 +61,33 @@ public class FilterService {
     public List<Filter> getFilters(String userId, String treeId) throws Exception {
         // Validate user if necessary
         // userRepository.findById(userNodeId).orElseThrow(() -> new EntityNotFoundException("User not found"));
-        return filterRepository.findAllByTreeIdAndUserId(userId, treeId);
+        List<Map<String, Object>> filtersResponse =  filterRepository.findAllByTreeIdAndUserId(userId, treeId);
+        List<Filter> savedFilters = new ArrayList<>();
+        filtersResponse.forEach(filterRes -> savedFilters.add(filterNodeConverter.unflatten(filterRes)));
+        return savedFilters;
     }
 
-    @Transactional(readOnly = true)
-    public Optional<Filter> getFilterById(String filterElementId) { // Changed from Long to String
-        return filterRepository.findById(filterElementId);
-    }
 
     @Transactional
     public Filter updateFilter(String filterElementId, FilterUpdateRequestDTO dto) throws Exception { // Changed from Long to String
-        Filter filter = filterRepository.findById(filterElementId)
-                .orElseThrow(() -> new EntityNotFoundException("Filter not found with ID: " + filterElementId));
+        Map<String, Object> props = filterRepository.findFilterById(filterElementId);
 
-        boolean updated = false;
-        if (dto.getFilterName() != null) {
-            filter.setFilterName(dto.getFilterName());
-            updated = true;
-        }
+        boolean updated = dto.getFilterName() != null;
         if (dto.getEnabled() != null) {
-            filter.setEnabled(dto.getEnabled());
+
             updated = true;
         }
         if (dto.getFilterBy() != null) {
-            filter.setFilterBy(dto.getFilterBy());
+
             updated = true;
         }
 
         if (updated) {
-            return filterRepository.save(filter);
+            props.remove("elementId");
+            Map<String, Object> updatedProps = filterRepository.updateFilter(filterElementId, props);
+            return filterNodeConverter.unflatten(updatedProps);
         }
-        return filter;
+        return filterNodeConverter.unflatten(props);
     }
 
     @Transactional

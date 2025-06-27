@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
 import { graphApi } from "@/redux/queries/graph-endpoints";
-import { treeApi } from "@/redux/queries/tree-endpoints"; // Changed from treeApi
+import { treeApi } from "@/redux/queries/tree-endpoints";
+import { filterApi } from "@/redux/queries/filter-endpoints";
 import { userApi } from "@/redux/queries/user-endpoints";
 import { authApi } from "@/redux/queries/auth-endpoints";
 import treeConfigReducer from "@/redux/treeConfigSlice";
@@ -11,13 +12,15 @@ export const store = configureStore({
     [userApi.reducerPath]: userApi.reducer,
     [treeApi.reducerPath]: treeApi.reducer, // Changed from treeApi
     [graphApi.reducerPath]: graphApi.reducer,
+    [filterApi.reducerPath]: filterApi.reducer,
     [authApi.reducerPath]: authApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
-      treeApi.middleware, // Changed from treeApi.middleware
+      treeApi.middleware,
       userApi.middleware,
       graphApi.middleware,
+      filterApi.middleware,
       authApi.middleware
     ),
 });

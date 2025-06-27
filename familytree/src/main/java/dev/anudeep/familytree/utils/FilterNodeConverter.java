@@ -2,6 +2,7 @@ package dev.anudeep.familytree.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.anudeep.familytree.dto.FilterDTO;
 import dev.anudeep.familytree.model.Filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,12 +22,22 @@ public class FilterNodeConverter {
         this.objectMapper = objectMapper;
     }
 
+    public Map<String, Object>  flatten(FilterDTO filterDTO){
+        Map<String, Object> properties = new HashMap<>();
+        if(filterDTO.getElementId()!=null)
+            properties.put("elementId", filterDTO.getElementId());
+        properties.put("filterName", filterDTO.getFilterName());
+        properties.put("enabled", filterDTO.getEnabled());
+        properties.put("filterBy", filterDTO.getFilterBy());
+        return properties;
+    }
     public Map<String, Object> flatten(Filter filter) {
         Map<String, Object> properties = new HashMap<>();
         if (filter == null) {
             return properties;
         }
-
+        if(filter.getElementId()!=null)
+            properties.put("elementId", filter.getElementId());
         properties.put("filterName", filter.getFilterName());
         properties.put("enabled", filter.isEnabled());
 
@@ -42,12 +53,22 @@ public class FilterNodeConverter {
         return properties;
     }
 
+    public Filter unflatten(FilterDTO filterDTO){
+        Map<String, Object> properties = new HashMap<>();
+        if(filterDTO.getElementId()!=null)
+            properties.put("elementId", filterDTO.getElementId());
+        properties.put("filterName", filterDTO.getFilterName());
+        properties.put("enabled", filterDTO.getEnabled());
+        properties.put("filterBy", filterDTO.getFilterBy());
+        return unflatten(properties);
+    }
     public Filter unflatten(Map<String, Object> properties) {
         if (properties == null || properties.isEmpty()) {
             return null;
         }
 
         Filter filter = new Filter();
+        filter.setElementId((String) properties.get("elementId"));
         filter.setFilterName((String) properties.get("filterName"));
         if (properties.containsKey("enabled")) {
             Object enabledObj = properties.get("enabled");

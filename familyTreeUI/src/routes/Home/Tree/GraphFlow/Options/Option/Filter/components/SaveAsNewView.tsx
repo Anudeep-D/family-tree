@@ -17,6 +17,7 @@ interface SaveAsNewViewProps {
   nameExists: boolean | null;
   checking: boolean;
   inputRef: RefObject<HTMLInputElement>;
+  error?: string;
 }
 
 const SaveAsNewView = ({
@@ -27,6 +28,7 @@ const SaveAsNewView = ({
   nameExists,
   checking,
   inputRef,
+  error,
 }: SaveAsNewViewProps) => {
   return (
     <Box>
@@ -43,6 +45,10 @@ const SaveAsNewView = ({
           size="small"
           slotProps={{ inputLabel: { shrink: true } }}
           sx={{ mb: 1 }}
+          error={Boolean(nameExists || error)}
+          helperText={
+            nameExists ? "Name already exists" : error ? error : undefined
+          }
         />
         <Button
           variant="contained"
@@ -56,11 +62,6 @@ const SaveAsNewView = ({
         </Button>
       </Stack>
       {checking && <CircularProgress size={20} sx={{ mt: 1 }} />}
-      {nameExists === true && (
-        <Alert severity="error" sx={{ mt: 1 }}>
-          Name already exists
-        </Alert>
-      )}
     </Box>
   );
 };

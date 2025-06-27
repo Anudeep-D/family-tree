@@ -86,6 +86,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           })
         );
         dispatch(setCurrentFilter(newFilter.data));
+        handleSaveAs();
       }
     }, [isErrorOnCreate, isCreating, newFilter]);
     const {
@@ -200,7 +201,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         filter: { ...filters, filterName: filterName },
       });
 
-      alert(`Filter "${filterName}" saved successfully`);
       setFilterName("");
       setNameExists(null);
     };
@@ -641,7 +641,19 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             Apply Filters
           </Button>
         </Stack>
-
+        {saveAsOpen && (
+          <SaveAsNewView
+            filterName={filterName}
+            onFilterNameChange={handleSaveNameChange}
+            onSave={handleSave}
+            saving={isCreating}
+            nameExists={nameExists}
+            checking={checking}
+            inputRef={inputRef}
+            error={isErrorOnCreate ? getErrorMessage(errorOnCreate) : undefined}
+          />
+        )}
+        {checking && <CircularProgress size={20} sx={{ mt: 1 }} />}
         <Stack
           direction="row"
           spacing={1}
@@ -665,28 +677,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             {saveAsOpen ? "Close" : "Save As New"}
           </Button>
         </Stack>
-        {saveAsOpen && (
-          <SaveAsNewView
-            filterName={filterName}
-            onFilterNameChange={handleSaveNameChange}
-            onSave={handleSave}
-            saving={isCreating}
-            nameExists={nameExists}
-            checking={checking}
-            inputRef={inputRef}
-          />
-        )}
-        {checking && <CircularProgress size={20} sx={{ mt: 1 }} />}
-        {nameExists && (
-          <Alert severity="error" sx={{ mt: 1 }}>
-            Name already exists
-          </Alert>
-        )}
-        {isErrorOnCreate && (
-          <Alert severity="error" sx={{ mt: 1 }}>
-            {getErrorMessage(errorOnCreate)}
-          </Alert>
-        )}
+
         <DeleteFilterDialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
