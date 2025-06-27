@@ -1,12 +1,8 @@
 package dev.anudeep.familytree.service;
 
-import dev.anudeep.familytree.dto.FlowEdgeDTO;
-import dev.anudeep.familytree.dto.FlowGraphDTO;
-import dev.anudeep.familytree.dto.FlowNodeDTO;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import dev.anudeep.familytree.dto.FlowPositionDTO;
-import dev.anudeep.familytree.dto.GraphDiffDTO;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.anudeep.familytree.dto.*;
 import dev.anudeep.familytree.model.Person;
 import dev.anudeep.familytree.repository.GraphRepository;
 import dev.anudeep.familytree.utils.Constants;
@@ -19,7 +15,6 @@ import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap; // Added this import
 import java.util.*;
 
 @Slf4j
@@ -27,6 +22,8 @@ import java.util.*;
 public class GraphService {
     private final GraphRepository repository;
     private final ObjectMapper objectMapper;
+    @Autowired
+    private Neo4jClient neo4jClient;
 
     public GraphService(GraphRepository repository, ObjectMapper objectMapper) {
         this.repository = repository;
@@ -37,18 +34,15 @@ public class GraphService {
         return repository.findFamily(elementId);
     }
 
-    @Autowired
-    private Neo4jClient neo4jClient;
-
     public FlowGraphDTO getGraph(String treeId) {
         Set<FlowNodeDTO> nodes = new HashSet<>();
         Set<FlowEdgeDTO> edges = new HashSet<>();
         String cypher = String.format("""
-            MATCH (m:Person | House)-[:%s]->(proj:Tree)
-            WHERE elementId(proj) = $treeId
-            OPTIONAL MATCH (m)-[r:%s|%s|%s]->(n)
-            RETURN n, r, m
-            """,Constants.PART_OF,Constants.MARRIED_REL, Constants.PARENT_REL, Constants.BELONGS_REL);
+                MATCH (m:Person | House)-[:%s]->(proj:Tree)
+                WHERE elementId(proj) = $treeId
+                OPTIONAL MATCH (m)-[r:%s|%s|%s]->(n)
+                RETURN n, r, m
+                """, Constants.PART_OF, Constants.MARRIED_REL, Constants.PARENT_REL, Constants.BELONGS_REL);
         log.info("Cypher to get the full graph: \n {}", cypher);
         neo4jClient.query(cypher).bind(treeId).to("treeId").fetch()
                 .all()
@@ -56,11 +50,11 @@ public class GraphService {
                     Node node = (Node) row.get("n");
                     Node target = (Node) row.get("m");
                     Relationship rel = (Relationship) row.get("r");
-                    addNode(node,nodes);
-                    addNode(target,nodes);
+                    addNode(node, nodes);
+                    addNode(target, nodes);
                     addEdge(rel, edges);
                 });
-        log.info("Graph generated with {} nodes and {} edges",nodes.size(), edges.size());
+        log.info("Graph generated with {} nodes and {} edges", nodes.size(), edges.size());
         return new FlowGraphDTO(new ArrayList<>(nodes), new ArrayList<>(edges));
     }
 
@@ -76,7 +70,8 @@ public class GraphService {
                 try {
                     // String id, name, type are already defined before this block
                     Person person = PersonNodeConverter.flattenedMapToPerson(new HashMap<>(node.asMap()), id);
-                    Map<String, Object> dataForDto = objectMapper.convertValue(person, new TypeReference<Map<String, Object>>() {});
+                    Map<String, Object> dataForDto = objectMapper.convertValue(person, new TypeReference<Map<String, Object>>() {
+                    });
                     FlowNodeDTO flowNode = new FlowNodeDTO(id, name, type, dataForDto, new FlowPositionDTO());
                     nodes.add(flowNode);
                 } catch (Exception e) {
@@ -99,7 +94,7 @@ public class GraphService {
             String srcId = relation.startNodeElementId();
             String tgtId = relation.endNodeElementId();
             String edgeId = relation.elementId();
-            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, relation.type(),relation.asMap());
+            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, relation.type(), relation.asMap());
             // log.info("edge identified {}",flowEdge);
             edges.add(flowEdge);
         }
@@ -107,24 +102,24 @@ public class GraphService {
 
     public FlowGraphDTO getFamilyTree(String elementId) {
         String cypher = String.format("""
-                MATCH (root:Person)
-                    WHERE elementId(root) = $elementId
-                    // Root <-> Spouse
-                    OPTIONAL MATCH (root)-[spouseRel:%s]-(spouse:Person)                
-                    // Root -> Descendants
-                    OPTIONAL MATCH path=(root)-[descendantRel:%s*1..]->(descendant:Person)                
-                    // Descendant <-> Spouse
-                    OPTIONAL MATCH (descendant)-[descendantSpouseRel:%s]-(descendantSpouse:Person)                
-                    // Return all nodes and relationships
-                    RETURN DISTINCT
-                      root,
-                      spouse,
-                      descendant,
-                      descendantSpouse,
-                      spouseRel,
-                      descendantRel,
-                      descendantSpouseRel                
-            """, Constants.MARRIED_REL, Constants.PARENT_REL, Constants.MARRIED_REL);
+                    MATCH (root:Person)
+                        WHERE elementId(root) = $elementId
+                        // Root <-> Spouse
+                        OPTIONAL MATCH (root)-[spouseRel:%s]-(spouse:Person)                
+                        // Root -> Descendants
+                        OPTIONAL MATCH path=(root)-[descendantRel:%s*1..]->(descendant:Person)                
+                        // Descendant <-> Spouse
+                        OPTIONAL MATCH (descendant)-[descendantSpouseRel:%s]-(descendantSpouse:Person)                
+                        // Return all nodes and relationships
+                        RETURN DISTINCT
+                          root,
+                          spouse,
+                          descendant,
+                          descendantSpouse,
+                          spouseRel,
+                          descendantRel,
+                          descendantSpouseRel                
+                """, Constants.MARRIED_REL, Constants.PARENT_REL, Constants.MARRIED_REL);
         log.info("Cypher to fetch family tree:\n {}", cypher);
         Set<FlowNodeDTO> nodes = new HashSet<>();
         Set<FlowEdgeDTO> edges = new HashSet<>();
@@ -138,12 +133,12 @@ public class GraphService {
                     addPersonNode((Node) row.get("descendant"), nodes);
                     addPersonNode((Node) row.get("descendantSpouse"), nodes);
 
-                    addEdge((Relationship) row.get("spouseRel"),edges);
-                    addEdge((Relationship) row.get("descendantRel"),edges);
-                    addEdge((Relationship) row.get("descendantSpouseRel"),edges);
+                    addEdge((Relationship) row.get("spouseRel"), edges);
+                    addEdge((Relationship) row.get("descendantRel"), edges);
+                    addEdge((Relationship) row.get("descendantSpouseRel"), edges);
                 });
 
-        log.info("Graph generated with {} nodes and {} edges",nodes.size(), edges.size());
+        log.info("Graph generated with {} nodes and {} edges", nodes.size(), edges.size());
         return new FlowGraphDTO(new ArrayList<>(nodes), new ArrayList<>(edges));
     }
 
@@ -159,7 +154,8 @@ public class GraphService {
         try {
             // String id, name are already defined
             Person person = PersonNodeConverter.flattenedMapToPerson(new HashMap<>(personNode.asMap()), id);
-            Map<String, Object> dataForDto = objectMapper.convertValue(person, new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> dataForDto = objectMapper.convertValue(person, new TypeReference<Map<String, Object>>() {
+            });
             FlowNodeDTO flowNode = new FlowNodeDTO(id, name, "Person", dataForDto, new FlowPositionDTO()); // Type is "Person"
             nodes.add(flowNode);
         } catch (Exception e) {
@@ -181,8 +177,8 @@ public class GraphService {
             String edgeId = srcId + "_married_" + tgtId;
             String reverseEdgeId = tgtId + "_married_" + srcId;
             Map<String, Object> data = Map.of("label", Constants.MARRIED_REL);
-            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, Constants.MARRIED_REL,data);
-            FlowEdgeDTO reverseFlowEdge = new FlowEdgeDTO(reverseEdgeId, tgtId, srcId, Constants.MARRIED_REL,data);
+            FlowEdgeDTO flowEdge = new FlowEdgeDTO(edgeId, srcId, tgtId, Constants.MARRIED_REL, data);
+            FlowEdgeDTO reverseFlowEdge = new FlowEdgeDTO(reverseEdgeId, tgtId, srcId, Constants.MARRIED_REL, data);
             if (!edges.contains(flowEdge) && !edges.contains(reverseFlowEdge)) { //clog.info("MARRIED_TO edge identified {}",flowEdge);
                 edges.add(flowEdge);
             }

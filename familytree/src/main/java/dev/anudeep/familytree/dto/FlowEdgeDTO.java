@@ -11,9 +11,11 @@ import java.util.Map;
 import java.util.Objects;
 
 @Component
-@Getter @Setter
+@Getter
+@Setter
 @Schema(description = "Edge representation for React Flow")
-@AllArgsConstructor @NoArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 public class FlowEdgeDTO {
     private String id;
     private String source;
@@ -28,7 +30,7 @@ public class FlowEdgeDTO {
         this.target = target;
         this.label = label;
         this.type = label;
-        this.data =data;
+        this.data = data;
     }
 
     @Override

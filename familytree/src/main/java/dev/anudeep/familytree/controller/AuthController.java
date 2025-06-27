@@ -3,7 +3,7 @@ package dev.anudeep.familytree.controller;
 import dev.anudeep.familytree.controller.common.CommonUtils;
 import dev.anudeep.familytree.dto.TokenRequest;
 import dev.anudeep.familytree.dto.UserSessionDetailsDTO;
-import dev.anudeep.familytree.model.User; // Your custom User model
+import dev.anudeep.familytree.model.User;
 import dev.anudeep.familytree.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,12 +16,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository; // Important
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Collections; // For authorities
+import java.util.Collections;
 
 @Slf4j
 @Tag(name = "Auth API", description = "Endpoints for authentication related")
@@ -32,6 +32,7 @@ public class AuthController {
 
     private final UserService userService;
     private final CommonUtils commonUtils;
+
     public AuthController(UserService userService, CommonUtils commonUtils) {
         this.userService = userService;
         this.commonUtils = commonUtils;

@@ -1,7 +1,8 @@
 package dev.anudeep.familytree.dto;
 
-import lombok.Data;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.Data;
+
 import java.util.List;
 
 @Data

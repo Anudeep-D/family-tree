@@ -12,8 +12,8 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.Objects;
+import java.util.Set;
 
 @Node("User")
 @Setter

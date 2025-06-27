@@ -1,14 +1,13 @@
 package dev.anudeep.familytree.service;
 
 import dev.anudeep.familytree.ErrorHandling.dto.EntityNotFoundException;
-import dev.anudeep.familytree.model.House;
 import dev.anudeep.familytree.model.Person;
 import dev.anudeep.familytree.repository.PersonRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.List;
 
 @Slf4j
 @Service

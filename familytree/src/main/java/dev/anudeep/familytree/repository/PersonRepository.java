@@ -1,6 +1,5 @@
 package dev.anudeep.familytree.repository;
 
-import dev.anudeep.familytree.model.House;
 import dev.anudeep.familytree.model.Person;
 import dev.anudeep.familytree.utils.Constants;
 import org.springframework.data.neo4j.repository.Neo4jRepository;

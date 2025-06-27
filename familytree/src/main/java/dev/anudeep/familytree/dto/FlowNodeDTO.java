@@ -11,9 +11,11 @@ import java.util.Map;
 import java.util.Objects;
 
 @Component
-@Getter @Setter
+@Getter
+@Setter
 @Schema(description = "Node representation for React Flow")
-@AllArgsConstructor @NoArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 public class FlowNodeDTO {
     private String id;
     private String label;

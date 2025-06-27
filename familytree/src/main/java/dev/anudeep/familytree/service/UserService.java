@@ -1,16 +1,17 @@
 package dev.anudeep.familytree.service;
 
-import dev.anudeep.familytree.model.User;
-import dev.anudeep.familytree.repository.UserRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import dev.anudeep.familytree.model.User;
+import dev.anudeep.familytree.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+
 @Slf4j
 @Service
 public class UserService {
@@ -45,7 +46,7 @@ public class UserService {
                     .orElseGet(() -> userRepository.save(new User(email, name, picture)));
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to verify token: "+e.getMessage(), e);
+            throw new RuntimeException("Failed to verify token: " + e.getMessage(), e);
         }
     }
 }

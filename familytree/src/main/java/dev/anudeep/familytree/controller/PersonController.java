@@ -26,7 +26,8 @@ public class PersonController {
     private final PersonService personService;
     private final HouseService houseService;
     private final CommonUtils commonUtils;
-    public PersonController(PersonService personService,HouseService houseService, CommonUtils commonUtils) {
+
+    public PersonController(PersonService personService, HouseService houseService, CommonUtils commonUtils) {
         this.personService = personService;
         this.houseService = houseService;
         this.commonUtils = commonUtils;
@@ -35,12 +36,12 @@ public class PersonController {
     @GetMapping("/{elementId}")
     @Operation(summary = "Get person by elementId")
     public ResponseEntity<Person> getPerson(
-            @Parameter(description = "Tree Id of a tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String treeId,
-            @Parameter(description = "elementId of the person to retrieve", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @Parameter(description = "elementId of the person to retrieve", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String elementId,
             HttpSession session) {
-        commonUtils.accessCheck(treeId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(treeId, new Role[]{Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("PersonController: Fetching person with elementId {}", elementId);
         return ResponseEntity.ok(personService.getPersonById(elementId));
     }
@@ -48,11 +49,11 @@ public class PersonController {
     @PostMapping
     @Operation(summary = "Create a new person")
     public Person createPerson(
-            @Parameter(description = "Tree Id of a tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String treeId,
             @RequestBody Person person,
             HttpSession session) {
-        commonUtils.accessCheck(treeId,new Role[] {Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(treeId, new Role[]{Role.ADMIN, Role.EDITOR});
         log.info("PersonController: Creating person {}", person);
         return personService.createPerson(person);
     }
@@ -60,12 +61,12 @@ public class PersonController {
     @GetMapping("/{elementId}/partners")
     @Operation(summary = "Get partners of a person by elementId")
     public List<Person> getPartners(
-            @Parameter(description = "Tree Id of a tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String treeId,
-            @Parameter(description = "elementId of the person to retrieve partners of", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @Parameter(description = "elementId of the person to retrieve partners of", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String elementId,
             HttpSession session) {
-        commonUtils.accessCheck(treeId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(treeId, new Role[]{Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("PersonController: Fetching partners of a person with elementId {}", elementId);
         return personService.getPartners(elementId);
     }
@@ -73,12 +74,12 @@ public class PersonController {
     @GetMapping("/{elementId}/children")
     @Operation(summary = "Get children of a person by elementId")
     public List<Person> getChildren(
-            @Parameter(description = "Tree Id of a tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String treeId,
-            @Parameter(description = "elementId of the person to retrieve children of", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @Parameter(description = "elementId of the person to retrieve children of", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String elementId,
             HttpSession session) {
-        commonUtils.accessCheck(treeId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(treeId, new Role[]{Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("PersonController: Fetching children of a person with elementId {}", elementId);
         return personService.getChildren(elementId);
     }
@@ -86,11 +87,11 @@ public class PersonController {
     @GetMapping("/{elementId}/siblings")
     @Operation(summary = "Get siblings of a person by elementId")
     public List<Person> getSiblings(
-            @Parameter(description = "Tree Id of a tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String treeId,
-            @Parameter(description = "elementId of the person to retrieve siblings of person", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
-            @PathVariable String elementId,HttpSession session) {
-        commonUtils.accessCheck(treeId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+            @Parameter(description = "elementId of the person to retrieve siblings of person", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @PathVariable String elementId, HttpSession session) {
+        commonUtils.accessCheck(treeId, new Role[]{Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("PersonController: Fetching siblings of a person with elementId {}", elementId);
         return personService.getSiblings(elementId);
     }
@@ -98,12 +99,12 @@ public class PersonController {
     @GetMapping("/{elementId}/house")
     @Operation(summary = "Get house of a person by elementId")
     public House getHouse(
-            @Parameter(description = "Tree Id of a tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String treeId,
-            @Parameter(description = "elementId of the person to retrieve person's house belongs to", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
+            @Parameter(description = "elementId of the person to retrieve person's house belongs to", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String elementId,
             HttpSession session) {
-        commonUtils.accessCheck(treeId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+        commonUtils.accessCheck(treeId, new Role[]{Role.VIEWER, Role.ADMIN, Role.EDITOR});
         log.info("PersonController: Fetching house of a person with elementId {}", elementId);
         return houseService.getHouse(elementId);
     }

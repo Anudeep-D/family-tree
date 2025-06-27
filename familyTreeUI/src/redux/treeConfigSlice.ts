@@ -10,7 +10,7 @@ export type TreeConfigState = {
   filteredNodes: AppNode[];
   filteredEdges: AppEdge[];
   savedFilters: { id: string; data: FilterProps }[];
-  selectedFilter: string | null;
+  selectedFilter: { id: string; label: string } | null;
   currentFilter: FilterProps;
 };
 
@@ -100,8 +100,14 @@ const treeConfigSlice = createSlice({
     setFilteredEdges: (state, action: PayloadAction<AppEdge[]>) => {
       state.filteredEdges = action.payload;
     },
-    setSelectedFilter: (state, action: PayloadAction<string | null>) => {
+    setSelectedFilter: (state, action: PayloadAction<{ id: string; label: string } | null>) => {
       state.selectedFilter = action.payload;
+    },
+    setSavedFilters: (state, action: PayloadAction<{ id: string; data: FilterProps }[]>) => {
+      state.savedFilters = action.payload;
+    },
+    setCurrentFilter: (state, action: PayloadAction<FilterProps>) => {
+      state.currentFilter = action.payload;
     },
   },
 });
@@ -111,14 +117,18 @@ export const selectTree = (state: ParameterSetState) =>
 export const selectNodes = (state: ParameterSetState) => state.treeConfig.nodes;
 export const selectEdges = (state: ParameterSetState) => state.treeConfig.edges;
 export const selectSavedFilters = (state: ParameterSetState) => state.treeConfig.savedFilters;
-export const selectFilter = (state: ParameterSetState) =>
+export const selectSelectedFilter = (state: ParameterSetState) =>
   state.treeConfig.selectedFilter;
+export const selectCurrentFilter = (state: ParameterSetState) =>
+  state.treeConfig.currentFilter;
 
 export const {
   setCurrentTree,
   setReduxNodes,
   setReduxEdges,
   setSelectedFilter,
+  setSavedFilters,
+  setCurrentFilter,
 } = treeConfigSlice.actions;
 
 export default treeConfigSlice.reducer;

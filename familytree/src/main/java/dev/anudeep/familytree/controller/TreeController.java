@@ -1,25 +1,28 @@
 package dev.anudeep.familytree.controller;
 
 import dev.anudeep.familytree.controller.common.CommonUtils;
+import dev.anudeep.familytree.dto.DeleteMultipleTreesRequestDto;
 import dev.anudeep.familytree.dto.RelationChangeSummary;
 import dev.anudeep.familytree.dto.RoleAssignmentRequest;
-import dev.anudeep.familytree.model.Tree;
 import dev.anudeep.familytree.model.Role;
+import dev.anudeep.familytree.model.Tree;
 import dev.anudeep.familytree.model.User;
 import dev.anudeep.familytree.service.UserTreeService;
 import dev.anudeep.familytree.utils.Constants;
-import dev.anudeep.familytree.dto.DeleteMultipleTreesRequestDto;
 import dev.anudeep.familytree.utils.DateTimeUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import org.springframework.http.HttpStatus;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Tag(name = "Trees API", description = "Endpoints for trees related")
@@ -37,19 +40,19 @@ public class TreeController {
     }
 
     @GetMapping("/{elementId}")
-    public ResponseEntity<?> getTree(@Parameter(description = "elementId of the tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:72")
+    public ResponseEntity<?> getTree(@Parameter(description = "elementId of the tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:72")
                                      @PathVariable String elementId) { // HttpSession removed
         log.info("TreeController: get tree");
         User currentUser = commonUtils.getCurrentAuthenticatedUser();
         try {
-            commonUtils.accessCheck(elementId,new Role[] {Role.VIEWER, Role.ADMIN, Role.EDITOR});
+            commonUtils.accessCheck(elementId, new Role[]{Role.VIEWER, Role.ADMIN, Role.EDITOR});
         } catch (Exception e) {
             log.error("Don't have access", e);  // log stack trace
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Access denied – you currently don’t have access to this tree.", e);
         }
         try {
-            Optional<Tree> tree = userTreeService.getTreeWithAccess(currentUser.getElementId(),elementId);
-            if(tree.isPresent()){
+            Optional<Tree> tree = userTreeService.getTreeWithAccess(currentUser.getElementId(), elementId);
+            if (tree.isPresent()) {
                 Tree localTree = tree.get();
                 localTree.setAccess(Constants.getRoleForRel(localTree.getAccess()));
                 return ResponseEntity.ok().body(localTree);
@@ -57,7 +60,7 @@ public class TreeController {
             return ResponseEntity.ok().body(tree.orElseThrow());
         } catch (Exception e) {
             log.error("Failed to fetch tree", e);  // log stack trace
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error getting tree: "+e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error getting tree: " + e.getMessage(), e);
         }
     }
 
@@ -88,9 +91,9 @@ public class TreeController {
         }
         log.info("TreeController: User {} is creating tree {}", currentUser.getEmail(), tree);
         userTreeService.createTree(tree);
-        Tree newTree = userTreeService.getTreeByDetails(tree.getName(), DateTimeUtil.toIsoUtcString(tree.getCreatedAt()),currentUser.getElementId());
-        log.info("TreeController: created tree {}",newTree);
-        log.info("TreeController: creating {} relation between userId {} and treeId {}",Constants.ADMIN_REL, currentUser.getElementId(), newTree.getElementId());
+        Tree newTree = userTreeService.getTreeByDetails(tree.getName(), DateTimeUtil.toIsoUtcString(tree.getCreatedAt()), currentUser.getElementId());
+        log.info("TreeController: created tree {}", newTree);
+        log.info("TreeController: creating {} relation between userId {} and treeId {}", Constants.ADMIN_REL, currentUser.getElementId(), newTree.getElementId());
         userTreeService.createRelationship(currentUser.getElementId(), newTree.getElementId(), Constants.ADMIN_REL);
         log.info("TreeController: relation created");
         return ResponseEntity.ok().body(newTree);
@@ -98,7 +101,7 @@ public class TreeController {
 
     @PostMapping("/{elementId}/addusers")
     @Operation(summary = "Add users to tree")
-    public ResponseEntity<?> addUsersToTree(@Parameter(description = "elementId of the tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:72")
+    public ResponseEntity<?> addUsersToTree(@Parameter(description = "elementId of the tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:72")
                                             @PathVariable String elementId, @RequestBody List<RoleAssignmentRequest> users) { // HttpSession removed
         log.info("addusers:tree {}", elementId);
         commonUtils.accessCheck(elementId, new Role[]{Role.ADMIN}); // Example: if creating trees needs a general role
@@ -111,8 +114,8 @@ public class TreeController {
 
     @PostMapping("/{elementId}/updateusers")
     @Operation(summary = "Update users to tree")
-    public ResponseEntity<Map<String,Integer>> updateUsersToTree(@Parameter(description = "elementId of the tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:72")
-                                            @PathVariable String elementId, @RequestBody List<RoleAssignmentRequest> users) { // HttpSession removed
+    public ResponseEntity<Map<String, Integer>> updateUsersToTree(@Parameter(description = "elementId of the tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:72")
+                                                                  @PathVariable String elementId, @RequestBody List<RoleAssignmentRequest> users) { // HttpSession removed
         log.info("updateusers:tree {}", elementId);
         try {
             commonUtils.accessCheck(elementId, new Role[]{Role.ADMIN}); // Example: if creating trees needs a general role
@@ -126,13 +129,13 @@ public class TreeController {
         log.info("TreeController: Users count {} updating to tree {}", users.size(), elementId);
         try {
             RelationChangeSummary summary = userTreeService.updateUsersRelationShip(elementId, users);
-            Map<String,Integer> counts = new HashMap<>();
+            Map<String, Integer> counts = new HashMap<>();
             counts.putIfAbsent("updated", summary.getUpdatedCount());
             counts.putIfAbsent("removed", summary.getPermanentlyDeletedCount());
             counts.putIfAbsent("created", summary.getNewlyCreatedCount());
             return ResponseEntity.ok().body(counts);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating user access: "+e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating user access: " + e.getMessage(), e);
         }
     }
 

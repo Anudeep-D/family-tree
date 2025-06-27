@@ -3,7 +3,8 @@ package dev.anudeep.familytree.dto;
 public class TokenRequest {
     private String token;
 
-    public TokenRequest() {}
+    public TokenRequest() {
+    }
 
     public TokenRequest(String token) {
         this.token = token;

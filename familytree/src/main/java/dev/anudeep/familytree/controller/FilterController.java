@@ -7,15 +7,17 @@ import dev.anudeep.familytree.dto.FilterUpdateRequestDTO;
 import dev.anudeep.familytree.model.Filter;
 import dev.anudeep.familytree.model.User;
 import dev.anudeep.familytree.service.FilterService;
-
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import jakarta.validation.Valid;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/filters") // Base path for filter-related APIs
 public class FilterController {
@@ -32,22 +34,33 @@ public class FilterController {
      * Creates a new filter for the authenticated user and a specified tree.
      */
     @PostMapping("/create")
-    public ResponseEntity<Filter> createFilter(@Parameter(description = "Tree Id of a tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45") @RequestParam String treeId ,@Valid @RequestBody FilterRequestDTO filterRequestDTO) {
-        User currentUser = commonUtils.getCurrentAuthenticatedUser();
-        Filter createdFilter = filterService.createFilter(currentUser.getElementId(), treeId, filterRequestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdFilter);
+    public ResponseEntity<Filter> createFilter(@Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45") @RequestParam String treeId, @Valid @RequestBody FilterRequestDTO filterRequestDTO) {
+        try {
+            User currentUser = commonUtils.getCurrentAuthenticatedUser();
+            Filter createdFilter = filterService.createFilter(currentUser.getElementId(), treeId, filterRequestDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdFilter);
+        } catch (Exception e) {
+            log.error("Failed to create Filter due to {}", e.getMessage(), e); // Log full stack trace
+            // Consider a more specific exception if possible, or a generic internal server error.
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error creating filter: " + e.getMessage(), e);
+        }
     }
 
     /**
      * Gets all filters for the currently authenticated user.
      */
     @GetMapping("/")
-    public ResponseEntity<List<Filter>> getFilters(@Parameter(description = "Tree Id of a tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45") @RequestParam String treeId ) {
-        User currentUser = commonUtils.getCurrentAuthenticatedUser();
-        List<Filter> filters = filterService.getFilters(currentUser.getElementId(), treeId);
-        return ResponseEntity.ok(filters);
+    public ResponseEntity<List<Filter>> getFilters(@Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45") @RequestParam String treeId) {
+        try {
+            User currentUser = commonUtils.getCurrentAuthenticatedUser();
+            List<Filter> filters = filterService.getFilters(currentUser.getElementId(), treeId);
+            return ResponseEntity.ok(filters);
+        } catch (Exception e) {
+            log.error("Failed to create Filter due to {}", e.getMessage(), e); // Log full stack trace
+            // Consider a more specific exception if possible, or a generic internal server error.
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error creating filter: " + e.getMessage(), e);
+        }
     }
-
 
 
     /**
@@ -56,7 +69,7 @@ public class FilterController {
      * For now, assuming service layer might not check ownership for a direct GET by ID if IDs are unique.
      */
     @GetMapping("/{filterId}")
-    public ResponseEntity<Filter> getFilterById(@Parameter(description = "Filter Id of a filter", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")@PathVariable String filterId) { // Changed Long to String
+    public ResponseEntity<Filter> getFilterById(@Parameter(description = "Filter Id of a filter", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45") @PathVariable String filterId) { // Changed Long to String
         // Optional: Add ownership check here or ensure service does it if filters are not public.
         // Long userNodeId = userNodeIdResolver.getUserNodeId(authentication);
         // filterService.getFilterByIdAndUser(filterId, userNodeId) // Would need service method adjustment
@@ -69,10 +82,16 @@ public class FilterController {
      * Updates an existing filter.
      */
     @PatchMapping("/{filterId}")
-    public ResponseEntity<Filter> updateFilter(@Parameter(description = "Tree Id of a tree", required=true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45") @PathVariable String filterId, // Changed Long to String
+    public ResponseEntity<Filter> updateFilter(@Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45") @PathVariable String filterId, // Changed Long to String
                                                @Valid @RequestBody FilterUpdateRequestDTO updateRequestDTO) {
-        Filter updatedFilter = filterService.updateFilter(filterId, updateRequestDTO); // Service now expects String
-        return ResponseEntity.ok(updatedFilter);
+        try {
+            Filter updatedFilter = filterService.updateFilter(filterId, updateRequestDTO); // Service now expects String
+            return ResponseEntity.ok(updatedFilter);
+        } catch (Exception e) {
+            log.error("Failed to create Filter due to {}", e.getMessage(), e); // Log full stack trace
+            // Consider a more specific exception if possible, or a generic internal server error.
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error creating filter: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -81,7 +100,13 @@ public class FilterController {
      */
     @DeleteMapping("/delete-multiple")
     public ResponseEntity<Void> deleteMultipleFilters(@Valid @RequestBody DeleteFiltersRequestDTO deleteRequestDTO) {
-        filterService.deleteMultipleFilters(deleteRequestDTO.getFilterIds());
-        return ResponseEntity.noContent().build();
+        try {
+            filterService.deleteMultipleFilters(deleteRequestDTO.getFilterIds());
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            log.error("Failed to create Filter due to {}", e.getMessage(), e); // Log full stack trace
+            // Consider a more specific exception if possible, or a generic internal server error.
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error creating filter: " + e.getMessage(), e);
+        }
     }
 }

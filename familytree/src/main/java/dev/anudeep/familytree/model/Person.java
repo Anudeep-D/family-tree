@@ -1,15 +1,14 @@
 package dev.anudeep.familytree.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import dev.anudeep.familytree.dto.FlowEdgeDTO;
-import dev.anudeep.familytree.model.Education;
-import dev.anudeep.familytree.model.Job;
 import dev.anudeep.familytree.utils.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.neo4j.core.schema.*;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.util.Date;
 import java.util.List;
@@ -17,7 +16,10 @@ import java.util.Objects;
 
 @Node("Person")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Setter @Getter @AllArgsConstructor @NoArgsConstructor
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Person {
 
     @Id

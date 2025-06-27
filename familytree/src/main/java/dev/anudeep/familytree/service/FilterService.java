@@ -4,19 +4,17 @@ import dev.anudeep.familytree.ErrorHandling.dto.EntityNotFoundException;
 import dev.anudeep.familytree.dto.FilterRequestDTO;
 import dev.anudeep.familytree.dto.FilterUpdateRequestDTO;
 import dev.anudeep.familytree.model.Filter;
-import dev.anudeep.familytree.model.User; // Assuming User model exists
-import dev.anudeep.familytree.model.Tree;   // Assuming Tree model exists
 import dev.anudeep.familytree.repository.FilterRepository;
-import dev.anudeep.familytree.repository.UserRepository; // Assuming UserRepository exists
-import dev.anudeep.familytree.repository.TreeRepository;   // Assuming TreeRepository exists
+import dev.anudeep.familytree.repository.TreeRepository;
+import dev.anudeep.familytree.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.access.AccessDeniedException; // Or a custom exception
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class FilterService {
 
@@ -38,7 +36,7 @@ public class FilterService {
     }
 
     @Transactional
-    public Filter createFilter(String userId, String treeId, FilterRequestDTO dto) {
+    public Filter createFilter(String userId, String treeId, FilterRequestDTO dto) throws Exception {
         // 1. Validate user (exists? active?) - UserNodeId is Neo4j internal ID
         // User user = userRepository.findById(userNodeId)
         // .orElseThrow(() -> new EntityNotFoundException("User not found with ID: " + userNodeId));
@@ -50,14 +48,15 @@ public class FilterService {
 
         Filter filter = new Filter(dto.getFilterName(), dto.getEnabled(), dto.getFilterBy());
         Filter savedFilter = filterRepository.save(filter);
-
+        log.info("id {} ,savedFilter {}", savedFilter.getElementId(), savedFilter);
         // Create relationships
         filterRepository.createFilterRelationship(userId, treeId, savedFilter.getElementId());
+        log.info("created relationship successfully");
         return savedFilter;
     }
 
     @Transactional(readOnly = true)
-    public List<Filter> getFilters(String userId, String treeId) {
+    public List<Filter> getFilters(String userId, String treeId) throws Exception {
         // Validate user if necessary
         // userRepository.findById(userNodeId).orElseThrow(() -> new EntityNotFoundException("User not found"));
         return filterRepository.findAllByTreeIdAndUserId(userId, treeId);
@@ -69,7 +68,7 @@ public class FilterService {
     }
 
     @Transactional
-    public Filter updateFilter(String filterElementId, FilterUpdateRequestDTO dto) { // Changed from Long to String
+    public Filter updateFilter(String filterElementId, FilterUpdateRequestDTO dto) throws Exception { // Changed from Long to String
         Filter filter = filterRepository.findById(filterElementId)
                 .orElseThrow(() -> new EntityNotFoundException("Filter not found with ID: " + filterElementId));
 
@@ -94,7 +93,7 @@ public class FilterService {
     }
 
     @Transactional
-    public void deleteMultipleFilters(List<String> filterElementIds) { // Changed from List<Long> to List<String>
+    public void deleteMultipleFilters(List<String> filterElementIds) throws Exception { // Changed from List<Long> to List<String>
         if (filterElementIds == null || filterElementIds.isEmpty()) {
             return;
         }

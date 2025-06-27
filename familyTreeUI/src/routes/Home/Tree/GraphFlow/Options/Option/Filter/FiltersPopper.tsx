@@ -14,21 +14,24 @@ import {
   Paper,
   Switch,
   IconButton,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Alert,
   CircularProgress,
 } from "@mui/material";
-import { forwardRef, useRef, useState } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import DeleteFilterDialog from "./components/DeleteFilterDialog";
+import SaveAsNewView from "./components/SaveAsNewView";
 import options from "@/constants/JobAndQualification.json";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   FilterProps,
   initialState as initialFilters,
   selectNodes,
   selectSavedFilters,
+  selectTree,
+  setSavedFilters,
+  setSelectedFilter,
+  setCurrentFilter,
+  selectSelectedFilter,
 } from "@/redux/treeConfigSlice";
 import { Nodes } from "@/types/nodeTypes";
 import {
@@ -36,6 +39,11 @@ import {
   CheckBox,
   DeleteForeverTwoTone,
 } from "@mui/icons-material";
+import {
+  useCreateFilterMutation,
+  useGetFiltersQuery,
+} from "@/redux/queries/filter-endpoints";
+import { getErrorMessage } from "@/utils/common";
 
 export type FiltersPopperProps = {};
 
@@ -48,6 +56,71 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
       initialFilters.currentFilter
     );
 
+    //about saved filters
+    const tree = useSelector(selectTree);
+    const existingFilters = useSelector(selectSavedFilters);
+    const selectedFilter = useSelector(selectSelectedFilter);
+    const savedFilters = useMemo(
+      () =>
+        existingFilters.map((existingFilter) => ({
+          id: existingFilter.id,
+          label: existingFilter.data.filterName!,
+        })),
+      [existingFilters]
+    );
+    const [
+      createFilterMutation, // Changed
+      {
+        data: newFilter, // Changed
+        isError: isErrorOnCreate,
+        error: errorOnCreate,
+        isLoading: isCreating,
+      },
+    ] = useCreateFilterMutation();
+    useEffect(() => {
+      if (!(isErrorOnCreate || isCreating) && newFilter) {
+        dispatch(
+          setSelectedFilter({
+            id: newFilter.id,
+            label: newFilter.data.filterName!,
+          })
+        );
+        dispatch(setCurrentFilter(newFilter.data));
+      }
+    }, [isErrorOnCreate, isCreating, newFilter]);
+    const {
+      data: allSavedFilters, // Changed
+      error: fetchFiltersError, // Changed for consistency, though not strictly required by prompt
+      isError: isErrorOnFetchFilters,
+      isLoading: isfetchFiltersLoading, // Changed for consistency
+      isFetching: isfetchFiltersFetching, // Changed for consistency
+    } = useGetFiltersQuery(tree?.elementId ?? "", { skip: !tree?.elementId });
+    const dispatch = useDispatch();
+    useEffect(() => {
+      if (
+        !(
+          isfetchFiltersLoading ||
+          isfetchFiltersFetching ||
+          isErrorOnFetchFilters
+        ) &&
+        allSavedFilters
+      )
+        dispatch(setSavedFilters(allSavedFilters));
+    }, [
+      allSavedFilters,
+      fetchFiltersError,
+      isfetchFiltersLoading,
+      isfetchFiltersFetching,
+    ]);
+    const handleFilterChange = (val: { id: string; label: string } | null) => {
+      dispatch(setSelectedFilter(val));
+      if (val) {
+        const currFilter = existingFilters.find(
+          (existingFilter) => existingFilter.id === val.id
+        );
+        currFilter && dispatch(setCurrentFilter(currFilter.data));
+      }
+    };
     const handleChange = (keys: string[], value: any) => {
       setFilters((prev) => {
         const newState = { ...prev };
@@ -62,10 +135,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         return newState;
       });
     };
-    const [selectedFilter, setSelectedFilter] = useState<{
-      id: string;
-      label: string;
-    } | null>(null);
 
     const allNodes = useSelector(selectNodes);
 
@@ -81,8 +150,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         persons.push({ id: eachNode.id, label: eachNode.data["name"] });
       }
     });
-
-    const savedFilters: { id: string; label: string }[] = [];
 
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [filtersToDelete, setFiltersToDelete] = useState<string[]>([]); // IDs of filters to delete
@@ -104,9 +171,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
     const [checking, setChecking] = useState(false);
     const [nameExists, setNameExists] = useState<boolean | null>(null);
     const [saveAsOpen, setSaveAsOpen] = useState(false);
-    const [saving, setSaving] = useState(false);
-
-    const existingFilters = useSelector(selectSavedFilters);
 
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -129,20 +193,22 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
       setNameExists(exists);
     };
     const handleSave = async () => {
-      setSaving(true);
       // Call your actual save logic here
-      await new Promise((res) => setTimeout(res, 500));
-      setSaving(false);
+      handleChange(["filterName"], filterName);
+      createFilterMutation({
+        treeId: tree?.elementId ?? "",
+        filter: { ...filters, filterName: filterName },
+      });
+
       alert(`Filter "${filterName}" saved successfully`);
       setFilterName("");
       setNameExists(null);
     };
-     const handleSaveAs = () => {
+    const handleSaveAs = () => {
       setSaveAsOpen((prev) => !prev);
       setChecking(false);
       setFilterName("");
       setNameExists(null);
-      setSaving(false);
     };
 
     return (
@@ -179,15 +245,22 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             sx={{ ml: 1 }}
           />
         </Box>
+        {isErrorOnFetchFilters && (
+          <Alert severity="error" sx={{ mt: 1 }}>
+            {getErrorMessage(fetchFiltersError)}
+          </Alert>
+        )}
         <Box display="flex" alignItems="center" sx={{ mb: 1 }}>
           <Autocomplete
+            loading={isfetchFiltersLoading || isfetchFiltersFetching}
+            disabled={isErrorOnFetchFilters}
             options={savedFilters}
             value={selectedFilter}
             disablePortal
             getOptionLabel={(option) => option.label}
             isOptionEqualToValue={(option, value) => option.id === value.id}
             filterSelectedOptions
-            onChange={(_, val) => setSelectedFilter(val)}
+            onChange={(_, val) => handleFilterChange(val)}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -587,79 +660,41 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             variant="contained"
             color={saveAsOpen ? "error" : "primary"}
             onClick={handleSaveAs}
-            disabled={saving}
+            disabled={isCreating}
           >
             {saveAsOpen ? "Close" : "Save As New"}
           </Button>
         </Stack>
         {saveAsOpen && (
-          <Box>
-          <Divider sx={{ my: 2 }} />
-          <Stack>
-            <TextField
-              label="Filter name"
-              focused
-              placeholder="Filter name"
-              value={filterName}
-              inputRef={inputRef}
-              onChange={handleSaveNameChange}
-              fullWidth
-              size="small"
-              slotProps={{ inputLabel: { shrink: true } }}
-              sx={{ mb: 1 }}
-            />
-            <Button
-              variant="contained"
-              size="small"
-              onClick={handleSave}
-              loading={saving}
-              disabled={
-                saving || filterName.trim().length === 0 || nameExists === true
-              }
-            >
-              Save
-            </Button>
-          </Stack>
-          </Box>
+          <SaveAsNewView
+            filterName={filterName}
+            onFilterNameChange={handleSaveNameChange}
+            onSave={handleSave}
+            saving={isCreating}
+            nameExists={nameExists}
+            checking={checking}
+            inputRef={inputRef}
+          />
         )}
         {checking && <CircularProgress size={20} sx={{ mt: 1 }} />}
-        {nameExists === true && (
+        {nameExists && (
           <Alert severity="error" sx={{ mt: 1 }}>
             Name already exists
           </Alert>
         )}
-        <Dialog
+        {isErrorOnCreate && (
+          <Alert severity="error" sx={{ mt: 1 }}>
+            {getErrorMessage(errorOnCreate)}
+          </Alert>
+        )}
+        <DeleteFilterDialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
-          maxWidth="xs"
-          fullWidth
-        >
-          <DialogTitle>Delete Filters</DialogTitle>
-          <DialogContent dividers>
-            {savedFilters.map((filter) => (
-              <FormControlLabel
-                key={filter.id}
-                control={
-                  <Checkbox
-                    checked={filtersToDelete.includes(filter.id)}
-                    onChange={() => handleToggleFilter(filter.id)}
-                  />
-                }
-                label={filter.label}
-              />
-            ))}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-            <Button
-              onClick={handleDeleteFilters}
-              color="error"
-              disabled={filtersToDelete.length === 0}
-            >
-              Delete Selected
-            </Button>
-          </DialogActions>
-        </Dialog>
+          savedFilters={savedFilters}
+          filtersToDelete={filtersToDelete}
+          onToggleFilter={handleToggleFilter}
+          onDeleteFilters={handleDeleteFilters}
+        />
       </Paper>
     );
   }

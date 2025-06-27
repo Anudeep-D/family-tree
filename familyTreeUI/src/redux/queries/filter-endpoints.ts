@@ -17,7 +17,7 @@ export const filterApi = createApi({
   tagTypes: ["filterApi"], // Changed from filterApi
   endpoints: (builder) => ({
     getFilters: builder.query<
-      Pick<TreeConfigState, "savedFilters">,
+      { id: string; data: FilterProps }[],
       string
     >({
       // Renamed from getFilters, changed Filter[] to Filter[]
@@ -31,7 +31,7 @@ export const filterApi = createApi({
       providesTags: ["filterApi"], // Changed from filterApi
     }),
     createFilter: builder.mutation<
-      Pick<TreeConfigState, "savedFilters">,
+      { id: string; data: FilterProps },
       { treeId: string; filter: FilterProps }
     >({
       // Renamed from createFilter
@@ -44,9 +44,10 @@ export const filterApi = createApi({
         },
         body: args.filter,
       }),
+      invalidatesTags: ["filterApi"],
     }),
     updateFilter: builder.mutation<
-      Pick<TreeConfigState, "savedFilters">,
+      { id: string; data: FilterProps },
       { filterId: string; filter: FilterProps }
     >({
       // Renamed from createFilter
@@ -56,6 +57,7 @@ export const filterApi = createApi({
         method: "PATCH",
         body: args.filter,
       }),
+      invalidatesTags: ["filterApi"],
     }),
     deleteMultipleFilters: builder.mutation<void, { ids: string[] }>({
       query: (body) => ({

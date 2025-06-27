@@ -6,7 +6,9 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class DateTimeUtil {
-    private DateTimeUtil(){}
+    private DateTimeUtil() {
+    }
+
     public static String toIsoUtcString(String date) {
         Instant instant = Instant.parse(date);
         return DateTimeFormatter.ISO_INSTANT.format(instant);

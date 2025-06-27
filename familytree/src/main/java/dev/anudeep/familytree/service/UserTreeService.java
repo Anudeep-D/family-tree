@@ -1,13 +1,13 @@
 package dev.anudeep.familytree.service;
 
+import dev.anudeep.familytree.ErrorHandling.dto.EntityNotFoundException;
 import dev.anudeep.familytree.dto.RelationChangeSummary;
 import dev.anudeep.familytree.dto.RoleAssignmentRequest;
-import dev.anudeep.familytree.model.Tree;
 import dev.anudeep.familytree.model.Role;
+import dev.anudeep.familytree.model.Tree;
 import dev.anudeep.familytree.model.User;
 import dev.anudeep.familytree.repository.TreeRepository;
 import dev.anudeep.familytree.repository.UserRepository;
-import dev.anudeep.familytree.ErrorHandling.dto.EntityNotFoundException;
 import dev.anudeep.familytree.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,18 +44,18 @@ public class UserTreeService {
         return treeRepo.findByElementId(elementId);
     }
 
-    
+
     public Optional<Tree> getTreeWithAccess(String userId, String treeId) {
         return treeRepo.findUserAccessforTree(userId, treeId);
     }
 
     public Optional<Role> getRelationshipType(String userElementId, String treeElementId) {
-        Optional<String> relation =  userRepo.findRelationshipBetweenUserAndTree(userElementId, treeElementId);
-        if(relation.isPresent()){
+        Optional<String> relation = userRepo.findRelationshipBetweenUserAndTree(userElementId, treeElementId);
+        if (relation.isPresent()) {
             log.info("Relationship for User {}  tree {} is {}", userElementId, treeElementId, relation.get());
-            if(relation.get().equalsIgnoreCase(Constants.ADMIN_REL)) return Optional.of(Role.ADMIN);
-            if(relation.get().equalsIgnoreCase(Constants.EDITOR_REL)) return Optional.of(Role.EDITOR);
-            if(relation.get().equalsIgnoreCase(Constants.VIEWER_REL)) return Optional.of(Role.VIEWER);
+            if (relation.get().equalsIgnoreCase(Constants.ADMIN_REL)) return Optional.of(Role.ADMIN);
+            if (relation.get().equalsIgnoreCase(Constants.EDITOR_REL)) return Optional.of(Role.EDITOR);
+            if (relation.get().equalsIgnoreCase(Constants.VIEWER_REL)) return Optional.of(Role.VIEWER);
         }
         log.info("No Relationship found for User {}  tree {}", userElementId, treeElementId);
         return Optional.empty();
@@ -77,7 +77,7 @@ public class UserTreeService {
         return treeRepo.findUsersByRelationship(treeElementId, type);
     }
 
-    public User createUser(String name, String email,String picture) {
+    public User createUser(String name, String email, String picture) {
         return userRepo.save(new User(name, email, picture));
     }
 
@@ -85,21 +85,21 @@ public class UserTreeService {
         treeRepo.save(tree);
     }
 
-    public Tree getTreeByDetails(String name, String createdAt, String createdBy){
+    public Tree getTreeByDetails(String name, String createdAt, String createdBy) {
         return treeRepo.findTreeByDetails(name, createdAt, createdBy);
     }
 
     public void createRelationship(String userId, String treeId, String relationType) {
         neo4jClient.query(String.format("""
-            MATCH (u:User)
-            WHERE elementId(u) = $userId
-            MATCH (t:Tree)
-            WHERE elementId(t) = $treeId
-            MERGE (u)-[:%s]->(t)
-        """, relationType)).bindAll(Map.of("userId", userId, "treeId", treeId)).run();
+                    MATCH (u:User)
+                    WHERE elementId(u) = $userId
+                    MATCH (t:Tree)
+                    WHERE elementId(t) = $treeId
+                    MERGE (u)-[:%s]->(t)
+                """, relationType)).bindAll(Map.of("userId", userId, "treeId", treeId)).run();
     }
 
-    public RelationChangeSummary updateUsersRelationShip(String treeId, List<RoleAssignmentRequest> users) throws Exception{
+    public RelationChangeSummary updateUsersRelationShip(String treeId, List<RoleAssignmentRequest> users) throws Exception {
 
         List<Map<String, String>> userMaps = users.stream()
                 .map(user -> {
@@ -181,7 +181,7 @@ public class UserTreeService {
             log.info("No trees were eligible for deletion by user {} from the provided list.", currentUser.getEmail());
         }
 
-        if(!skippedIdsLog.isEmpty()){
+        if (!skippedIdsLog.isEmpty()) {
             log.info("Skipped tree IDs during bulk deletion by user {}: {}", currentUser.getEmail(), skippedIdsLog);
         }
     }

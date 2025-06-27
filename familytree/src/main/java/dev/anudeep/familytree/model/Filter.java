@@ -1,8 +1,6 @@
 package dev.anudeep.familytree.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -12,7 +10,6 @@ import org.springframework.data.neo4j.core.schema.Node;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @Node("Filter")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -28,7 +25,7 @@ public class Filter {
     private boolean enabled;
     private FilterBy filterBy;
 
-    public Filter(String filterName, boolean enabled, FilterBy filterBy){
+    public Filter(String filterName, boolean enabled, FilterBy filterBy) {
         this.setFilterName(filterName);
         this.setEnabled(enabled);
         this.setFilterBy(filterBy);

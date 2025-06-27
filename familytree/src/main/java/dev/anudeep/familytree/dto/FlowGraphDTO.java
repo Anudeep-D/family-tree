@@ -10,9 +10,11 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-@Getter @Setter
+@Getter
+@Setter
 @Schema(description = "Graph representation for React Flow")
-@AllArgsConstructor @NoArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 public class FlowGraphDTO {
     private List<FlowNodeDTO> nodes;
     private List<FlowEdgeDTO> edges;

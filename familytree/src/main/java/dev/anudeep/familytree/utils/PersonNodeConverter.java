@@ -27,8 +27,8 @@ public class PersonNodeConverter {
         properties.put("gender", person.getGender());
         properties.put("nickName", person.getNickName());
         properties.put("isAlive", person.getIsAlive());
-        properties.put("dob", person.getDob()==null? null : ZonedDateTime.ofInstant(person.getDob().toInstant(), ZoneId.of("UTC")));
-        properties.put("doe", person.getDoe()==null? null : ZonedDateTime.ofInstant(person.getDoe().toInstant(), ZoneId.of("UTC")));
+        properties.put("dob", person.getDob() == null ? null : ZonedDateTime.ofInstant(person.getDob().toInstant(), ZoneId.of("UTC")));
+        properties.put("doe", person.getDoe() == null ? null : ZonedDateTime.ofInstant(person.getDoe().toInstant(), ZoneId.of("UTC")));
         properties.put("currLocation", person.getCurrLocation());
         properties.put("character", person.getCharacter());
         properties.put("imageUrl", person.getImageUrl());
@@ -75,7 +75,7 @@ public class PersonNodeConverter {
         person.setIsAlive(Objects.toString(flattenedProps.get("isAlive"), null));
 
         Object dobObj = flattenedProps.get("dob");
-        if(dobObj instanceof ZonedDateTime){
+        if (dobObj instanceof ZonedDateTime) {
             person.setDob(Date.from(((ZonedDateTime) dobObj).toInstant()));
         } else if (dobObj instanceof Date) {
             person.setDob((Date) dobObj);
@@ -84,7 +84,7 @@ public class PersonNodeConverter {
         } // Add more specific date parsing if Neo4j returns strings in a certain format
 
         Object doeObj = flattenedProps.get("doe");
-        if(doeObj instanceof ZonedDateTime){
+        if (doeObj instanceof ZonedDateTime) {
             person.setDoe(Date.from(((ZonedDateTime) doeObj).toInstant()));
         } else if (doeObj instanceof Date) {
             person.setDoe((Date) doeObj);

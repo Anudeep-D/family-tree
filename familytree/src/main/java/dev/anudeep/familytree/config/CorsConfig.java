@@ -2,9 +2,9 @@ package dev.anudeep.familytree.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
@@ -20,6 +20,7 @@ public class CorsConfig {
     public CorsConfig(CorsProperties corsProperties) {
         this.corsProperties = corsProperties;
     }
+
     /**
      * Defines the CORS policy applied to all endpoints (/**).
      *

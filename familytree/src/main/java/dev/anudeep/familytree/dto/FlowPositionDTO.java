@@ -10,9 +10,11 @@ import org.springframework.stereotype.Component;
 import java.util.Objects;
 
 @Component
-@Getter @Setter
+@Getter
+@Setter
 @Schema(description = "Position representation for React Flow")
-@AllArgsConstructor @NoArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 public class FlowPositionDTO {
     private double x;
     private double y;

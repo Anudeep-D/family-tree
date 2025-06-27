@@ -31,9 +31,9 @@ public interface UserRepository extends Neo4jRepository<User, String> {
     Optional<User> findByEmail(String email);
 
     @Query("""
-        MATCH (u:User)-[r]->(t:Tree)
-        WHERE elementId(u) = $userElementId AND elementId(t) = $treeElementId
-        RETURN type(r)
-    """)
+                MATCH (u:User)-[r]->(t:Tree)
+                WHERE elementId(u) = $userElementId AND elementId(t) = $treeElementId
+                RETURN type(r)
+            """)
     Optional<String> findRelationshipBetweenUserAndTree(@Param("userElementId") String userElementId, @Param("treeElementId") String treeElementId);
 }

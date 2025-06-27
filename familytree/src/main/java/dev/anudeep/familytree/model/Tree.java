@@ -6,7 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.data.neo4j.core.schema.*;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -16,7 +18,9 @@ import java.util.Objects;
 import java.util.Set;
 
 @Node("Tree")
-@Setter @Getter @AllArgsConstructor
+@Setter
+@Getter
+@AllArgsConstructor
 @NoArgsConstructor
 public class Tree implements Serializable {
     @Serial
@@ -37,8 +41,8 @@ public class Tree implements Serializable {
     @Relationship(type = Constants.VIEWER_REL, direction = Relationship.Direction.INCOMING)
     private transient Set<User> viewerUsers = new HashSet<>();
 
-    public Tree(String name, String desc, String createdAt, String createdBy){
-        this.name=name;
+    public Tree(String name, String desc, String createdAt, String createdBy) {
+        this.name = name;
         this.desc = desc;
         this.createdAt = (String) Objects.requireNonNullElseGet(createdAt, Date::new);
         this.createdBy = createdBy;
