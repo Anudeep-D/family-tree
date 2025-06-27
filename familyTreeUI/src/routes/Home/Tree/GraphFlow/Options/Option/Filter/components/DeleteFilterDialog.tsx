@@ -31,7 +31,7 @@ const DeleteFilterDialog = ({
   onDeleteFilters,
 }: DeleteFilterDialogProps) => {
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+    <Dialog disablePortal open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle>Delete Filters</DialogTitle>
       <DialogContent dividers>
         {savedFilters.map((filter) => (
@@ -48,13 +48,16 @@ const DeleteFilterDialog = ({
         ))}
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button variant="outlined" color="info" onClick={onClose}>
+          Cancel
+        </Button>
         <Button
           onClick={onDeleteFilters}
           color="error"
           disabled={filtersToDelete.length === 0}
+          variant="contained"
         >
-          Delete Selected
+          Delete
         </Button>
       </DialogActions>
     </Dialog>

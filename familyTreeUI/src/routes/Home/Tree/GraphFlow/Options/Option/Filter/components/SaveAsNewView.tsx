@@ -32,7 +32,6 @@ const SaveAsNewView = ({
 }: SaveAsNewViewProps) => {
   return (
     <Box>
-      <Divider sx={{ my: 2 }} />
       <Stack>
         <TextField
           label="Filter name"
@@ -55,13 +54,15 @@ const SaveAsNewView = ({
           size="small"
           onClick={onSave}
           disabled={
-            saving || filterName.trim().length === 0 || nameExists === true
+            filterName.trim().length === 0 || nameExists === true
           }
+          loading={checking || saving}
         >
           {saving ? <CircularProgress size={24} color="inherit" /> : "Save"}
         </Button>
       </Stack>
       {checking && <CircularProgress size={20} sx={{ mt: 1 }} />}
+      <Divider sx={{ my: 2 }} />
     </Box>
   );
 };

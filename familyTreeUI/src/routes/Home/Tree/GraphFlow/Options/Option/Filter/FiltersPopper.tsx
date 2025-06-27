@@ -15,7 +15,8 @@ import {
   Switch,
   IconButton,
   Alert,
-  CircularProgress,
+  ButtonGroup,
+  Tooltip,
 } from "@mui/material";
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import DeleteFilterDialog from "./components/DeleteFilterDialog";
@@ -38,6 +39,12 @@ import {
   CheckBoxOutlineBlank,
   CheckBox,
   DeleteForeverTwoTone,
+  FilterAltTwoTone,
+  SaveAsTwoTone,
+  UpdateTwoTone,
+  ClearAllTwoTone,
+  DangerousTwoTone,
+  RotateLeftTwoTone,
 } from "@mui/icons-material";
 import {
   useCreateFilterMutation,
@@ -52,7 +59,6 @@ const checkedIcon = <CheckBox fontSize="small" />;
 
 const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
   ({}, ref) => {
-
     //about saved filters
     const tree = useSelector(selectTree);
     const currentFilter = useSelector(selectCurrentFilter);
@@ -122,13 +128,13 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           const { elementId, ...newActualFilter } = currFilter;
           dispatch(setCurrentFilter(newActualFilter));
         }
-      }else{
+      } else {
         dispatch(setCurrentFilter(initialState.currentFilter));
       }
     };
 
     const handleReset = () => {
-      if(selectedFilter){
+      if (selectedFilter) {
         const currFilter = existingFilters.find(
           (existingFilter) => existingFilter.elementId === selectedFilter.id
         );
@@ -136,10 +142,10 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           const { elementId, ...newActualFilter } = currFilter;
           dispatch(setCurrentFilter(newActualFilter));
         }
-      }else{
+      } else {
         dispatch(setCurrentFilter(initialState.currentFilter));
       }
-    }
+    };
     const handleChange = (keys: string[], value: any) => {
       const newState = { ...currentFilter };
       let curr: any = newState;
@@ -232,7 +238,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         sx={{
           p: 2,
           width: 350,
-          maxHeight: 520,
+          maxHeight: 650,
           overflowY: "auto",
           bgcolor: "background.paper",
           borderRadius: 2,
@@ -499,10 +505,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           }}
           disablePortal
           onChange={(_, vals) =>
-            handleChange(
-              ["filterBy", "nodeProps", "person", "jobTypes"],
-              vals
-            )
+            handleChange(["filterBy", "nodeProps", "person", "jobTypes"], vals)
           }
           renderInput={(params) => (
             <TextField {...params} label="Job Type" size="small" />
@@ -538,10 +541,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           }}
           disablePortal
           onChange={(_, vals) =>
-            handleChange(
-              ["filterBy", "nodeProps", "person", "studies"],
-              vals
-            )
+            handleChange(["filterBy", "nodeProps", "person", "studies"], vals)
           }
           renderInput={(params) => (
             <TextField {...params} label="Select field of study" size="small" />
@@ -615,7 +615,9 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         />
         <ToggleButtonGroup
           value={
-            currentFilter.filterBy.rootPerson.onlyImmediate ? "immediate" : "full"
+            currentFilter.filterBy.rootPerson.onlyImmediate
+              ? "immediate"
+              : "full"
           }
           exclusive
           onChange={(_, val) =>
@@ -631,38 +633,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           <ToggleButton value="full">Full Tree</ToggleButton>
         </ToggleButtonGroup>
         <Divider sx={{ my: 2 }} />
-        <Stack
-          direction="row"
-          spacing={1}
-          justifyContent="space-between"
-          sx={{ mt: 3 }}
-        >
-          <Button
-            color="secondary"
-            fullWidth
-            onClick={() => dispatch(setCurrentFilter(initialState.currentFilter))}
-          >
-            Clear
-          </Button>
-          <Button
-            variant="outlined"
-            color="info"
-            fullWidth
-            onClick={() => handleReset()}
-          >
-            Reset
-          </Button>
-          <Button
-            fullWidth
-            variant="contained"
-            color="success"
-            onClick={() => console.log("clicked Apply Filters")}
-            disabled={!currentFilter.enabled}
-            sx={{ color: "#ffffff" }}
-          >
-            Filter
-          </Button>
-        </Stack>
         {saveAsOpen && (
           <SaveAsNewView
             filterName={filterName}
@@ -675,29 +645,72 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             error={isErrorOnCreate ? getErrorMessage(errorOnCreate) : undefined}
           />
         )}
-        {checking && <CircularProgress size={20} sx={{ mt: 1 }} />}
         <Stack
           direction="row"
-          spacing={1}
+          spacing={2}
           justifyContent="space-between"
           sx={{ mt: 3 }}
         >
-          <Button
-            variant="outlined"
-            color="secondary"
-            onClick={() => console.log("clicked Update")}
-            disabled={!selectedFilter}
-          >
-            Update
-          </Button>
-          <Button
-            variant="contained"
-            color={saveAsOpen ? "error" : "primary"}
-            onClick={handleSaveAs}
-            disabled={isCreating}
-          >
-            {saveAsOpen ? "Close" : "Save As New"}
-          </Button>
+          <ButtonGroup fullWidth variant="text" sx={{ flex: 1, gap: 1 }}>
+            <Tooltip title="Clear Filter">
+              <Button
+                variant="outlined"
+                onClick={() =>
+                  dispatch(setCurrentFilter(initialState.currentFilter))
+                }
+                sx={{ color: "#b6a3c5", background: "#00000000" }}
+              >
+                <ClearAllTwoTone />
+              </Button>
+            </Tooltip>
+
+            <Tooltip title="Reset to Saved Filter">
+              <Button
+                variant="outlined"
+                onClick={handleReset}
+                sx={{ color: "#e2d83f", background: "#00000000" }}
+              >
+                <RotateLeftTwoTone />
+              </Button>
+            </Tooltip>
+
+            <Tooltip title="Apply Filter">
+              <Button
+                variant="outlined"
+                onClick={() => console.log("clicked Apply Filters")}
+                disabled={!currentFilter.enabled}
+                sx={{ color: "#5688fc", background: "#00000000" }}
+              >
+                <FilterAltTwoTone />
+              </Button>
+            </Tooltip>
+            <Tooltip title="Update Existing Filter">
+              <Button
+                variant="outlined"
+                onClick={() => console.log("clicked Update")}
+                disabled={!selectedFilter}
+                sx={{ color: "#00acc1", background: "#00000000" }}
+              >
+                <UpdateTwoTone />
+              </Button>
+            </Tooltip>
+
+            <Tooltip
+              title={saveAsOpen ? "Close Save Panel" : "Save As New Filter"}
+            >
+              <Button
+                variant="outlined"
+                onClick={handleSaveAs}
+                disabled={isCreating}
+                sx={{
+                  color: saveAsOpen ? "#ff5c5c" : "#00d285",
+                  background: "#00000000",
+                }}
+              >
+                {saveAsOpen ? <DangerousTwoTone /> : <SaveAsTwoTone />}
+              </Button>
+            </Tooltip>
+          </ButtonGroup>
         </Stack>
 
         <DeleteFilterDialog
