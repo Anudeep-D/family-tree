@@ -177,10 +177,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
       }
     });
 
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);// IDs of filters to delete
-
-
-
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false); // IDs of filters to delete
 
     const handleUpdate = () => {
       updateFilterMutation({
@@ -236,8 +233,8 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         elevation={5}
         sx={{
           p: 2,
-          width: 350,
-          maxHeight: 650,
+          width: 700, // Increased width
+          maxHeight: 700,
           overflowY: "auto",
           bgcolor: "background.paper",
           borderRadius: 2,
@@ -248,7 +245,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           display="flex"
           justifyContent="space-between"
           alignItems="center"
-          sx={{ my: 2 }}
+          sx={{ mb: 2 }}
         >
           <Typography variant="subtitle1">Presaved Filters</Typography>
           <FormControlLabel
@@ -301,336 +298,364 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           )}
         </Box>
         <Divider sx={{ mb: 2 }} />
-        <Typography variant="subtitle1" sx={{ my: 2 }}>
-          Show Node Types
-        </Typography>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={currentFilter.filterBy.nodeTypes.Person}
-              onChange={(e) =>
-                handleChange(
-                  ["filterBy", "nodeTypes", Nodes.Person],
-                  e.target.checked
-                )
-              }
-            />
-          }
-          label="Persons"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={currentFilter.filterBy.nodeTypes.House}
-              onChange={(e) =>
-                handleChange(
-                  ["filterBy", "nodeTypes", Nodes.House],
-                  e.target.checked
-                )
-              }
-            />
-          }
-          label="Houses"
-        />
-        <Divider sx={{ my: 2 }} />
-        <Typography variant="subtitle1" sx={{ my: 2 }}>
-          Filter by House
-        </Typography>
-        <Autocomplete
-          multiple
-          limitTags={1}
-          options={houses}
-          autoHighlight
-          autoComplete
-          value={currentFilter.filterBy.nodeProps.house.selectedHouses}
-          disableCloseOnSelect
-          getOptionLabel={(option) => option.label}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderOption={(props, option, { selected }) => {
-            const { key, ...optionProps } = props;
-            return (
-              <li key={key} {...optionProps}>
-                <Checkbox
-                  icon={icon}
-                  checkedIcon={checkedIcon}
-                  style={{ marginRight: 8 }}
-                  checked={selected}
-                />
-                {option.label}
-              </li>
-            );
-          }}
-          disablePortal
-          onChange={(_, vals) =>
-            handleChange(
-              ["filterBy", "nodeProps", "house", "selectedHouses"],
-              vals
-            )
-          }
-          renderInput={(params) => (
-            <TextField {...params} label="Houses" size="small" />
-          )}
-          sx={{ mb: 2 }}
-        />
-        <Divider sx={{ my: 2 }} />
-        <Typography variant="subtitle1" sx={{ my: 2 }}>
-          Person Filters
-        </Typography>
 
-        <Stack spacing={1.2}>
-          {" "}
-          {/* Adjust spacing as needed */}
-          <ToggleButtonGroup
-            value={currentFilter.filterBy.nodeProps.person.gender ?? ""}
-            exclusive
-            onChange={(_, val) =>
-              handleChange(
-                ["filterBy", "nodeProps", "person", "gender"],
-                val === "" ? null : val
-              )
-            }
-            size="small"
-            fullWidth
-          >
-            <ToggleButton value="">Any</ToggleButton>
-            <ToggleButton value="male">Male</ToggleButton>
-            <ToggleButton value="female">Female</ToggleButton>
-          </ToggleButtonGroup>
-          <ToggleButtonGroup
-            value={currentFilter.filterBy.nodeProps.person.isAlive ?? ""}
-            exclusive
-            onChange={(_, val) =>
-              handleChange(
-                ["filterBy", "nodeProps", "person", "isAlive"],
-                val === "" ? null : val
-              )
-            }
-            size="small"
-            fullWidth
-          >
-            <ToggleButton value="">Any</ToggleButton>
-            <ToggleButton value={true}>Alive</ToggleButton>
-            <ToggleButton value={false}>Expired</ToggleButton>
-          </ToggleButtonGroup>
-          <ToggleButtonGroup
-            value={currentFilter.filterBy.nodeProps.person.married ?? ""}
-            exclusive
-            onChange={(_, val) =>
-              handleChange(
-                ["filterBy", "nodeProps", "person", "married"],
-                val === "" ? null : val
-              )
-            }
-            size="small"
-            fullWidth
-          >
-            <ToggleButton value="">Any</ToggleButton>
-            <ToggleButton value={false}>Single</ToggleButton>
-            <ToggleButton value={true}>Married</ToggleButton>
-          </ToggleButtonGroup>
-        </Stack>
-        <Typography variant="body2" sx={{ my: 1 }}>
-          Age Range
-        </Typography>
-        <Slider
-          value={currentFilter.filterBy.nodeProps.person.age}
-          onChange={(_, val) =>
-            handleChange(
-              ["filterBy", "nodeProps", "person", "age"],
-              typeof val === "number" ? [val, val] : val
-            )
-          }
-          valueLabelDisplay="auto"
-          min={0}
-          max={100}
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          label="Born After"
-          type="date"
-          value={currentFilter.filterBy.nodeProps.person.bornAfter}
-          onChange={(e) =>
-            handleChange(
-              ["filterBy", "nodeProps", "person", "bornAfter"],
-              e.target.value
-            )
-          }
-          fullWidth
-          size="small"
-          slotProps={{ inputLabel: { shrink: true } }}
-          sx={{ mb: 1 }}
-        />
-        <TextField
-          label="Born Before"
-          type="date"
-          value={currentFilter.filterBy.nodeProps.person.bornBefore}
-          onChange={(e) =>
-            handleChange(
-              ["filterBy", "nodeProps", "person", "bornBefore"],
-              e.target.value
-            )
-          }
-          fullWidth
-          size="small"
-          slotProps={{ inputLabel: { shrink: true } }}
-          sx={{ mb: 2 }}
-        />
-        <Autocomplete
-          multiple
-          limitTags={1}
-          options={options.JobTypeOptions.sort((a, b) =>
-            a.group.localeCompare(b.group)
-          )}
-          autoHighlight
-          autoComplete
-          value={currentFilter.filterBy.nodeProps.person.jobTypes}
-          disableCloseOnSelect
-          groupBy={(option) => option.group}
-          getOptionLabel={(option) => option.label}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderOption={(props, option, { selected }) => {
-            const { key, ...optionProps } = props;
-            return (
-              <li key={key} {...optionProps}>
+        {/* Two-column layout for filters */}
+        <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={2}>
+          {/* Column 1 */}
+          <Box>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Show Node Types
+            </Typography>
+            <FormControlLabel
+              control={
                 <Checkbox
-                  icon={icon}
-                  checkedIcon={checkedIcon}
-                  style={{ marginRight: 8 }}
-                  checked={selected}
+                  checked={currentFilter.filterBy.nodeTypes.Person}
+                  onChange={(e) =>
+                    handleChange(
+                      ["filterBy", "nodeTypes", Nodes.Person],
+                      e.target.checked
+                    )
+                  }
                 />
-                {option.label}
-              </li>
-            );
-          }}
-          disablePortal
-          onChange={(_, vals) =>
-            handleChange(["filterBy", "nodeProps", "person", "jobTypes"], vals)
-          }
-          renderInput={(params) => (
-            <TextField {...params} label="Job Type" size="small" />
-          )}
-          sx={{ mb: 2 }}
-        />
-        <Autocomplete
-          multiple
-          limitTags={1}
-          options={options.fieldOfStudyOptions.sort((a, b) =>
-            a.group.localeCompare(b.group)
-          )}
-          autoHighlight
-          autoComplete
-          value={currentFilter.filterBy.nodeProps.person.studies}
-          disableCloseOnSelect
-          groupBy={(option) => option.group}
-          getOptionLabel={(option) => option.label}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderOption={(props, option, { selected }) => {
-            const { key, ...optionProps } = props;
-            return (
-              <li key={key} {...optionProps}>
+              }
+              label="Persons"
+            />
+            <FormControlLabel
+              control={
                 <Checkbox
-                  icon={icon}
-                  checkedIcon={checkedIcon}
-                  style={{ marginRight: 8 }}
-                  checked={selected}
+                  checked={currentFilter.filterBy.nodeTypes.House}
+                  onChange={(e) =>
+                    handleChange(
+                      ["filterBy", "nodeTypes", Nodes.House],
+                      e.target.checked
+                    )
+                  }
                 />
-                {option.label}
-              </li>
-            );
-          }}
-          disablePortal
-          onChange={(_, vals) =>
-            handleChange(["filterBy", "nodeProps", "person", "studies"], vals)
-          }
-          renderInput={(params) => (
-            <TextField {...params} label="Select field of study" size="small" />
-          )}
-          sx={{ mb: 2 }}
-        />
-        <Autocomplete
-          multiple
-          limitTags={1}
-          options={options.QualificationOptions.sort((a, b) =>
-            a.group.localeCompare(b.group)
-          )}
-          autoHighlight
-          autoComplete
-          value={currentFilter.filterBy.nodeProps.person.qualifications}
-          disableCloseOnSelect
-          groupBy={(option) => option.group}
-          getOptionLabel={(option) => option.label}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          renderOption={(props, option, { selected }) => {
-            const { key, ...optionProps } = props;
-            return (
-              <li key={key} {...optionProps}>
-                <Checkbox
-                  icon={icon}
-                  checkedIcon={checkedIcon}
-                  style={{ marginRight: 8 }}
-                  checked={selected}
-                />
-                {option.label}
-              </li>
-            );
-          }}
-          disablePortal
-          onChange={(_, vals) =>
-            handleChange(
-              ["filterBy", "nodeProps", "person", "qualifications"],
-              vals
-            )
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Select highest qualification"
+              }
+              label="Houses"
+            />
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Filter by House
+            </Typography>
+            <Autocomplete
+              multiple
+              limitTags={1}
+              options={houses}
+              autoHighlight
+              autoComplete
+              value={currentFilter.filterBy.nodeProps.house.selectedHouses}
+              disableCloseOnSelect
+              getOptionLabel={(option) => option.label}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              renderOption={(props, option, { selected }) => {
+                const { key, ...optionProps } = props;
+                return (
+                  <li key={key} {...optionProps}>
+                    <Checkbox
+                      icon={icon}
+                      checkedIcon={checkedIcon}
+                      style={{ marginRight: 8 }}
+                      checked={selected}
+                    />
+                    {option.label}
+                  </li>
+                );
+              }}
+              disablePortal
+              onChange={(_, vals) =>
+                handleChange(
+                  ["filterBy", "nodeProps", "house", "selectedHouses"],
+                  vals
+                )
+              }
+              renderInput={(params) => (
+                <TextField {...params} label="Houses" size="small" />
+              )}
+              sx={{ mb: 2 }}
+            />
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Start From Person
+            </Typography>
+            <Autocomplete
+              autoHighlight
+              autoComplete
+              options={persons}
+              value={currentFilter.filterBy.rootPerson.person}
+              getOptionLabel={(option) => option.label}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              filterSelectedOptions
+              disablePortal
+              onChange={(_, val) =>
+                handleChange(["filterBy", "rootPerson", "person"], val)
+              }
+              renderInput={(params) => (
+                <TextField {...params} label="Start Person" size="small" />
+              )}
+              sx={{ mb: 1 }}
+            />
+            <ToggleButtonGroup
+              value={
+                currentFilter.filterBy.rootPerson.onlyImmediate
+                  ? "immediate"
+                  : "full"
+              }
+              exclusive
+              onChange={(_, val) =>
+                handleChange(
+                  ["filterBy", "rootPerson", "onlyImmediate"],
+                  val === "immediate" ? true : false
+                )
+              }
               size="small"
-            />
-          )}
-          sx={{ mb: 2 }}
-        />
+              fullWidth
+              sx={{ mb: 2 }}
+            >
+              <ToggleButton value="immediate">Immediate Family</ToggleButton>
+              <ToggleButton value="full">Full Tree</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
 
-        <Divider sx={{ my: 2 }} />
-        <Typography variant="subtitle1" sx={{ my: 2 }}>
-          Start From Person
-        </Typography>
-        <Autocomplete
-          autoHighlight
-          autoComplete
-          options={persons}
-          value={currentFilter.filterBy.rootPerson.person}
-          getOptionLabel={(option) => option.label}
-          isOptionEqualToValue={(option, value) => option.id === value.id}
-          filterSelectedOptions
-          disablePortal
-          onChange={(_, val) =>
-            handleChange(["filterBy", "rootPerson", "person"], val)
-          }
-          renderInput={(params) => (
-            <TextField {...params} label="Start Person" size="small" />
-          )}
-          sx={{ mb: 2 }}
-        />
-        <ToggleButtonGroup
-          value={
-            currentFilter.filterBy.rootPerson.onlyImmediate
-              ? "immediate"
-              : "full"
-          }
-          exclusive
-          onChange={(_, val) =>
-            handleChange(
-              ["filterBy", "rootPerson", "onlyImmediate"],
-              val === "immediate" ? true : false
-            )
-          }
-          size="small"
-          fullWidth
-        >
-          <ToggleButton value="immediate">Immediate Family</ToggleButton>
-          <ToggleButton value="full">Full Tree</ToggleButton>
-        </ToggleButtonGroup>
+          {/* Column 2 */}
+          <Box>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Person Filters
+            </Typography>
+            <Stack spacing={1.2} sx={{ mb: 1 }}>
+              <ToggleButtonGroup
+                value={currentFilter.filterBy.nodeProps.person.gender ?? ""}
+                exclusive
+                onChange={(_, val) =>
+                  handleChange(
+                    ["filterBy", "nodeProps", "person", "gender"],
+                    val === "" ? null : val
+                  )
+                }
+                size="small"
+                fullWidth
+              >
+                <ToggleButton value="">Any</ToggleButton>
+                <ToggleButton value="male">Male</ToggleButton>
+                <ToggleButton value="female">Female</ToggleButton>
+              </ToggleButtonGroup>
+              <ToggleButtonGroup
+                value={currentFilter.filterBy.nodeProps.person.isAlive ?? ""}
+                exclusive
+                onChange={(_, val) =>
+                  handleChange(
+                    ["filterBy", "nodeProps", "person", "isAlive"],
+                    val === "" ? null : val
+                  )
+                }
+                size="small"
+                fullWidth
+              >
+                <ToggleButton value="">Any</ToggleButton>
+                <ToggleButton value={true}>Alive</ToggleButton>
+                <ToggleButton value={false}>Expired</ToggleButton>
+              </ToggleButtonGroup>
+              <ToggleButtonGroup
+                value={currentFilter.filterBy.nodeProps.person.married ?? ""}
+                exclusive
+                onChange={(_, val) =>
+                  handleChange(
+                    ["filterBy", "nodeProps", "person", "married"],
+                    val === "" ? null : val
+                  )
+                }
+                size="small"
+                fullWidth
+              >
+                <ToggleButton value="">Any</ToggleButton>
+                <ToggleButton value={false}>Single</ToggleButton>
+                <ToggleButton value={true}>Married</ToggleButton>
+              </ToggleButtonGroup>
+            </Stack>
+            <Typography variant="body2" sx={{ mt: 2, mb: 0.5 }}>
+              Age Range
+            </Typography>
+            <Slider
+              value={currentFilter.filterBy.nodeProps.person.age}
+              onChange={(_, val) =>
+                handleChange(
+                  ["filterBy", "nodeProps", "person", "age"],
+                  typeof val === "number" ? [val, val] : val
+                )
+              }
+              valueLabelDisplay="auto"
+              min={0}
+              max={100}
+              sx={{ mb: 1 }}
+            />
+            <Stack
+              direction="row"
+              spacing={1}
+              justifyContent="space-between"
+              sx={{ mt: 1 }}
+            >
+              <TextField
+                label="Born After"
+                type="date"
+                value={currentFilter.filterBy.nodeProps.person.bornAfter}
+                onChange={(e) =>
+                  handleChange(
+                    ["filterBy", "nodeProps", "person", "bornAfter"],
+                    e.target.value
+                  )
+                }
+                fullWidth
+                size="small"
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ mb: 1 }}
+              />
+              <TextField
+                label="Born Before"
+                type="date"
+                value={currentFilter.filterBy.nodeProps.person.bornBefore}
+                onChange={(e) =>
+                  handleChange(
+                    ["filterBy", "nodeProps", "person", "bornBefore"],
+                    e.target.value
+                  )
+                }
+                fullWidth
+                size="small"
+                slotProps={{ inputLabel: { shrink: true } }}
+                sx={{ mb: 1 }}
+              />
+            </Stack>
+
+            <Autocomplete
+              multiple
+              limitTags={1}
+              options={options.fieldOfStudyOptions.sort((a, b) =>
+                a.group.localeCompare(b.group)
+              )}
+              autoHighlight
+              autoComplete
+              value={currentFilter.filterBy.nodeProps.person.studies}
+              disableCloseOnSelect
+              groupBy={(option) => option.group}
+              getOptionLabel={(option) => option.label}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              renderOption={(props, option, { selected }) => {
+                const { key, ...optionProps } = props;
+                return (
+                  <li key={key} {...optionProps}>
+                    <Checkbox
+                      icon={icon}
+                      checkedIcon={checkedIcon}
+                      style={{ marginRight: 8 }}
+                      checked={selected}
+                    />
+                    {option.label}
+                  </li>
+                );
+              }}
+              disablePortal
+              onChange={(_, vals) =>
+                handleChange(
+                  ["filterBy", "nodeProps", "person", "studies"],
+                  vals
+                )
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select field of study"
+                  size="small"
+                />
+              )}
+              sx={{ my: 1 }}
+              fullWidth
+            />
+            <Autocomplete
+              multiple
+              limitTags={1}
+              options={options.QualificationOptions.sort((a, b) =>
+                a.group.localeCompare(b.group)
+              )}
+              autoHighlight
+              autoComplete
+              value={currentFilter.filterBy.nodeProps.person.qualifications}
+              disableCloseOnSelect
+              groupBy={(option) => option.group}
+              getOptionLabel={(option) => option.label}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              renderOption={(props, option, { selected }) => {
+                const { key, ...optionProps } = props;
+                return (
+                  <li key={key} {...optionProps}>
+                    <Checkbox
+                      icon={icon}
+                      checkedIcon={checkedIcon}
+                      style={{ marginRight: 8 }}
+                      checked={selected}
+                    />
+                    {option.label}
+                  </li>
+                );
+              }}
+              disablePortal
+              onChange={(_, vals) =>
+                handleChange(
+                  ["filterBy", "nodeProps", "person", "qualifications"],
+                  vals
+                )
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Select highest qualification"
+                  size="small"
+                />
+              )}
+              sx={{ my: 1 }}
+              fullWidth
+            />
+            <Autocomplete
+              multiple
+              limitTags={1}
+              options={options.JobTypeOptions.sort((a, b) =>
+                a.group.localeCompare(b.group)
+              )}
+              autoHighlight
+              autoComplete
+              value={currentFilter.filterBy.nodeProps.person.jobTypes}
+              disableCloseOnSelect
+              groupBy={(option) => option.group}
+              getOptionLabel={(option) => option.label}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              renderOption={(props, option, { selected }) => {
+                const { key, ...optionProps } = props;
+                return (
+                  <li key={key} {...optionProps}>
+                    <Checkbox
+                      icon={icon}
+                      checkedIcon={checkedIcon}
+                      style={{ marginRight: 8 }}
+                      checked={selected}
+                    />
+                    {option.label}
+                  </li>
+                );
+              }}
+              disablePortal
+              onChange={(_, vals) =>
+                handleChange(
+                  ["filterBy", "nodeProps", "person", "jobTypes"],
+                  vals
+                )
+              }
+              renderInput={(params) => (
+                <TextField {...params} label="Job Type" size="small" />
+              )}
+              sx={{ my: 1 }}
+            />
+          </Box>
+        </Box>
+
         <Divider sx={{ my: 2 }} />
         {saveAsOpen && (
           <SaveAsNewView
