@@ -48,6 +48,7 @@ import {
 } from "@mui/icons-material";
 import {
   useCreateFilterMutation,
+  useUpdateFilterMutation,
   useGetFiltersQuery,
 } from "@/redux/queries/filter-endpoints";
 import { getErrorMessage } from "@/utils/common";
@@ -94,6 +95,10 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         handleSaveAs();
       }
     }, [isErrorOnCreate, isCreating, newFilter]);
+    const [
+      updateFilterMutation, // Changed
+      { isError: isErrorOnUpdate, error: errorOnUpdate, isLoading: isUpdating },
+    ] = useUpdateFilterMutation();
     const {
       data: allSavedFilters, // Changed
       error: fetchFiltersError, // Changed for consistency, though not strictly required by prompt
@@ -172,20 +177,16 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
       }
     });
 
-    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-    const [filtersToDelete, setFiltersToDelete] = useState<string[]>([]); // IDs of filters to delete
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);// IDs of filters to delete
 
-    const handleToggleFilter = (id: string) => {
-      setFiltersToDelete((prev) =>
-        prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]
-      );
-    };
 
-    const handleDeleteFilters = () => {
-      // handle delete logic here using filtersToDelete
-      console.log("Deleting filters: ", filtersToDelete);
-      setDeleteDialogOpen(false);
-      setFiltersToDelete([]);
+
+
+    const handleUpdate = () => {
+      updateFilterMutation({
+        filterId: selectedFilter?.id ?? "",
+        filter: { ...currentFilter },
+      });
     };
 
     const [filterName, setFilterName] = useState("");
@@ -195,9 +196,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
 
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const handleSaveNameChange = async (
-      e: React.ChangeEvent<HTMLInputElement>
-    ) => {
+    const handleSaveNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const name = e.target.value;
       setFilterName(name);
       setNameExists(null);
@@ -213,7 +212,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
       setChecking(false);
       setNameExists(exists);
     };
-    const handleSave = async () => {
+    const handleSave = () => {
       // Call your actual save logic here
       handleChange(["filterName"], filterName);
       createFilterMutation({
@@ -645,6 +644,11 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             error={isErrorOnCreate ? getErrorMessage(errorOnCreate) : undefined}
           />
         )}
+        {isErrorOnUpdate && (
+          <Alert severity="error" sx={{ mt: 1 }}>
+            {getErrorMessage(errorOnUpdate)}
+          </Alert>
+        )}
         <Stack
           direction="row"
           spacing={2}
@@ -687,9 +691,10 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             <Tooltip title="Update Existing Filter">
               <Button
                 variant="outlined"
-                onClick={() => console.log("clicked Update")}
+                onClick={() => handleUpdate()}
                 disabled={!selectedFilter}
                 sx={{ color: "#00acc1", background: "#00000000" }}
+                loading={isUpdating}
               >
                 <UpdateTwoTone />
               </Button>
@@ -716,10 +721,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         <DeleteFilterDialog
           open={deleteDialogOpen}
           onClose={() => setDeleteDialogOpen(false)}
-          savedFilters={savedFilters}
-          filtersToDelete={filtersToDelete}
-          onToggleFilter={handleToggleFilter}
-          onDeleteFilters={handleDeleteFilters}
         />
       </Paper>
     );

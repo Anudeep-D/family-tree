@@ -35,4 +35,8 @@ public interface FilterRepository extends Neo4jRepository<Filter, String> {
     @Query("MATCH (f:Filter) WHERE elementId(f) = $filterId RETURN f {.*, elementId: elementId(f) } AS f")
     Map<String, Object> findFilterById(@Param("filterId") String filterId);
 
+
+    @Query("MATCH (f:Filter) WHERE elementId(f) IN $filterIds DETACH DELETE f RETURN count(f) AS deletedCount")
+    int deleteFilters(@Param("filterIds") List<String> filterIds);
+
 }

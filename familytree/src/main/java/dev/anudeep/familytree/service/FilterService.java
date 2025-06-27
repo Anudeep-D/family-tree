@@ -94,7 +94,7 @@ public class FilterService {
     }
 
     @Transactional
-    public Filter updateFilter(String filterElementId, FilterUpdateRequestDTO dto) {
+    public Filter updateFilter(String filterElementId, FilterRequestDTO dto) {
         Map<String, Object> currentFilterMap = filterRepository.findFilterById(filterElementId);
         if (currentFilterMap == null || currentFilterMap.isEmpty()) {
             throw new EntityNotFoundException("Filter not found with ID: " + filterElementId);
@@ -133,11 +133,11 @@ public class FilterService {
     }
 
     @Transactional
-    public void deleteMultipleFilters(List<String> filterElementIds) throws Exception { // Changed from List<Long> to List<String>
+    public int deleteMultipleFilters(List<String> filterElementIds) throws Exception { // Changed from List<Long> to List<String>
         if (filterElementIds == null || filterElementIds.isEmpty()) {
-            return;
+            return 0;
         }
 
-        filterRepository.deleteAllById(filterElementIds);
+        return filterRepository.deleteFilters(filterElementIds);
     }
 }

@@ -8,5 +8,5 @@ import java.util.List;
 @Data
 public class DeleteFiltersRequestDTO {
     @NotEmpty(message = "List of filter IDs cannot be empty.")
-    private List<String> filterIds; // Changed from List<Long> to List<String>
+    private List<String> ids; // Changed from List<Long> to List<String>
 }

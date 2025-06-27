@@ -68,7 +68,7 @@ public class FilterController {
      */
     @PatchMapping("/{filterId}")
     public ResponseEntity<Filter> updateFilter(@Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45") @PathVariable String filterId, // Changed Long to String
-                                               @Valid @RequestBody FilterUpdateRequestDTO updateRequestDTO) {
+                                               @Valid @RequestBody FilterRequestDTO updateRequestDTO) {
         try {
             Filter updatedFilter = filterService.updateFilter(filterId, updateRequestDTO); // Service now expects String
             return ResponseEntity.ok(updatedFilter);
@@ -84,10 +84,10 @@ public class FilterController {
      * Filters to be deleted must belong to the authenticated user.
      */
     @DeleteMapping("/delete-multiple")
-    public ResponseEntity<Void> deleteMultipleFilters(@Valid @RequestBody DeleteFiltersRequestDTO deleteRequestDTO) {
+    public ResponseEntity<?> deleteMultipleFilters(@Valid @RequestBody DeleteFiltersRequestDTO deleteRequestDTO) {
         try {
-            filterService.deleteMultipleFilters(deleteRequestDTO.getFilterIds());
-            return ResponseEntity.noContent().build();
+            int deleted = filterService.deleteMultipleFilters(deleteRequestDTO.getIds());
+            return ResponseEntity.status(HttpStatus.OK).body("deleted filters = "+deleted);
         } catch (Exception e) {
             log.error("Failed to create Filter due to {}", e.getMessage(), e); // Log full stack trace
             // Consider a more specific exception if possible, or a generic internal server error.
