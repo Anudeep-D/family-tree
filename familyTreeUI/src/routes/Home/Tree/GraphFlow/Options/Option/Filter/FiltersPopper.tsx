@@ -23,8 +23,6 @@ import SaveAsNewView from "./components/SaveAsNewView";
 import options from "@/constants/JobAndQualification.json";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  FilterProps,
-  initialState as initialFilters,
   selectNodes,
   selectSavedFilters,
   selectTree,
@@ -32,6 +30,8 @@ import {
   setSelectedFilter,
   setCurrentFilter,
   selectSelectedFilter,
+  selectCurrentFilter,
+  initialState,
 } from "@/redux/treeConfigSlice";
 import { Nodes } from "@/types/nodeTypes";
 import {
@@ -52,12 +52,10 @@ const checkedIcon = <CheckBox fontSize="small" />;
 
 const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
   ({}, ref) => {
-    const [filters, setFilters] = useState<FilterProps>(
-      initialFilters.currentFilter
-    );
 
     //about saved filters
     const tree = useSelector(selectTree);
+    const currentFilter = useSelector(selectCurrentFilter);
     const existingFilters = useSelector(selectSavedFilters);
     const selectedFilter = useSelector(selectSelectedFilter);
     const savedFilters = useMemo(
@@ -124,21 +122,33 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           const { elementId, ...newActualFilter } = currFilter;
           dispatch(setCurrentFilter(newActualFilter));
         }
+      }else{
+        dispatch(setCurrentFilter(initialState.currentFilter));
       }
     };
-    const handleChange = (keys: string[], value: any) => {
-      setFilters((prev) => {
-        const newState = { ...prev };
-        let curr: any = newState;
 
-        for (let i = 0; i < keys.length - 1; i++) {
-          curr[keys[i]] = { ...curr[keys[i]] };
-          curr = curr[keys[i]];
+    const handleReset = () => {
+      if(selectedFilter){
+        const currFilter = existingFilters.find(
+          (existingFilter) => existingFilter.elementId === selectedFilter.id
+        );
+        if (currFilter) {
+          const { elementId, ...newActualFilter } = currFilter;
+          dispatch(setCurrentFilter(newActualFilter));
         }
-
-        curr[keys[keys.length - 1]] = value;
-        return newState;
-      });
+      }else{
+        dispatch(setCurrentFilter(initialState.currentFilter));
+      }
+    }
+    const handleChange = (keys: string[], value: any) => {
+      const newState = { ...currentFilter };
+      let curr: any = newState;
+      for (let i = 0; i < keys.length - 1; i++) {
+        curr[keys[i]] = { ...curr[keys[i]] };
+        curr = curr[keys[i]];
+      }
+      curr[keys[keys.length - 1]] = value;
+      dispatch(setCurrentFilter(newState));
     };
 
     const allNodes = useSelector(selectNodes);
@@ -202,7 +212,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
       handleChange(["filterName"], filterName);
       createFilterMutation({
         treeId: tree?.elementId ?? "",
-        filter: { ...filters, filterName: filterName },
+        filter: { ...currentFilter, filterName: filterName },
       });
 
       setFilterName("");
@@ -240,7 +250,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             control={
               <Switch
                 size="small"
-                checked={filters.enabled}
+                checked={currentFilter.enabled}
                 onChange={(e) => handleChange(["enabled"], e.target.checked)}
               />
             }
@@ -292,7 +302,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         <FormControlLabel
           control={
             <Checkbox
-              checked={filters.filterBy.nodeTypes.Person}
+              checked={currentFilter.filterBy.nodeTypes.Person}
               onChange={(e) =>
                 handleChange(
                   ["filterBy", "nodeTypes", Nodes.Person],
@@ -306,7 +316,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         <FormControlLabel
           control={
             <Checkbox
-              checked={filters.filterBy.nodeTypes.House}
+              checked={currentFilter.filterBy.nodeTypes.House}
               onChange={(e) =>
                 handleChange(
                   ["filterBy", "nodeTypes", Nodes.House],
@@ -327,7 +337,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           options={houses}
           autoHighlight
           autoComplete
-          value={filters.filterBy.nodeProps.House.selectedHouses}
+          value={currentFilter.filterBy.nodeProps.house.selectedHouses}
           disableCloseOnSelect
           getOptionLabel={(option) => option.label}
           isOptionEqualToValue={(option, value) => option.id === value.id}
@@ -348,7 +358,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           disablePortal
           onChange={(_, vals) =>
             handleChange(
-              ["filterBy", "nodeProps", Nodes.House, "selectedHouses"],
+              ["filterBy", "nodeProps", "house", "selectedHouses"],
               vals
             )
           }
@@ -366,11 +376,11 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           {" "}
           {/* Adjust spacing as needed */}
           <ToggleButtonGroup
-            value={filters.filterBy.nodeProps.Person.gender ?? ""}
+            value={currentFilter.filterBy.nodeProps.person.gender ?? ""}
             exclusive
             onChange={(_, val) =>
               handleChange(
-                ["filterBy", "nodeProps", Nodes.Person, "gender"],
+                ["filterBy", "nodeProps", "person", "gender"],
                 val === "" ? null : val
               )
             }
@@ -382,11 +392,11 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             <ToggleButton value="female">Female</ToggleButton>
           </ToggleButtonGroup>
           <ToggleButtonGroup
-            value={filters.filterBy.nodeProps.Person.isAlive ?? ""}
+            value={currentFilter.filterBy.nodeProps.person.isAlive ?? ""}
             exclusive
             onChange={(_, val) =>
               handleChange(
-                ["filterBy", "nodeProps", Nodes.Person, "isAlive"],
+                ["filterBy", "nodeProps", "person", "isAlive"],
                 val === "" ? null : val
               )
             }
@@ -398,11 +408,11 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             <ToggleButton value={false}>Expired</ToggleButton>
           </ToggleButtonGroup>
           <ToggleButtonGroup
-            value={filters.filterBy.nodeProps.Person.married ?? ""}
+            value={currentFilter.filterBy.nodeProps.person.married ?? ""}
             exclusive
             onChange={(_, val) =>
               handleChange(
-                ["filterBy", "nodeProps", Nodes.Person, "married"],
+                ["filterBy", "nodeProps", "person", "married"],
                 val === "" ? null : val
               )
             }
@@ -418,10 +428,10 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           Age Range
         </Typography>
         <Slider
-          value={filters.filterBy.nodeProps.Person.age}
+          value={currentFilter.filterBy.nodeProps.person.age}
           onChange={(_, val) =>
             handleChange(
-              ["filterBy", "nodeProps", Nodes.Person, "age"],
+              ["filterBy", "nodeProps", "person", "age"],
               typeof val === "number" ? [val, val] : val
             )
           }
@@ -433,10 +443,10 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         <TextField
           label="Born After"
           type="date"
-          value={filters.filterBy.nodeProps.Person.bornAfter}
+          value={currentFilter.filterBy.nodeProps.person.bornAfter}
           onChange={(e) =>
             handleChange(
-              ["filterBy", "nodeProps", Nodes.Person, "bornAfter"],
+              ["filterBy", "nodeProps", "person", "bornAfter"],
               e.target.value
             )
           }
@@ -448,10 +458,10 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         <TextField
           label="Born Before"
           type="date"
-          value={filters.filterBy.nodeProps.Person.bornBefore}
+          value={currentFilter.filterBy.nodeProps.person.bornBefore}
           onChange={(e) =>
             handleChange(
-              ["filterBy", "nodeProps", Nodes.Person, "bornBefore"],
+              ["filterBy", "nodeProps", "person", "bornBefore"],
               e.target.value
             )
           }
@@ -468,7 +478,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           )}
           autoHighlight
           autoComplete
-          value={filters.filterBy.nodeProps.Person.jobTypes}
+          value={currentFilter.filterBy.nodeProps.person.jobTypes}
           disableCloseOnSelect
           groupBy={(option) => option.group}
           getOptionLabel={(option) => option.label}
@@ -490,7 +500,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           disablePortal
           onChange={(_, vals) =>
             handleChange(
-              ["filterBy", "nodeProps", Nodes.Person, "jobTypes"],
+              ["filterBy", "nodeProps", "person", "jobTypes"],
               vals
             )
           }
@@ -507,7 +517,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           )}
           autoHighlight
           autoComplete
-          value={filters.filterBy.nodeProps.Person.studies}
+          value={currentFilter.filterBy.nodeProps.person.studies}
           disableCloseOnSelect
           groupBy={(option) => option.group}
           getOptionLabel={(option) => option.label}
@@ -529,7 +539,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           disablePortal
           onChange={(_, vals) =>
             handleChange(
-              ["filterBy", "nodeProps", Nodes.Person, "studies"],
+              ["filterBy", "nodeProps", "person", "studies"],
               vals
             )
           }
@@ -546,7 +556,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           )}
           autoHighlight
           autoComplete
-          value={filters.filterBy.nodeProps.Person.qualifications}
+          value={currentFilter.filterBy.nodeProps.person.qualifications}
           disableCloseOnSelect
           groupBy={(option) => option.group}
           getOptionLabel={(option) => option.label}
@@ -568,7 +578,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           disablePortal
           onChange={(_, vals) =>
             handleChange(
-              ["filterBy", "nodeProps", Nodes.Person, "qualifications"],
+              ["filterBy", "nodeProps", "person", "qualifications"],
               vals
             )
           }
@@ -590,7 +600,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           autoHighlight
           autoComplete
           options={persons}
-          value={filters.filterBy.rootPerson.person}
+          value={currentFilter.filterBy.rootPerson.person}
           getOptionLabel={(option) => option.label}
           isOptionEqualToValue={(option, value) => option.id === value.id}
           filterSelectedOptions
@@ -605,7 +615,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         />
         <ToggleButtonGroup
           value={
-            filters.filterBy.rootPerson.onlyImmediate ? "immediate" : "full"
+            currentFilter.filterBy.rootPerson.onlyImmediate ? "immediate" : "full"
           }
           exclusive
           onChange={(_, val) =>
@@ -628,9 +638,17 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           sx={{ mt: 3 }}
         >
           <Button
-            variant="outlined"
+            color="secondary"
             fullWidth
-            onClick={() => console.log("clicked Reset")}
+            onClick={() => dispatch(setCurrentFilter(initialState.currentFilter))}
+          >
+            Clear
+          </Button>
+          <Button
+            variant="outlined"
+            color="info"
+            fullWidth
+            onClick={() => handleReset()}
           >
             Reset
           </Button>
@@ -639,10 +657,10 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             variant="contained"
             color="success"
             onClick={() => console.log("clicked Apply Filters")}
-            disabled={!filters.enabled}
+            disabled={!currentFilter.enabled}
             sx={{ color: "#ffffff" }}
           >
-            Apply Filters
+            Filter
           </Button>
         </Stack>
         {saveAsOpen && (

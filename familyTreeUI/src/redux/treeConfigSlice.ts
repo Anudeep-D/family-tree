@@ -20,10 +20,10 @@ export type FilterProps = {
   filterBy: {
     nodeTypes: { [K in Nodes]: boolean };
     nodeProps: {
-      [Nodes.House]: {
+      house: {
         selectedHouses: { id: string; label: string }[];
       };
-      [Nodes.Person]: {
+      person: {
         married: boolean | null;
         gender: "male" | "female" | null;
         age: number[];
@@ -58,10 +58,10 @@ export const initialState: TreeConfigState = {
     filterBy: {
       nodeTypes: { [Nodes.Person]: true, [Nodes.House]: true },
       nodeProps: {
-        [Nodes.House]: {
+        house: {
           selectedHouses: [],
         },
-        [Nodes.Person]: {
+        person: {
           married: null,
           gender: null,
           age: [0, 100],

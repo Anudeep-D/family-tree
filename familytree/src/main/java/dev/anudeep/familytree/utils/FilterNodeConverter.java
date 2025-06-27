@@ -163,103 +163,62 @@ public class FilterNodeConverter {
             filter.setEnabled(Boolean.parseBoolean(enabledObj.toString()));
         }
 
-
-        Filter.FilterBy filterBy = new Filter.FilterBy();
-
-        Map<String, Boolean> nodeTypes = new HashMap<>();
         if (flattenedProps.get("filterBy_nodeTypes_Person") instanceof Boolean) {
-            nodeTypes.put("Person", (Boolean) flattenedProps.get("filterBy_nodeTypes_Person"));
-        } else {
-            nodeTypes.put("Person", false);
+            filter.getFilterBy().getNodeTypes().replace("Person", (Boolean) flattenedProps.get("filterBy_nodeTypes_Person"));
         }
         if (flattenedProps.get("filterBy_nodeTypes_House") instanceof Boolean) {
-            nodeTypes.put("House", (Boolean) flattenedProps.get("filterBy_nodeTypes_House"));
-        } else {
-            nodeTypes.put("House", false);
+            filter.getFilterBy().getNodeTypes().replace("House", (Boolean) flattenedProps.get("filterBy_nodeTypes_House"));
         }
-        filterBy.setNodeTypes(nodeTypes);
-
-        Filter.NodeProps nodeProps = new Filter.NodeProps();
 
         String selectedHousesJson = Objects.toString(flattenedProps.get("filterBy_nodeProps_house_selectedHouses"), null);
         if (selectedHousesJson != null) {
             try {
-                List<Filter.LabelledItem> selectedHouses = objectMapper.readValue(selectedHousesJson, new TypeReference<List<Filter.LabelledItem>>() {
-                });
-                Filter.HouseFilter houseFilter = new Filter.HouseFilter(selectedHouses);
-                nodeProps.setHouse(houseFilter);
-
+                List<Filter.LabelledItem> selectedHouses = objectMapper.readValue(selectedHousesJson, new TypeReference<List<Filter.LabelledItem>>() {});
+                filter.getFilterBy().getNodeProps().getHouse().setSelectedHouses(selectedHouses);
             } catch (IOException e) {
                 log.error("Error deserializing house_selectedHouses for filterId {}: {}", elementId, e.getMessage());
             }
-        } else {
-            Filter.HouseFilter houseFilter = new Filter.HouseFilter(List.of());
-            nodeProps.setHouse(houseFilter);
         }
-
-
-        Filter.PersonFilter personFilter = new Filter.PersonFilter();
 
 
         if (flattenedProps.get("filterBy_nodeProps_person_married") instanceof Boolean) {
-            personFilter.setMarried((Boolean) flattenedProps.get("filterBy_nodeProps_person_married"));
-        } else {
-            personFilter.setMarried(null);
+            filter.getFilterBy().getNodeProps().getPerson().setMarried((Boolean) flattenedProps.get("filterBy_nodeProps_person_married"));
         }
+
         String gender = Objects.toString(flattenedProps.get("filterBy_nodeProps_person_gender"), null);
-        if (gender != null) {
-            personFilter.setGender(gender);
-        } else {
-            personFilter.setGender(null);
-        }
+        filter.getFilterBy().getNodeProps().getPerson().setGender(gender);
 
         String ageJson = Objects.toString(flattenedProps.get("filterBy_nodeProps_person_age"), null);
         if (ageJson != null) {
             try {
-                List<Integer> age = objectMapper.readValue(ageJson, new TypeReference<List<Integer>>() {
-                });
-                personFilter.setAge(age);
+                List<Integer> age = objectMapper.readValue(ageJson, new TypeReference<List<Integer>>() {});
+                filter.getFilterBy().getNodeProps().getPerson().setAge(age);
             } catch (IOException e) {
                 log.error("Error deserializing person_age for filterId {}: {}", elementId, e.getMessage());
             }
-        } else {
-            personFilter.setAge(Arrays.asList(0, 100));
         }
 
         Object bornAfterObj = flattenedProps.get("filterBy_nodeProps_person_bornAfter");
         if (bornAfterObj instanceof ZonedDateTime) {
-            personFilter.setBornAfter(Date.from(((ZonedDateTime) bornAfterObj).toInstant()));
-
+            filter.getFilterBy().getNodeProps().getPerson().setBornAfter(Date.from(((ZonedDateTime) bornAfterObj).toInstant()));
         } else if (bornAfterObj instanceof Date) { // Should not happen with current SDN if ZonedDateTime is used
-            personFilter.setBornAfter((Date) bornAfterObj);
-
+            filter.getFilterBy().getNodeProps().getPerson().setBornAfter((Date) bornAfterObj);
         } else if (bornAfterObj instanceof Long) {
-            personFilter.setBornAfter(new Date((Long) bornAfterObj));
-
-        } else {
-            personFilter.setBornAfter(null);
+            filter.getFilterBy().getNodeProps().getPerson().setBornAfter(new Date((Long) bornAfterObj));
         }
 
 
         Object bornBeforeObj = flattenedProps.get("filterBy_nodeProps_person_bornBefore");
         if (bornBeforeObj instanceof ZonedDateTime) {
-            personFilter.setBornBefore(Date.from(((ZonedDateTime) bornBeforeObj).toInstant()));
-
+            filter.getFilterBy().getNodeProps().getPerson().setBornBefore(Date.from(((ZonedDateTime) bornBeforeObj).toInstant()));
         } else if (bornBeforeObj instanceof Date) {
-            personFilter.setBornBefore((Date) bornBeforeObj);
-
+            filter.getFilterBy().getNodeProps().getPerson().setBornBefore((Date) bornBeforeObj);
         } else if (bornBeforeObj instanceof Long) {
-            personFilter.setBornBefore(new Date((Long) bornBeforeObj));
-
-        } else {
-            personFilter.setBornBefore(null);
+            filter.getFilterBy().getNodeProps().getPerson().setBornBefore(new Date((Long) bornBeforeObj));
         }
 
         if (flattenedProps.get("filterBy_nodeProps_person_isAlive") instanceof Boolean) {
-            personFilter.setIsAlive((Boolean) flattenedProps.get("filterBy_nodeProps_person_isAlive"));
-
-        } else {
-            personFilter.setIsAlive(null);
+            filter.getFilterBy().getNodeProps().getPerson().setIsAlive((Boolean) flattenedProps.get("filterBy_nodeProps_person_isAlive"));
         }
 
         String jobTypesJson = Objects.toString(flattenedProps.get("filterBy_nodeProps_person_jobTypes"), null);
@@ -267,12 +226,10 @@ public class FilterNodeConverter {
             try {
                 List<Filter.GroupedLabelItem> jobTypes = objectMapper.readValue(jobTypesJson, new TypeReference<List<Filter.GroupedLabelItem>>() {
                 });
-                personFilter.setJobTypes(jobTypes);
+                filter.getFilterBy().getNodeProps().getPerson().setJobTypes(jobTypes);
             } catch (IOException e) {
                 log.error("Error deserializing person_jobTypes for filterId {}: {}", elementId, e.getMessage());
             }
-        } else {
-            personFilter.setJobTypes(List.of());
         }
 
         String studiesJson = Objects.toString(flattenedProps.get("filterBy_nodeProps_person_studies"), null);
@@ -280,12 +237,10 @@ public class FilterNodeConverter {
             try {
                 List<Filter.GroupedLabelItem> studies = objectMapper.readValue(studiesJson, new TypeReference<List<Filter.GroupedLabelItem>>() {
                 });
-                personFilter.setStudies(studies);
+                filter.getFilterBy().getNodeProps().getPerson().setStudies(studies);
             } catch (IOException e) {
                 log.error("Error deserializing person_studies for filterId {}: {}", elementId, e.getMessage());
             }
-        } else {
-            personFilter.setStudies(List.of());
         }
 
         String qualificationsJson = Objects.toString(flattenedProps.get("filterBy_nodeProps_person_qualifications"), null);
@@ -293,44 +248,29 @@ public class FilterNodeConverter {
             try {
                 List<Filter.GroupedLabelItem> qualifications = objectMapper.readValue(qualificationsJson, new TypeReference<List<Filter.GroupedLabelItem>>() {
                 });
-                personFilter.setQualifications(qualifications);
+                filter.getFilterBy().getNodeProps().getPerson().setQualifications(qualifications);
             } catch (IOException e) {
                 log.error("Error deserializing person_qualifications for filterId {}: {}", elementId, e.getMessage());
             }
-        } else {
-            personFilter.setQualifications(List.of());
         }
 
-        nodeProps.setPerson(personFilter);
-
-        filterBy.setNodeProps(nodeProps);
-
-        Filter.RootPerson rootPerson = new Filter.RootPerson();
         String rootPersonJson = Objects.toString(flattenedProps.get("filterBy_rootPerson_person"), null);
         if (rootPersonJson != null) {
             try {
                 Filter.LabelledItem person = objectMapper.readValue(rootPersonJson, Filter.LabelledItem.class);
-                rootPerson.setPerson(person);
+                filter.getFilterBy().getRootPerson().setPerson(person);
             } catch (IOException e) {
                 log.error("Error deserializing rootPerson_person for filterId {}: {}", elementId, e.getMessage());
             }
-        } else {
-            rootPerson.setPerson(null);
         }
 
         Object onlyImmediateObj = flattenedProps.get("filterBy_rootPerson_onlyImmediate");
         if (onlyImmediateObj instanceof Boolean) {
-            rootPerson.setOnlyImmediate((Boolean) onlyImmediateObj);
+            filter.getFilterBy().getRootPerson().setOnlyImmediate((Boolean) onlyImmediateObj);
         } else if (onlyImmediateObj != null) {
             // handle cases where it might be stored as string "true" or "false"
-            rootPerson.setOnlyImmediate(Boolean.parseBoolean(onlyImmediateObj.toString()));
-        } else {
-            rootPerson.setOnlyImmediate(false);
+            filter.getFilterBy().getRootPerson().setOnlyImmediate(Boolean.parseBoolean(onlyImmediateObj.toString()));
         }
-
-
-        filterBy.setRootPerson(rootPerson);
-        filter.setFilterBy(filterBy);
 
         return filter;
     }
