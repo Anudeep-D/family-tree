@@ -66,10 +66,11 @@ public class FilterController {
     /**
      * Updates an existing filter.
      */
-    @PatchMapping("/{filterId}")
+    @PostMapping("/{filterId}/update")
     public ResponseEntity<Filter> updateFilter(@Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45") @PathVariable String filterId, // Changed Long to String
                                                @Valid @RequestBody FilterRequestDTO updateRequestDTO) {
         try {
+            log.error("Update the filter {}", filterId); // Log full stack trace
             Filter updatedFilter = filterService.updateFilter(filterId, updateRequestDTO); // Service now expects String
             return ResponseEntity.ok(updatedFilter);
         } catch (Exception e) {

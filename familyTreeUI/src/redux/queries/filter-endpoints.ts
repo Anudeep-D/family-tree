@@ -52,8 +52,8 @@ export const filterApi = createApi({
       // Renamed from createFilter
       query: (args) => ({
         // Renamed from filter
-        url: `/${args.filterId}`,
-        method: "PATCH",
+        url: `/${args.filterId}/update`,
+        method: "POST",
         body: args.filter,
       }),
       invalidatesTags: ["filterApi"],

@@ -95,41 +95,39 @@ public class FilterService {
 
     @Transactional
     public Filter updateFilter(String filterElementId, FilterRequestDTO dto) {
-        Map<String, Object> currentFilterMap = filterRepository.findFilterById(filterElementId);
-        if (currentFilterMap == null || currentFilterMap.isEmpty()) {
-            throw new EntityNotFoundException("Filter not found with ID: " + filterElementId);
+        // User/Tree validation logic would go here (e.g., check existence)
+
+        Filter filter = new Filter(dto.getFilterName(), dto.getEnabled(), dto.getFilterBy());
+        Map<String, Object> propsToSave = FilterNodeConverter.filterToFlattenedMap(filter);
+
+        String createFilterCypher = """
+                    MATCH (f:Filter) WHERE elementId(f) = $filterId
+                    SET f += $props
+                    RETURN f {.*, elementId: elementId(f) } AS updatedFilter
+                """;
+
+        Optional<Map<String, Object>> resultOptional = neo4jClient.query(createFilterCypher)
+                .bind(filterElementId).to("filterId")
+                .bind(propsToSave).to("props")
+                .fetch()
+                .one();
+
+        if (resultOptional.isEmpty() || resultOptional.get().get("updatedFilter") == null) {
+            log.error("Failed to update filter {}. Neo4jClient query returned no data or null filter.", filterElementId);
+            throw new RuntimeException("Filter creation failed, Neo4jClient query returned no data.");
         }
 
-        Filter currentFilter = FilterNodeConverter.flattenedMapToFilter(currentFilterMap, filterElementId);
+        // The result is a Map<String, Object> where the key "updatedFilter" holds the properties of the node.
+        @SuppressWarnings("unchecked")
+        Map<String, Object> updatedNodeMap = (Map<String, Object>) resultOptional.get().get("updatedFilter");
 
-        boolean updated = false;
-        if (dto.getFilterName() != null && !dto.getFilterName().equals(currentFilter.getFilterName())) {
-            currentFilter.setFilterName(dto.getFilterName());
-            updated = true;
+        if (updatedNodeMap == null || updatedNodeMap.isEmpty()) {
+            log.error("Failed to update filter {}. Result map for updatedFilter is null or empty.", filterElementId);
+            throw new RuntimeException("Filter update failed, result map for updatedFilter is null or empty.");
         }
-        if (dto.getEnabled() != null && !dto.getEnabled().equals(currentFilter.isEnabled())) {
-            currentFilter.setEnabled(dto.getEnabled());
-            updated = true;
-        }
-        if (dto.getFilterBy() != null) {
-            // For simplicity, if filterBy is in DTO, we consider it an update.
-            // More granular comparison could be done here if needed.
-            currentFilter.setFilterBy(dto.getFilterBy());
-            updated = true;
-        }
-
-        if (updated) {
-            Map<String, Object> propsToUpdate = FilterNodeConverter.filterToFlattenedMap(currentFilter);
-            propsToUpdate.remove("elementId"); // elementId should not be in the properties map for SET f += $props
-
-            Map<String, Object> updatedNodeMap = filterRepository.updateFilter(filterElementId, propsToUpdate);
-            if (updatedNodeMap == null || updatedNodeMap.isEmpty()) {
-                log.error("Failed to update filter with id {}. Repository returned empty map.", filterElementId);
-                throw new RuntimeException("Filter update failed, repository returned no data.");
-            }
-            return FilterNodeConverter.flattenedMapToFilter(updatedNodeMap, filterElementId);
-        }
-        return currentFilter; // No changes were made
+        Filter savedFilter = FilterNodeConverter.flattenedMapToFilter(updatedNodeMap, filterElementId);
+        log.info("Updated filter with id {}", filterElementId);
+        return savedFilter;
     }
 
     @Transactional
