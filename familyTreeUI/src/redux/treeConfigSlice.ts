@@ -37,6 +37,7 @@ export type FilterProps = {
       person: {
         married: boolean | null;
         gender: "male" | "female" | null;
+        locations: string[];
         age: number[];
         bornAfter: Date | null;
         bornBefore: Date | null;
@@ -80,6 +81,7 @@ export const initialState: TreeConfigState = {
         person: {
           married: null,
           gender: null,
+          locations: [],
           age: [0, 100],
           bornAfter: null,
           bornBefore: null,
@@ -110,8 +112,8 @@ const treeConfigSlice = createSlice({
     setReduxEdges: (state, action: PayloadAction<AppEdge[]>) => {
       state.edges = action.payload;
     },
-    setApplyFilters: (state, action: PayloadAction<boolean>) => {
-      applyFilters(state, action.payload);
+    setApplyFilters: (state) => {
+      applyFilters(state);
     },
     setFilteredNodes: (state, action: PayloadAction<AppNode[]>) => {
       state.filteredNodes = action.payload;
@@ -170,22 +172,8 @@ const validateAge = (range: number[], data: Record<string, any>) => {
   return age >= range[0] && age <= range[1];
 };
 
-const applyFilters = (state: TreeConfigState, checkDiff: boolean = false) => {
+const applyFilters = (state: TreeConfigState) => {
   const currentFilter = state.currentFilter;
-
-  const diffNodes = getDiff(state.filteredNodes, state.nodes);
-  const diffEdges = getDiff(state.filteredEdges, state.edges);
-  if (
-    checkDiff &&
-    diffNodes.added.length === 0 &&
-    diffNodes.updated.length === 0 &&
-    diffNodes.removed.length === 0 &&
-    diffEdges.added.length === 0 &&
-    diffEdges.updated.length === 0 &&
-    diffEdges.removed.length === 0
-  ) {
-    return;
-  }
 
   if (!currentFilter.enabled) {
     state.filteredNodes = state.nodes;
@@ -267,6 +255,20 @@ const applyFilters = (state: TreeConfigState, checkDiff: boolean = false) => {
       .map((node) => node.id);
     console.log(
       `remove ${localIdsToRemove.length} nodes as personFilters.gender: ${personFilters.gender}`
+    );
+    nodeIdsToRemove.push(...localIdsToRemove);
+  }
+
+  if (personFilters.locations.length>0) {
+    const localIdsToRemove = nodes
+      .filter(
+        (node) =>
+          node.type === Nodes.Person &&
+          !personFilters.locations.includes(node.data.currLocation)
+      )
+      .map((node) => node.id);
+    console.log(
+      `remove ${localIdsToRemove.length} nodes as personFilters.locations: ${personFilters.locations}`
     );
     nodeIdsToRemove.push(...localIdsToRemove);
   }
@@ -431,6 +433,11 @@ export const selectCurrentFilter = (state: ParameterSetState) =>
   state.treeConfig.currentFilter;
 export const selectRootedGraph = (state: ParameterSetState) =>
   state.treeConfig.rootedGraph;
+export const selectAllLocations = (state: ParameterSetState) =>{
+  const allLocs = state.treeConfig.nodes.filter(node=>Boolean(node.data.currLocation)).map(node=>node.data.currLocation as string);
+  return [...new Set(allLocs)].sort();
+}
+  
 
 export const {
   setCurrentTree,

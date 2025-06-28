@@ -17,12 +17,9 @@ import {
   Alert,
   ButtonGroup,
   Tooltip,
-  Chip,
-  SvgIcon,
 } from "@mui/material";
 import {
   forwardRef,
-  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -44,6 +41,7 @@ import {
   initialState,
   setApplyFilters,
   selectRootedGraph,
+  selectAllLocations,
 } from "@/redux/treeConfigSlice";
 import { Nodes } from "@/types/nodeTypes";
 import {
@@ -56,6 +54,13 @@ import {
   ClearAllTwoTone,
   DangerousTwoTone,
   RotateLeftTwoTone,
+  SentimentSatisfiedAlt,
+  EmojiPeopleTwoTone,
+  LibraryAddCheckTwoTone,
+  ManTwoTone,
+  SentimentVeryDissatisfiedTwoTone,
+  WcTwoTone,
+  WomanTwoTone,
 } from "@mui/icons-material";
 import {
   useCreateFilterMutation,
@@ -82,6 +87,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
     const currentFilter = useSelector(selectCurrentFilter);
     const existingFilters = useSelector(selectSavedFilters);
     const selectedFilter = useSelector(selectSelectedFilter);
+    const locOptions = useSelector(selectAllLocations);
     const savedFilters = useMemo(
       () =>
         existingFilters.map((existingFilter) => ({
@@ -246,7 +252,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
     const [waitForRootedGraph, setWaitForRootedGraph] = useState(false);
     const handleApplyFilter = () => {
       if (!currentFilter.filterBy.rootPerson.person) {
-        dispatch(setApplyFilters(false));
+        dispatch(setApplyFilters());
         onClose();
       } else {
         setWaitForRootedGraph(true); // wait for rootedGraph to load
@@ -259,7 +265,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         rootedGraph.isloading === false &&
         rootedGraph.error === undefined
       ) {
-        dispatch(setApplyFilters(false));
+        dispatch(setApplyFilters());
         setWaitForRootedGraph(false); // reset the flag
         onClose();
       }
@@ -514,7 +520,13 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             <Typography variant="subtitle1" sx={{ mb: 1 }}>
               Person Filters
             </Typography>
-            <Stack spacing={1.2} sx={{ mb: 1 }}>
+            <Stack
+              direction="row"
+              spacing={2}
+              divider={<Divider orientation="vertical" flexItem />}
+              sx={{ mb: 1 }}
+            >
+              {/* Gender Group */}
               <ToggleButtonGroup
                 value={currentFilter.filterBy.nodeProps.person.gender ?? ""}
                 exclusive
@@ -525,12 +537,25 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
                   )
                 }
                 size="small"
-                fullWidth
               >
-                <ToggleButton value="">Any</ToggleButton>
-                <ToggleButton value="male">Male</ToggleButton>
-                <ToggleButton value="female">Female</ToggleButton>
+                <Tooltip title="Any">
+                  <ToggleButton value="">
+                    <LibraryAddCheckTwoTone />
+                  </ToggleButton>
+                </Tooltip>
+                <Tooltip title="Male">
+                  <ToggleButton value="male">
+                    <ManTwoTone />
+                  </ToggleButton>
+                </Tooltip>
+                <Tooltip title="Female">
+                  <ToggleButton value="female">
+                    <WomanTwoTone />
+                  </ToggleButton>
+                </Tooltip>
               </ToggleButtonGroup>
+
+              {/* Alive Group */}
               <ToggleButtonGroup
                 value={currentFilter.filterBy.nodeProps.person.isAlive ?? ""}
                 exclusive
@@ -541,12 +566,25 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
                   )
                 }
                 size="small"
-                fullWidth
               >
-                <ToggleButton value="">Any</ToggleButton>
-                <ToggleButton value={true}>Alive</ToggleButton>
-                <ToggleButton value={false}>Expired</ToggleButton>
+                <Tooltip title="Any">
+                  <ToggleButton value="">
+                    <LibraryAddCheckTwoTone />
+                  </ToggleButton>
+                </Tooltip>
+                <Tooltip title="Alive">
+                  <ToggleButton value={true}>
+                    <SentimentSatisfiedAlt />
+                  </ToggleButton>
+                </Tooltip>
+                <Tooltip title="Expired">
+                  <ToggleButton value={false}>
+                    <SentimentVeryDissatisfiedTwoTone />
+                  </ToggleButton>
+                </Tooltip>
               </ToggleButtonGroup>
+
+              {/* Married Group */}
               <ToggleButtonGroup
                 value={currentFilter.filterBy.nodeProps.person.married ?? ""}
                 exclusive
@@ -557,11 +595,22 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
                   )
                 }
                 size="small"
-                fullWidth
               >
-                <ToggleButton value="">Any</ToggleButton>
-                <ToggleButton value={false}>Single</ToggleButton>
-                <ToggleButton value={true}>Married</ToggleButton>
+                <Tooltip title="Any">
+                  <ToggleButton value="">
+                    <LibraryAddCheckTwoTone />
+                  </ToggleButton>
+                </Tooltip>
+                <Tooltip title="Single">
+                  <ToggleButton value={false}>
+                    <EmojiPeopleTwoTone />
+                  </ToggleButton>
+                </Tooltip>
+                <Tooltip title="Married">
+                  <ToggleButton value={true}>
+                    <WcTwoTone />
+                  </ToggleButton>
+                </Tooltip>
               </ToggleButtonGroup>
             </Stack>
             <Typography variant="body2" sx={{ mt: 2, mb: 0.5 }}>
@@ -633,6 +682,45 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
                 />
               </Stack>
             </LocalizationProvider>
+            <Autocomplete
+              multiple
+              limitTags={1}
+              options={locOptions}
+              autoHighlight
+              autoComplete
+              value={currentFilter.filterBy.nodeProps.person.locations}
+              disableCloseOnSelect
+              renderOption={(props, option, { selected }) => {
+                const { key, ...optionProps } = props;
+                return (
+                  <li key={key} {...optionProps}>
+                    <Checkbox
+                      icon={icon}
+                      checkedIcon={checkedIcon}
+                      style={{ marginRight: 8 }}
+                      checked={selected}
+                    />
+                    {option}
+                  </li>
+                );
+              }}
+              disablePortal
+              onChange={(_, vals) =>
+                handleChange(
+                  ["filterBy", "nodeProps", "person", "locations"],
+                  vals
+                )
+              }
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="current location"
+                  size="small"
+                />
+              )}
+              sx={{ my: 2 }}
+              fullWidth
+            />
             <Autocomplete
               multiple
               limitTags={1}

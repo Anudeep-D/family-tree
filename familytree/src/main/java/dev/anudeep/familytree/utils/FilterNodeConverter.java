@@ -87,6 +87,8 @@ public class FilterNodeConverter {
                             personFilter.getBornBefore() == null ? null : ZonedDateTime.ofInstant(personFilter.getBornBefore().toInstant(), ZoneId.of("UTC")));
                     properties.put("filterBy_nodeProps_person_isAlive", personFilter.getIsAlive());
                     try {
+                        properties.put("filterBy_nodeProps_person_locations",
+                                personFilter.getLocations() != null ? objectMapper.writeValueAsString(personFilter.getLocations()) : null);
                         properties.put("filterBy_nodeProps_person_jobTypes",
                                 personFilter.getJobTypes() != null ? objectMapper.writeValueAsString(personFilter.getJobTypes()) : null);
                         properties.put("filterBy_nodeProps_person_studies",
@@ -94,7 +96,8 @@ public class FilterNodeConverter {
                         properties.put("filterBy_nodeProps_person_qualifications",
                                 personFilter.getQualifications() != null ? objectMapper.writeValueAsString(personFilter.getQualifications()) : null);
                     } catch (JsonProcessingException e) {
-                        log.error("Error serializing person lists (jobTypes, studies, qualifications)", e);
+                        log.error("Error serializing person lists (locations, jobTypes, studies, qualifications)", e);
+                        properties.put("filterBy_nodeProps_person_locations", null);
                         properties.put("filterBy_nodeProps_person_jobTypes", null);
                         properties.put("filterBy_nodeProps_person_studies", null);
                         properties.put("filterBy_nodeProps_person_qualifications", null);
@@ -106,6 +109,7 @@ public class FilterNodeConverter {
                     properties.put("filterBy_nodeProps_person_bornAfter", null);
                     properties.put("filterBy_nodeProps_person_bornBefore", null);
                     properties.put("filterBy_nodeProps_person_isAlive", null);
+                    properties.put("filterBy_nodeProps_person_locations", null);
                     properties.put("filterBy_nodeProps_person_jobTypes", null);
                     properties.put("filterBy_nodeProps_person_studies", null);
                     properties.put("filterBy_nodeProps_person_qualifications", null);
@@ -119,6 +123,7 @@ public class FilterNodeConverter {
                 properties.put("filterBy_nodeProps_person_bornAfter", null);
                 properties.put("filterBy_nodeProps_person_bornBefore", null);
                 properties.put("filterBy_nodeProps_person_isAlive", null);
+                properties.put("filterBy_nodeProps_person_locations", null);
                 properties.put("filterBy_nodeProps_person_jobTypes", null);
                 properties.put("filterBy_nodeProps_person_studies", null);
                 properties.put("filterBy_nodeProps_person_qualifications", null);
@@ -152,6 +157,7 @@ public class FilterNodeConverter {
             properties.put("filterBy_nodeProps_person_bornAfter", null);
             properties.put("filterBy_nodeProps_person_bornBefore", null);
             properties.put("filterBy_nodeProps_person_isAlive", null);
+            properties.put("filterBy_nodeProps_person_locations", null);
             properties.put("filterBy_nodeProps_person_jobTypes", null);
             properties.put("filterBy_nodeProps_person_studies", null);
             properties.put("filterBy_nodeProps_person_qualifications", null);
@@ -243,6 +249,17 @@ public class FilterNodeConverter {
 
         if (flattenedProps.get("filterBy_nodeProps_person_isAlive") instanceof Boolean) {
             filter.getFilterBy().getNodeProps().getPerson().setIsAlive((Boolean) flattenedProps.get("filterBy_nodeProps_person_isAlive"));
+        }
+
+        String locationsJson = Objects.toString(flattenedProps.get("filterBy_nodeProps_person_locations"), null);
+        if (locationsJson != null) {
+            try {
+                List<String> locations = objectMapper.readValue(locationsJson, new TypeReference<List<String>>() {
+                });
+                filter.getFilterBy().getNodeProps().getPerson().setLocations(locations);
+            } catch (IOException e) {
+                log.error("Error deserializing person_locations for filterId {}: {}", elementId, e.getMessage());
+            }
         }
 
         String jobTypesJson = Objects.toString(flattenedProps.get("filterBy_nodeProps_person_jobTypes"), null);

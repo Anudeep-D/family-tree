@@ -72,6 +72,7 @@ public class Filter {
         private Date bornAfter = null;
         private Date bornBefore = null;
         private Boolean isAlive = null;
+        private List<String> locations = new ArrayList<>();
         private List<GroupedLabelItem> jobTypes = new ArrayList<>();
         private List<GroupedLabelItem> studies = new ArrayList<>();
         private List<GroupedLabelItem> qualifications = new ArrayList<>();

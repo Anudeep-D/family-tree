@@ -1,5 +1,7 @@
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { SerializedError } from "@reduxjs/toolkit";
+import { AppNode } from "@/types/nodeTypes";
+import { AppEdge } from "@/types/edgeTypes";
 
 export function getErrorMessage(
   error: FetchBaseQueryError | SerializedError
@@ -18,6 +20,23 @@ export function getErrorMessage(
     // SerializedError (fallback for unexpected failures)
     return error.message || "An unknown error occurred";
   }
+}
+
+
+export const isDiff = (prevNodes:AppNode[], currNodes:AppNode[], prevEdges:AppEdge[], currEdges:AppEdge[]) => {
+  const diffNodes = getDiff(prevNodes, currNodes);
+  const diffEdges = getDiff(prevEdges, currEdges);
+  if (
+    diffNodes.added.length === 0 &&
+    diffNodes.updated.length === 0 &&
+    diffNodes.removed.length === 0 &&
+    diffEdges.added.length === 0 &&
+    diffEdges.updated.length === 0 &&
+    diffEdges.removed.length === 0
+  ) {
+    return false;
+  }
+  return true;
 }
 
 export const getDiff = <T extends { id: string; data?: Record<string, any> }>(

@@ -37,7 +37,7 @@ import "./GraphFlow.scss";
 import { Tree } from "@/types/entityTypes";
 import { EdgeDialog } from "./EdgeDialog/EdgeDialog";
 import { Role } from "@/types/common";
-import { getDiff } from "@/utils/common";
+import { getDiff, isDiff } from "@/utils/common";
 import {
   setReduxNodes,
   setReduxEdges,
@@ -46,6 +46,9 @@ import {
   setApplyFilters,
   selectCurrentFilter,
   selectRootedGraph,
+  selectNodes,
+  selectEdges,
+  setFilteredEdges,
 } from "@/redux/treeConfigSlice";
 import { useDispatch, useSelector } from "react-redux";
 import useRootPersonGraph from "@/hooks/useRootPersonGraph";
@@ -105,7 +108,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
   const [waitForRootedGraph, setWaitForRootedGraph] = useState(false);
   const handleApplyFilter = () => {
     if (!currentFilter.filterBy.rootPerson.person) {
-      dispatch(setApplyFilters(true));
+      dispatch(setApplyFilters());
     } else {
       setWaitForRootedGraph(true); // wait for rootedGraph to load
     }
@@ -117,23 +120,26 @@ const GraphFlow: FC<GraphFlowProps> = ({
       rootedGraph.isloading === false &&
       rootedGraph.error === undefined
     ) {
-      dispatch(setApplyFilters(true));
+      dispatch(setApplyFilters());
       setWaitForRootedGraph(false); // reset the flag
     }
   }, [waitForRootedGraph, rootedGraph]);
 
   useEffect(() => {
+    const isChanged = isDiff(oldNodes,nodes, oldEdges,edges);
     nodes && dispatch(setReduxNodes(nodes));
     edges && dispatch(setReduxEdges(edges));
-    currentFilter.enabled
-      ? handleApplyFilter()
-      : dispatch(setApplyFilters(true));
+    if(isChanged){
+      handleApplyFilter();
+    }
   }, [dispatch, nodes, edges]);
 
   const filteredNodes = useSelector(selectFilteredNodes);
   const filteredEdges = useSelector(selectFilteredEdges);
+  const oldNodes = useSelector(selectNodes);
+  const oldEdges = useSelector(selectEdges);
   useEffect(() => {
-    setSnackBarMsg(
+    currentFilter.enabled && setSnackBarMsg(
       <Box>
         <strong>Filters applied!</strong> Displaying a filtered tree.
       </Box>
