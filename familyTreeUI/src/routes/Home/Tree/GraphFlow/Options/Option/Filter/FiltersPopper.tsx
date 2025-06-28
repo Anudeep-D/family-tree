@@ -522,7 +522,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             </Typography>
             <Stack
               direction="row"
-              spacing={2}
+              spacing={0.5}
               divider={<Divider orientation="vertical" flexItem />}
               sx={{ mb: 1 }}
             >

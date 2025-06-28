@@ -37,7 +37,7 @@ import "./GraphFlow.scss";
 import { Tree } from "@/types/entityTypes";
 import { EdgeDialog } from "./EdgeDialog/EdgeDialog";
 import { Role } from "@/types/common";
-import { getDiff, isDiff } from "@/utils/common";
+import { getDiff } from "@/utils/common";
 import {
   setReduxNodes,
   setReduxEdges,
@@ -46,9 +46,6 @@ import {
   setApplyFilters,
   selectCurrentFilter,
   selectRootedGraph,
-  selectNodes,
-  selectEdges,
-  setFilteredEdges,
 } from "@/redux/treeConfigSlice";
 import { useDispatch, useSelector } from "react-redux";
 import useRootPersonGraph from "@/hooks/useRootPersonGraph";
@@ -126,18 +123,14 @@ const GraphFlow: FC<GraphFlowProps> = ({
   }, [waitForRootedGraph, rootedGraph]);
 
   useEffect(() => {
-    const isChanged = isDiff(oldNodes,nodes, oldEdges,edges);
     nodes && dispatch(setReduxNodes(nodes));
     edges && dispatch(setReduxEdges(edges));
-    if(isChanged){
-      handleApplyFilter();
-    }
+    handleApplyFilter();
   }, [dispatch, nodes, edges]);
 
   const filteredNodes = useSelector(selectFilteredNodes);
   const filteredEdges = useSelector(selectFilteredEdges);
-  const oldNodes = useSelector(selectNodes);
-  const oldEdges = useSelector(selectEdges);
+
   useEffect(() => {
     currentFilter.enabled && setSnackBarMsg(
       <Box>

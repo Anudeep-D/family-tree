@@ -259,7 +259,7 @@ const applyFilters = (state: TreeConfigState) => {
     nodeIdsToRemove.push(...localIdsToRemove);
   }
 
-  if (personFilters.locations.length>0) {
+  if (personFilters.locations.length > 0) {
     const localIdsToRemove = nodes
       .filter(
         (node) =>
@@ -409,12 +409,12 @@ const applyFilters = (state: TreeConfigState) => {
 
   const fEdges = edges.filter((edge) => !excludeEdgeIds.includes(edge.id));
   const fNodes = nodes.filter((node) => !excludeNodeIds.includes(node.id));
-  const { nodes: filteredNodes, edges: filteredEdges } = getLayoutedElements(
-    fNodes,
-    fEdges // Use the processed edges
-  );
-  state.filteredEdges = filteredEdges;
-  state.filteredNodes = filteredNodes;
+  // const { nodes: filteredNodes, edges: filteredEdges } = getLayoutedElements(
+  //   fNodes,
+  //   fEdges // Use the processed edges
+  // );
+  state.filteredEdges = fEdges;
+  state.filteredNodes = fNodes;
 };
 
 export const selectTree = (state: ParameterSetState) =>
@@ -433,11 +433,12 @@ export const selectCurrentFilter = (state: ParameterSetState) =>
   state.treeConfig.currentFilter;
 export const selectRootedGraph = (state: ParameterSetState) =>
   state.treeConfig.rootedGraph;
-export const selectAllLocations = (state: ParameterSetState) =>{
-  const allLocs = state.treeConfig.nodes.filter(node=>Boolean(node.data.currLocation)).map(node=>node.data.currLocation as string);
+export const selectAllLocations = (state: ParameterSetState) => {
+  const allLocs = state.treeConfig.nodes
+    .filter((node) => Boolean(node.data.currLocation))
+    .map((node) => node.data.currLocation as string);
   return [...new Set(allLocs)].sort();
-}
-  
+};
 
 export const {
   setCurrentTree,
