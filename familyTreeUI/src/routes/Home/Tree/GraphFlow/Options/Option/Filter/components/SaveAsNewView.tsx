@@ -1,9 +1,6 @@
 import {
-  Alert,
   Box,
   Button,
-  CircularProgress,
-  Divider,
   Stack,
   TextField,
 } from "@mui/material";
@@ -32,7 +29,12 @@ const SaveAsNewView = ({
 }: SaveAsNewViewProps) => {
   return (
     <Box>
-      <Stack>
+      <Stack
+        direction="row"
+        spacing={1}
+        justifyContent="space-between"
+        sx={{ mt: 1 }}
+      >
         <TextField
           label="Filter name"
           focused
@@ -53,15 +55,12 @@ const SaveAsNewView = ({
           variant="contained"
           size="small"
           onClick={onSave}
-          disabled={
-            filterName.trim().length === 0 || nameExists === true
-          }
+          disabled={filterName.trim().length === 0 || nameExists === true}
           loading={checking || saving}
         >
-          {saving ? <CircularProgress size={24} color="inherit" /> : "Save"}
+          Save
         </Button>
       </Stack>
-      {checking && <CircularProgress size={20} sx={{ mt: 1 }} />}
     </Box>
   );
 };

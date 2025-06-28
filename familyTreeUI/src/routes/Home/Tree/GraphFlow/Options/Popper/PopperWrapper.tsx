@@ -15,7 +15,7 @@ export const PopperWrapper: React.FC<PopperWrapperProps> = ({
   const canBeOpen = open && Boolean(anchorEl);
   const id = canBeOpen ? "transition-popper" : undefined;
   return (
-    <Popper id={id} open={open} anchorEl={anchorEl} transition>
+    <Popper id={id} open={open} anchorEl={anchorEl} transition onClick={(e) => e.stopPropagation()}>
       {({ TransitionProps }) => (
         <Fade {...TransitionProps} timeout={350}>
           <Box sx={{ border: 1, p: 1 }}>

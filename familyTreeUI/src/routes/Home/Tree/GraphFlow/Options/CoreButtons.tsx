@@ -1,7 +1,7 @@
 import ConfirmDialog, { ConfirmProps } from "@/routes/common/ConfirmDialog";
 import { Tree } from "@/types/entityTypes";
 import { DeleteTwoTone, Restore, SaveTwoTone } from "@mui/icons-material";
-import { Box, Tooltip, IconButton } from "@mui/material";
+import { Box, Tooltip, IconButton, Divider } from "@mui/material";
 import { Options } from "./Options";
 import "./CoreButtons.scss";
 import { useState } from "react";
@@ -41,6 +41,7 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
   return (
     <Box className="flow-save-buttons">
       <Options tree={tree} sortTree={sortTree}/> {/* Pass tree.id as treeId */}
+      {tree.access !== Role.Viewer && <Divider orientation="vertical" flexItem />}
       {tree.access === Role.Admin && (
         <Tooltip title="Delete">
           <IconButton
@@ -65,7 +66,7 @@ export const CoreButtons: React.FC<CoreButtonsProps> = ({
           </IconButton>
         </Tooltip>
       )}
-      {tree.access === Role.Admin && (
+      {(tree.access === Role.Admin || tree.access === Role.Editor) && (
         <Tooltip title="Reset">
           <IconButton
             disabled={disabled}

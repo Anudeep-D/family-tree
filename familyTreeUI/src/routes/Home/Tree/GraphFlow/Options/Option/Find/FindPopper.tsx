@@ -1,4 +1,4 @@
-import { selectNodes } from "@/redux/treeConfigSlice";
+import { selectFilteredNodes } from "@/redux/treeConfigSlice";
 import { Autocomplete, Box, TextField } from "@mui/material";
 import { useReactFlow } from "@xyflow/react";
 import { useMemo, forwardRef } from "react";
@@ -7,7 +7,7 @@ import { useSelector } from "react-redux";
 export type FindPopperProps = {};
 export const FindPopper = forwardRef<HTMLDivElement, FindPopperProps>(
   ({}, ref) => {
-    const currentNodes = useSelector(selectNodes);
+    const currentNodes = useSelector(selectFilteredNodes);
     const options = useMemo(
       () =>
         currentNodes?.map((curNode) => ({

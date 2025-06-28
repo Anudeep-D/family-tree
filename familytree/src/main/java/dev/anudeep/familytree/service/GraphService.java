@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.anudeep.familytree.dto.*;
 import dev.anudeep.familytree.model.Person;
-import dev.anudeep.familytree.repository.GraphRepository;
 import dev.anudeep.familytree.utils.Constants;
 import dev.anudeep.familytree.utils.PersonNodeConverter;
 import lombok.extern.slf4j.Slf4j;
@@ -20,18 +19,12 @@ import java.util.*;
 @Slf4j
 @Service
 public class GraphService {
-    private final GraphRepository repository;
     private final ObjectMapper objectMapper;
     @Autowired
     private Neo4jClient neo4jClient;
 
-    public GraphService(GraphRepository repository, ObjectMapper objectMapper) {
-        this.repository = repository;
+    public GraphService(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-    }
-
-    public List<Person> getFamily(String elementId) {
-        return repository.findFamily(elementId);
     }
 
     public FlowGraphDTO getGraph(String treeId) {
@@ -100,26 +93,56 @@ public class GraphService {
         }
     }
 
-    public FlowGraphDTO getFamilyTree(String elementId) {
+    public FlowGraphDTO getFamilyTree(String elementId, boolean isImmediate) {
+        String depthRange = isImmediate ? "1..1" : "1..";
+
         String cypher = String.format("""
-                    MATCH (root:Person)
+                        MATCH (root:Person)
                         WHERE elementId(root) = $elementId
+                        
                         // Root <-> Spouse
-                        OPTIONAL MATCH (root)-[spouseRel:%s]-(spouse:Person)                
+                        OPTIONAL MATCH (root)-[spouseRel:%s]-(spouse:Person)
+                        
                         // Root -> Descendants
-                        OPTIONAL MATCH path=(root)-[descendantRel:%s*1..]->(descendant:Person)                
+                        OPTIONAL MATCH path=(root)-[descendantRel:%s*%s]->(descendant:Person)
+                        
                         // Descendant <-> Spouse
-                        OPTIONAL MATCH (descendant)-[descendantSpouseRel:%s]-(descendantSpouse:Person)                
-                        // Return all nodes and relationships
+                        OPTIONAL MATCH (descendant)-[descendantSpouseRel:%s]-(descendantSpouse:Person)
+                        
+                        // Houses for all persons
+                        OPTIONAL MATCH (root)-[rootHouseRel:%s]-(rootHouse:House)
+                        OPTIONAL MATCH (spouse)-[spouseHouseRel:%s]-(spouseHouse:House)
+                        OPTIONAL MATCH (descendant)-[descendantHouseRel:%s]-(descendantHouse:House)
+                        OPTIONAL MATCH (descendantSpouse)-[descSpouseHouseRel:%s]-(descSpouseHouse:House)
+                        
                         RETURN DISTINCT
-                          root,
-                          spouse,
-                          descendant,
-                          descendantSpouse,
-                          spouseRel,
-                          descendantRel,
-                          descendantSpouseRel                
-                """, Constants.MARRIED_REL, Constants.PARENT_REL, Constants.MARRIED_REL);
+                            root,
+                            spouse,
+                            descendant,
+                            descendantSpouse,
+                            spouseRel,
+                            descendantRel,
+                            descendantSpouseRel,
+                            rootHouse,
+                            spouseHouse,
+                            descendantHouse,
+                            descSpouseHouse,
+                            rootHouseRel,
+                            spouseHouseRel,
+                            descendantHouseRel,
+                            descSpouseHouseRel
+                        """,
+                Constants.MARRIED_REL,       // %s → spouseRel
+                Constants.PARENT_REL,        // %s → descendantRel
+                depthRange,                  // %s → depth range
+                Constants.MARRIED_REL,       // %s → descendantSpouseRel
+                Constants.BELONGS_REL,       // %s → rootHouseRel
+                Constants.BELONGS_REL,       // %s → spouseHouseRel
+                Constants.BELONGS_REL,       // %s → descendantHouseRel
+                Constants.BELONGS_REL        // %s → descSpouseHouseRel
+        );
+
+
         log.info("Cypher to fetch family tree:\n {}", cypher);
         Set<FlowNodeDTO> nodes = new HashSet<>();
         Set<FlowEdgeDTO> edges = new HashSet<>();
@@ -133,9 +156,22 @@ public class GraphService {
                     addPersonNode((Node) row.get("descendant"), nodes);
                     addPersonNode((Node) row.get("descendantSpouse"), nodes);
 
+                    addNode((Node) row.get("rootHouse"), nodes);
+                    addNode((Node) row.get("spouseHouse"), nodes);
+                    addNode((Node) row.get("descendantHouse"), nodes);
+                    addNode((Node) row.get("descSpouseHouse"), nodes);
+
                     addEdge((Relationship) row.get("spouseRel"), edges);
-                    addEdge((Relationship) row.get("descendantRel"), edges);
+                    List<Relationship> descendantRelList = (List<Relationship>) row.get("descendantRel");
+                    if (descendantRelList != null && !descendantRelList.isEmpty()) {
+                        addEdge(descendantRelList.get(0), edges); // Only use the first relation
+                    }
                     addEdge((Relationship) row.get("descendantSpouseRel"), edges);
+
+                    addEdge((Relationship) row.get("rootHouseRel"), edges);
+                    addEdge((Relationship) row.get("spouseHouseRel"), edges);
+                    addEdge((Relationship) row.get("descendantHouseRel"), edges);
+                    addEdge((Relationship) row.get("descSpouseHouseRel"), edges);
                 });
 
         log.info("Graph generated with {} nodes and {} edges", nodes.size(), edges.size());

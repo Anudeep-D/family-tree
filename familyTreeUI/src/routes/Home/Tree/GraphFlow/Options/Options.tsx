@@ -1,9 +1,6 @@
 import React, { ReactElement } from "react";
-import SpeedDial from "@mui/material/SpeedDial";
-import SpeedDialIcon from "@mui/material/SpeedDialIcon";
-import SpeedDialAction from "@mui/material/SpeedDialAction";
+import { Stack, IconButton, Tooltip, ClickAwayListener } from "@mui/material";
 import {
-  ListTwoTone,
   ManageAccountsTwoTone,
   SearchTwoTone,
   SmartToyTwoTone,
@@ -14,7 +11,6 @@ import "./Options.scss";
 import AccessDialog from "./Option/AccessDialog/AccessDialog";
 import { Tree } from "@/types/entityTypes";
 import { PopperWrapper } from "./Popper/PopperWrapper";
-import { ClickAwayListener } from "@mui/material";
 import { FindPopper } from "./Option/Find/FindPopper";
 import FiltersPopper from "./Option/Filter/FiltersPopper";
 
@@ -25,29 +21,29 @@ interface OptionsProps {
 
 const actions = [
   {
-    icon: <ManageAccountsTwoTone sx={{ color: "#82b1ff" }} />,
+    icon: <ManageAccountsTwoTone fontSize="small" sx={{ color: "#82b1ff" }} />,
     name: "Access",
     actionKey: "access",
   },
   {
-    icon: <SortTwoTone sx={{ color: "#e040fb" }} />,
+    icon: <SortTwoTone fontSize="small" sx={{ color: "#e040fb" }} />,
     name: "Sort",
     actionKey: "sort",
   },
   {
-    icon: <TuneTwoTone sx={{ color: "#64ffda" }} />,
+    icon: <TuneTwoTone fontSize="small" sx={{ color: "#64ffda" }} />,
     name: "Filter",
     actionKey: "filter",
     airaDescribedby: "transition-popper",
   },
   {
-    icon: <SearchTwoTone sx={{ color: "#ffd54f" }} />,
+    icon: <SearchTwoTone fontSize="small" sx={{ color: "#ffd54f" }} />,
     name: "Find",
     actionKey: "find",
     airaDescribedby: "transition-popper",
   },
   {
-    icon: <SmartToyTwoTone sx={{ color: "#82b1ff" }} />,
+    icon: <SmartToyTwoTone fontSize="small" sx={{ color: "#82b1ff" }} />,
     name: "Chat",
     actionKey: "chat",
     airaDescribedby: "transition-popper",
@@ -55,7 +51,6 @@ const actions = [
 ];
 
 export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
-  const [open, setOpen] = React.useState(false);
   const [isAccessDialogOpen, setAccessDialogOpen] = React.useState(false);
   const [openPopper, setOpenPopper] = React.useState(false);
   const [popperAnchorEl, setPopperAnchorEl] = React.useState<
@@ -64,117 +59,82 @@ export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
   const [popperChild, setPopperChild] = React.useState<ReactElement | null>(
     null
   );
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
 
   const handleClickAway = () => {
     setOpenPopper(false);
-    handleClose();
   };
+
   const handleActionClick = (
     actionKey: string,
     event: React.MouseEvent<HTMLElement>
   ) => {
-    if (actionKey === "access") {
-      setAccessDialogOpen(true);
-      handleClose();
+    switch (actionKey) {
+      case "access":
+        setAccessDialogOpen(true);
+        break;
+      case "sort":
+        sortTree();
+        break;
+      case "find":
+        if (openPopper) {
+          setOpenPopper(false);
+          break;
+        }
+        setPopperAnchorEl(event.currentTarget);
+        setPopperChild(<FindPopper />);
+        setOpenPopper((prev) => !prev);
+        break;
+      case "filter":
+        if (openPopper) {
+          setOpenPopper(false);
+          break;
+        }
+        setPopperAnchorEl(event.currentTarget);
+        setPopperChild(<FiltersPopper onClose={()=>setOpenPopper(false)} />);
+        setOpenPopper((prev) => !prev);
+        break;
+      default:
+        break;
     }
-    if (actionKey === "sort") {
-      sortTree();
-      handleClose();
-    }
-    if (actionKey === "find") {
-      setPopperAnchorEl(event.currentTarget);
-      setPopperChild(<FindPopper />);
-      setOpenPopper(true);
-    }
-    if (actionKey === "filter") {
-      setPopperAnchorEl(event.currentTarget);
-      setPopperChild(<FiltersPopper />);
-      setOpenPopper(true);
-    }
-    // Add other action handlers here if needed
   };
 
   return (
     <>
-      <SpeedDial
-        className="flow-options-dial"
-        ariaLabel="Options"
-        icon={<SpeedDialIcon icon={<ListTwoTone fontSize="small" />} />}
-        onClose={handleClose}
-        onOpen={handleOpen}
-        open={open}
-        direction="left"
-        FabProps={{
-          size: "small",
-          sx: {
-            alignItems: "flex-end",
-            backgroundColor: "transparent",
-            boxShadow: "none",
-            minHeight: "30px",
-            width: "30px",
-            height: "30px",
-            color: "primary.main",
-            "&:hover": {
-              backgroundColor: "transparent",
-            },
-          },
-        }}
-        sx={{
-          "& .MuiFab-root": {
-            minHeight: "30px",
-            width: "30px",
-            height: "30px",
-          },
-          "& .MuiSvgIcon-root": {
-            fontSize: "1.2rem",
-          },
-        }}
-      >
+      <Stack direction="row" spacing={1} className="flow-options-stack">
         {actions.map((action) => (
-          <SpeedDialAction
-            aria-describedby={action.airaDescribedby}
-            key={action.name}
-            icon={action.icon}
-            onClick={(event) => handleActionClick(action.actionKey, event)}
-            slotProps={{
-              tooltip: {
-                placement: "top",
-                title: action.name,
-                sx: {
-                  gap: 0,
-                },
-              },
-              fab: {
-                size: "small",
-                sx: {
-                  backgroundColor: "transparent",
-                  color: "text.primary",
-                  boxShadow: "none",
-                  minHeight: "30px",
-                  width: "30px",
-                  height: "30px",
-                  "&:hover": {
-                    backgroundColor: "action.hover",
-                  },
-                },
-              },
-            }}
-          />
+          <Tooltip key={action.name} title={action.name} placement="top">
+            <IconButton
+              aria-label={action.name}
+              aria-describedby={action.airaDescribedby}
+              size="small"
+              onClick={(event) => handleActionClick(action.actionKey, event)}
+              // sx={{
+              //   backgroundColor: "transparent",
+              //   color: "text.primary",
+              //   boxShadow: "none",
+              //   width: 30,
+              //   height: 30,
+              //   p: 0.5,
+              //   "&:hover": {
+              //     backgroundColor: "action.hover",
+              //   },
+              // }}
+            >
+              {action.icon}
+            </IconButton>
+          </Tooltip>
         ))}
-      </SpeedDial>
+      </Stack>
+
       <AccessDialog
         open={isAccessDialogOpen}
-        onClose={() => {
-          setAccessDialogOpen(false);
-          handleClose();
-        }}
+        onClose={() => setAccessDialogOpen(false)}
         tree={tree}
       />
+
       <PopperWrapper open={openPopper} anchorEl={popperAnchorEl}>
         <ClickAwayListener onClickAway={handleClickAway}>
-          {popperChild ? popperChild : <div />}
+          {popperChild ?? <div />}
         </ClickAwayListener>
       </PopperWrapper>
     </>

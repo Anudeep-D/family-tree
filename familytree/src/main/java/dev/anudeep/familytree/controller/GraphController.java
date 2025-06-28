@@ -53,19 +53,6 @@ public class GraphController {
         }
     }
 
-    @GetMapping("/{elementId}/family")
-    @Operation(summary = "Get Family of a person by elementId")
-    public List<Person> getFamily(
-            @Parameter(description = "Tree Id of a tree", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
-            @PathVariable String treeId,
-            @Parameter(description = "elementId of the person to retrieve family of person", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
-            @PathVariable String elementId,
-            HttpSession session) {
-        commonUtils.accessCheck(treeId, new Role[]{Role.VIEWER, Role.ADMIN, Role.EDITOR});
-        log.info("GraphController: Fetching immediate family of a person by elementId {}", elementId);
-        return graphService.getFamily(elementId);
-    }
-
 
     @PreAuthorize("hasRole('EDITOR') or hasRole('ADMIN') or hasRole('VIEWER')")
     @GetMapping("/{elementId}/familytree")
@@ -75,11 +62,17 @@ public class GraphController {
             @PathVariable String treeId,
             @Parameter(description = "ElementId of the person to retrieve family tree of person", required = true, example = "4:12979c35-eb38-4bad-b707-8478b11ae98e:45")
             @PathVariable String elementId,
+            @Parameter(description = "isImmediate to fetch only immediate family", required = true, example = "true") @RequestParam("isImmediate") boolean isImmediate,
             HttpSession session) {
-        commonUtils.accessCheck(treeId, new Role[]{Role.VIEWER, Role.ADMIN, Role.EDITOR});
-        log.info("Requesting family tree for Person {}", elementId);
-        // ✅ You can now use `role` to allow/disallow operations
-        return graphService.getFamilyTree(elementId);
+        try {
+            commonUtils.accessCheck(treeId, new Role[]{Role.VIEWER, Role.ADMIN, Role.EDITOR});
+            log.info("Requesting family tree for Person {} and is immediate {}", elementId, isImmediate);
+            return graphService.getFamilyTree(elementId, isImmediate);
+        }catch (Exception e) {
+            log.error("GraphController: Failed to fetch graph for treeId {} and root {} with :{}", treeId, elementId, e.getMessage(), e); // Log full stack trace
+            // Consider a more specific exception if possible, or a generic internal server error.
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error fetching familytree: " + e.getMessage(), e);
+        }
     }
 
     @PostMapping
@@ -97,10 +90,11 @@ public class GraphController {
         // but commonUtils.accessCheck might perform more granular checks (e.g., specific tree ownership or shared access)
         // It's good practice to keep it if it adds value beyond role checking.
         // Ensure Role.EDITOR and Role.ADMIN are correctly referenced.
-        commonUtils.accessCheck(treeId, new Role[]{Role.EDITOR, Role.ADMIN});
+
 
         log.info("GraphController: Received request to update graph for treeId: {}", treeId);
         try {
+            commonUtils.accessCheck(treeId, new Role[]{Role.EDITOR, Role.ADMIN});
             graphService.updateGraph(treeId, diff);
             log.info("GraphController: Graph update successful for treeId: {}", treeId);
             return ResponseEntity.ok().build();

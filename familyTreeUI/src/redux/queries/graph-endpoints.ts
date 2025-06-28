@@ -51,36 +51,34 @@ export const graphApi = createApi({
       },
       providesTags: ["graphApi"],
     }),
-    getFamily: builder.query({ // Assuming this also needs treeId
-      query(args) {
-        return {
-          url: `/${args.treeId}/graph/${args.id}/family`, // Changed from args.treeId
-        };
-      },
-      providesTags: ["graphApi"],
-    }),
-    getFamilyTree: builder.query({ // Assuming this also needs treeId
+    getFamilyTree: builder.query<
+       { nodes: AppNode[]; edges: AppEdge[] },
+      { treeId: string; isImmediate: boolean; id: string }
+    >({
+      // Assuming this also needs treeId
       query(args) {
         return {
           url: `/${args.treeId}/graph/${args.id}/familytree`, // Changed from args.treeId
+          params: { isImmediate: args.isImmediate },
         };
       },
       providesTags: ["graphApi"],
     }),
-    updateGraph: builder.mutation<void, { treeId: string; diff: GraphDiffDTO }>({
-      query: (args) => ({
-        url: `/${args.treeId}/graph`,
-        method: 'POST',
-        body: args.diff,
-      }),
-      invalidatesTags: ['graphApi'], // Invalidate to refetch graph data after update
-    }),
+    updateGraph: builder.mutation<void, { treeId: string; diff: GraphDiffDTO }>(
+      {
+        query: (args) => ({
+          url: `/${args.treeId}/graph`,
+          method: "POST",
+          body: args.diff,
+        }),
+        invalidatesTags: ["graphApi"], // Invalidate to refetch graph data after update
+      }
+    ),
   }),
 });
 
-export const { 
-  useGetGraphQuery, 
-  useGetFamilyQuery, 
+export const {
+  useGetGraphQuery,
   useGetFamilyTreeQuery,
-  useUpdateGraphMutation // Add this export
+  useUpdateGraphMutation, // Add this export
 } = graphApi;

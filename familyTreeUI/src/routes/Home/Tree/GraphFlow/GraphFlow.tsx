@@ -1,8 +1,18 @@
 import { AppEdge, Edges, edgeTypes } from "@/types/edgeTypes";
 import { AppNode, Nodes, nodeTypes } from "@/types/nodeTypes";
 import { getLayoutedElements } from "@/utils/layout";
-import { useUpdateGraphMutation } from "@/redux/queries/graph-endpoints"; // Path verified by ls
-import { Alert, Box } from "@mui/material";
+import {
+  graphApi,
+  useUpdateGraphMutation,
+} from "@/redux/queries/graph-endpoints"; // Path verified by ls
+import {
+  Alert,
+  AlertTitle,
+  Box,
+  Slide,
+  SlideProps,
+  Snackbar,
+} from "@mui/material";
 import {
   useNodesState,
   useEdgesState,
@@ -17,7 +27,7 @@ import {
   XYPosition,
   MarkerType, // Added MarkerType
 } from "@xyflow/react";
-import { FC, useCallback, useEffect, useRef, useState } from "react";
+import { FC, ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDeleteTreeMutation } from "@/redux/queries/tree-endpoints";
 import { NodeButtons } from "./Options/NodeButtons";
@@ -28,8 +38,17 @@ import { Tree } from "@/types/entityTypes";
 import { EdgeDialog } from "./EdgeDialog/EdgeDialog";
 import { Role } from "@/types/common";
 import { getDiff } from "@/utils/common";
-import { setReduxNodes, setReduxEdges, selectFilteredNodes, selectFilteredEdges, setApplyFilters } from "@/redux/treeConfigSlice";
+import {
+  setReduxNodes,
+  setReduxEdges,
+  selectFilteredNodes,
+  selectFilteredEdges,
+  setApplyFilters,
+  selectCurrentFilter,
+  selectRootedGraph,
+} from "@/redux/treeConfigSlice";
 import { useDispatch, useSelector } from "react-redux";
+import useRootPersonGraph from "@/hooks/useRootPersonGraph";
 
 // Define defaultMarker outside the component if it's static, or inside if it depends on props/theme
 const defaultMarker = {
@@ -50,9 +69,10 @@ const GraphFlow: FC<GraphFlowProps> = ({
   initialEdges,
   tree,
 }) => {
-
   const dispatch = useDispatch(); // Initialize useDispatch
-  
+  const [snackBarMsg, setSnackBarMsg] = useState<ReactNode | undefined>(
+    undefined
+  );
   const isViewer = tree.access === Role.Viewer;
   const [deleteTree, { isLoading: isDeleting, error: deleteError }] =
     useDeleteTreeMutation();
@@ -76,16 +96,49 @@ const GraphFlow: FC<GraphFlowProps> = ({
   const [nodes, setNodes, onNodesChange] = useNodesState(initNodes);
   // Initialize useEdgesState with edges that have markers and classNames
   const [edges, setEdges, onEdgesChange] = useEdgesState(initEdgesWithMarkers);
-
+  const currentFilter = useSelector(selectCurrentFilter);
+  useRootPersonGraph(
+    currentFilter.filterBy.rootPerson.person?.id,
+    currentFilter.filterBy.rootPerson.onlyImmediate
+  );
+  const rootedGraph = useSelector(selectRootedGraph);
+  const [waitForRootedGraph, setWaitForRootedGraph] = useState(false);
+  const handleApplyFilter = () => {
+    if (!currentFilter.filterBy.rootPerson.person) {
+      dispatch(setApplyFilters(true));
+    } else {
+      setWaitForRootedGraph(true); // wait for rootedGraph to load
+    }
+  };
+  useEffect(() => {
+    if (
+      waitForRootedGraph &&
+      rootedGraph &&
+      rootedGraph.isloading === false &&
+      rootedGraph.error === undefined
+    ) {
+      dispatch(setApplyFilters(true));
+      setWaitForRootedGraph(false); // reset the flag
+    }
+  }, [waitForRootedGraph, rootedGraph]);
 
   useEffect(() => {
     nodes && dispatch(setReduxNodes(nodes));
     edges && dispatch(setReduxEdges(edges));
-    dispatch(setApplyFilters());
+    currentFilter.enabled
+      ? handleApplyFilter()
+      : dispatch(setApplyFilters(true));
   }, [dispatch, nodes, edges]);
 
   const filteredNodes = useSelector(selectFilteredNodes);
   const filteredEdges = useSelector(selectFilteredEdges);
+  useEffect(() => {
+    setSnackBarMsg(
+      <Box>
+        <strong>Filters applied!</strong> Displaying a filtered tree.
+      </Box>
+    );
+  }, [filteredEdges, filteredNodes]);
   const [prevNodes, setPrevNodes] = useNodesState(initNodes);
   // Initialize prevEdges with edges that have markers and classNames
   const [prevEdges, setPrevEdges] = useEdgesState(initEdgesWithMarkers);
@@ -445,6 +498,17 @@ const GraphFlow: FC<GraphFlowProps> = ({
           onSubmit={(type, data) => handleEdgeSubmit(type, data)}
         />
       )}
+
+      <Snackbar
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        open={Boolean(snackBarMsg)}
+        autoHideDuration={6000}
+        onClose={() => setSnackBarMsg(undefined)}
+      >
+        <Alert severity="warning" variant="filled" sx={{ width: "100%" }}>
+          {snackBarMsg}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

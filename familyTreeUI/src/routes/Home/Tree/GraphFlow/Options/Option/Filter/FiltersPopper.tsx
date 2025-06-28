@@ -20,7 +20,14 @@ import {
   Chip,
   SvgIcon,
 } from "@mui/material";
-import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import DeleteFilterDialog from "./components/DeleteFilterDialog";
 import SaveAsNewView from "./components/SaveAsNewView";
 import options from "@/constants/JobAndQualification.json";
@@ -36,6 +43,7 @@ import {
   selectCurrentFilter,
   initialState,
   setApplyFilters,
+  selectRootedGraph,
 } from "@/redux/treeConfigSlice";
 import { Nodes } from "@/types/nodeTypes";
 import {
@@ -56,17 +64,19 @@ import {
 } from "@/redux/queries/filter-endpoints";
 import { getErrorMessage } from "@/utils/common";
 import { Edges } from "@/types/edgeTypes";
-import ParentIcon from "@/styles/svg/ParentIcon";
-import MarriageIcon from "@/styles/svg/MarriageIcon";
-import BelongsIcon from "@/styles/svg/BelongsIcon";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 
-export type FiltersPopperProps = {};
+export type FiltersPopperProps = {
+  onClose: () => void;
+};
 
 const icon = <CheckBoxOutlineBlank fontSize="small" />;
 const checkedIcon = <CheckBox fontSize="small" />;
 
 const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
-  ({}, ref) => {
+  ({ onClose }, ref) => {
     //about saved filters
     const tree = useSelector(selectTree);
     const currentFilter = useSelector(selectCurrentFilter);
@@ -232,6 +242,28 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
       setFilterName("");
       setNameExists(null);
     };
+    const rootedGraph = useSelector(selectRootedGraph);
+    const [waitForRootedGraph, setWaitForRootedGraph] = useState(false);
+    const handleApplyFilter = () => {
+      if (!currentFilter.filterBy.rootPerson.person) {
+        dispatch(setApplyFilters(false));
+        onClose();
+      } else {
+        setWaitForRootedGraph(true); // wait for rootedGraph to load
+      }
+    };
+    useEffect(() => {
+      if (
+        waitForRootedGraph &&
+        rootedGraph &&
+        rootedGraph.isloading === false &&
+        rootedGraph.error === undefined
+      ) {
+        dispatch(setApplyFilters(false));
+        setWaitForRootedGraph(false); // reset the flag
+        onClose();
+      }
+    }, [waitForRootedGraph, rootedGraph]);
     const handleSaveAs = () => {
       setSaveAsOpen((prev) => !prev);
       setChecking(false);
@@ -548,46 +580,59 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
               max={100}
               sx={{ mb: 1 }}
             />
-            <Stack
-              direction="row"
-              spacing={1}
-              justifyContent="space-between"
-              sx={{ mt: 1 }}
-            >
-              <TextField
-                label="Born After"
-                type="date"
-                value={currentFilter.filterBy.nodeProps.person.bornAfter}
-                onChange={(e) => {
-                  console.log("born After", e.target.value);
-                  handleChange(
-                    ["filterBy", "nodeProps", "person", "bornAfter"],
-                    e.target.value
-                  );
-                }}
-                fullWidth
-                size="small"
-                slotProps={{ inputLabel: { shrink: true } }}
-                sx={{ mb: 1 }}
-              />
-              <TextField
-                label="Born Before"
-                type="date"
-                value={currentFilter.filterBy.nodeProps.person.bornBefore}
-                onChange={(e) => {
-                  console.log("born After", e.target.value);
-                  handleChange(
-                    ["filterBy", "nodeProps", "person", "bornBefore"],
-                    e.target.value
-                  );
-                }}
-                fullWidth
-                size="small"
-                slotProps={{ inputLabel: { shrink: true } }}
-                sx={{ mb: 1 }}
-              />
-            </Stack>
-
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <Stack
+                direction="row"
+                spacing={1}
+                justifyContent="space-between"
+                sx={{ mt: 1 }}
+              >
+                <DatePicker
+                  label="Born After"
+                  value={
+                    currentFilter.filterBy.nodeProps.person.bornAfter
+                      ? dayjs(currentFilter.filterBy.nodeProps.person.bornAfter)
+                      : null
+                  }
+                  onChange={(date) => {
+                    handleChange(
+                      ["filterBy", "nodeProps", "person", "bornAfter"],
+                      date ? date.toISOString() : null
+                    );
+                  }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: "small",
+                    },
+                  }}
+                  sx={{ mb: 1 }}
+                />
+                <DatePicker
+                  label="Born Before"
+                  value={
+                    currentFilter.filterBy.nodeProps.person.bornBefore
+                      ? dayjs(
+                          currentFilter.filterBy.nodeProps.person.bornBefore
+                        )
+                      : null
+                  }
+                  onChange={(date) => {
+                    handleChange(
+                      ["filterBy", "nodeProps", "person", "bornBefore"],
+                      date ? date.toISOString() : null
+                    );
+                  }}
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: "small",
+                    },
+                  }}
+                  sx={{ mb: 1 }}
+                />
+              </Stack>
+            </LocalizationProvider>
             <Autocomplete
               multiple
               limitTags={1}
@@ -736,7 +781,12 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             {getErrorMessage(errorOnUpdate)}
           </Alert>
         )}
-        <Stack direction="row" spacing={2} justifyContent="space-between">
+        <Stack
+          sx={{ mt: 1 }}
+          direction="row"
+          spacing={2}
+          justifyContent="space-between"
+        >
           <ButtonGroup fullWidth variant="text" sx={{ flex: 1, gap: 1 }}>
             <Tooltip title="Clear Filter">
               <Button
@@ -768,8 +818,9 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             <Tooltip title="Apply Filter">
               <Button
                 variant="outlined"
-                onClick={() => dispatch(setApplyFilters())}
+                onClick={handleApplyFilter}
                 disabled={!currentFilter.enabled}
+                loading={waitForRootedGraph}
                 sx={{ color: "#5688fc", background: "#00000000" }}
               >
                 <FilterAltTwoTone />
