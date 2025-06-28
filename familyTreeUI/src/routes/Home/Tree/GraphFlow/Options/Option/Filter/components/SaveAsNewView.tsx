@@ -62,7 +62,6 @@ const SaveAsNewView = ({
         </Button>
       </Stack>
       {checking && <CircularProgress size={20} sx={{ mt: 1 }} />}
-      <Divider sx={{ my: 2 }} />
     </Box>
   );
 };

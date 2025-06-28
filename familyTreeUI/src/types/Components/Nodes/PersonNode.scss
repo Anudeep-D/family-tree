@@ -29,8 +29,14 @@
   }
 
   &.deceased {
-    border-color: #d32f2f; // Border for deceased
-    // Opacity can make image look faded too, or apply to specific elements if needed
+    border-color: #c9c9c9;
+    opacity: 0.8;
+    filter: grayscale(100%);
+  }
+
+  &.alive {
+    opacity: 1;
+    filter: none;
   }
 
   // Styles for nodes WITH an image

@@ -28,8 +28,8 @@ import { Tree } from "@/types/entityTypes";
 import { EdgeDialog } from "./EdgeDialog/EdgeDialog";
 import { Role } from "@/types/common";
 import { getDiff } from "@/utils/common";
-import { setReduxNodes, setReduxEdges } from "@/redux/treeConfigSlice";
-import { useDispatch } from "react-redux";
+import { setReduxNodes, setReduxEdges, selectFilteredNodes, selectFilteredEdges, setApplyFilters } from "@/redux/treeConfigSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 // Define defaultMarker outside the component if it's static, or inside if it depends on props/theme
 const defaultMarker = {
@@ -81,9 +81,11 @@ const GraphFlow: FC<GraphFlowProps> = ({
   useEffect(() => {
     nodes && dispatch(setReduxNodes(nodes));
     edges && dispatch(setReduxEdges(edges));
+    dispatch(setApplyFilters());
   }, [dispatch, nodes, edges]);
 
-
+  const filteredNodes = useSelector(selectFilteredNodes);
+  const filteredEdges = useSelector(selectFilteredEdges);
   const [prevNodes, setPrevNodes] = useNodesState(initNodes);
   // Initialize prevEdges with edges that have markers and classNames
   const [prevEdges, setPrevEdges] = useEdgesState(initEdgesWithMarkers);
@@ -333,10 +335,10 @@ const GraphFlow: FC<GraphFlowProps> = ({
         onDragOver={isViewer ? undefined : onDragOver} // Conditionally disable dragOver if viewer
       >
         <ReactFlow
-          nodes={nodes}
+          nodes={filteredNodes}
           nodeTypes={nodeTypes}
           onNodesChange={onNodesChange}
-          edges={edges}
+          edges={filteredEdges}
           edgeTypes={edgeTypes}
           onEdgesChange={onEdgesChange}
           onConnect={isViewer ? undefined : onConnect}

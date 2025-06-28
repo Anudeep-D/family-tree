@@ -76,7 +76,7 @@ export const nodeFieldsMetadata = {
     {
       name: "isAlive",
       type: ["Yes", "No"],
-      required: false,
+      required: true,
       label: "Is alive?",
       default: "Yes",
       isField:true,

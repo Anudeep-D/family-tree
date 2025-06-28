@@ -36,6 +36,17 @@ public class FilterNodeConverter {
 
         Filter.FilterBy filterBy = filter.getFilterBy();
         if (filterBy != null) {
+
+            if (filterBy.getEdgeTypes() != null) {
+                properties.put("filterBy_edgeTypes_"+Constants.BELONGS_REL, filterBy.getEdgeTypes().get(Constants.BELONGS_REL));
+                properties.put("filterBy_edgeTypes_"+Constants.MARRIED_REL, filterBy.getEdgeTypes().get(Constants.MARRIED_REL));
+                properties.put("filterBy_edgeTypes_"+Constants.PARENT_REL, filterBy.getEdgeTypes().get(Constants.PARENT_REL));
+            } else {
+                properties.put("filterBy_edgeTypes_"+Constants.BELONGS_REL, null);
+                properties.put("filterBy_edgeTypes_"+Constants.MARRIED_REL, null);
+                properties.put("filterBy_edgeTypes_"+Constants.PARENT_REL, null);
+            }
+
             if (filterBy.getNodeTypes() != null) {
                 properties.put("filterBy_nodeTypes_Person", filterBy.getNodeTypes().get("Person"));
                 properties.put("filterBy_nodeTypes_House", filterBy.getNodeTypes().get("House"));
@@ -128,6 +139,9 @@ public class FilterNodeConverter {
                 properties.put("filterBy_rootPerson_onlyImmediate", false); // Or null if appropriate
             }
         } else {
+            properties.put("filterBy_edgeTypes_"+Constants.BELONGS_REL, null);
+            properties.put("filterBy_edgeTypes_"+Constants.MARRIED_REL, null);
+            properties.put("filterBy_edgeTypes_"+Constants.PARENT_REL, null);
             // Nullify all filterBy sub-properties
             properties.put("filterBy_nodeTypes_Person", null);
             properties.put("filterBy_nodeTypes_House", null);
@@ -161,6 +175,16 @@ public class FilterNodeConverter {
             filter.setEnabled((Boolean) enabledObj);
         } else if (enabledObj != null) {
             filter.setEnabled(Boolean.parseBoolean(enabledObj.toString()));
+        }
+
+        if (flattenedProps.get("filterBy_edgeTypes_"+Constants.BELONGS_REL) instanceof Boolean) {
+            filter.getFilterBy().getEdgeTypes().replace(Constants.BELONGS_REL, (Boolean) flattenedProps.get("filterBy_edgeTypes_"+Constants.BELONGS_REL));
+        }
+        if (flattenedProps.get("filterBy_edgeTypes_"+Constants.MARRIED_REL) instanceof Boolean) {
+            filter.getFilterBy().getEdgeTypes().replace(Constants.MARRIED_REL, (Boolean) flattenedProps.get("filterBy_edgeTypes_"+Constants.MARRIED_REL));
+        }
+        if (flattenedProps.get("filterBy_edgeTypes_"+Constants.PARENT_REL) instanceof Boolean) {
+            filter.getFilterBy().getEdgeTypes().replace(Constants.PARENT_REL, (Boolean) flattenedProps.get("filterBy_edgeTypes_"+Constants.PARENT_REL));
         }
 
         if (flattenedProps.get("filterBy_nodeTypes_Person") instanceof Boolean) {

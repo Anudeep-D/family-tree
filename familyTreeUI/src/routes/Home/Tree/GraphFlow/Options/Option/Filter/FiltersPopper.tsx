@@ -17,6 +17,8 @@ import {
   Alert,
   ButtonGroup,
   Tooltip,
+  Chip,
+  SvgIcon,
 } from "@mui/material";
 import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import DeleteFilterDialog from "./components/DeleteFilterDialog";
@@ -33,6 +35,7 @@ import {
   selectSelectedFilter,
   selectCurrentFilter,
   initialState,
+  setApplyFilters,
 } from "@/redux/treeConfigSlice";
 import { Nodes } from "@/types/nodeTypes";
 import {
@@ -52,6 +55,10 @@ import {
   useGetFiltersQuery,
 } from "@/redux/queries/filter-endpoints";
 import { getErrorMessage } from "@/utils/common";
+import { Edges } from "@/types/edgeTypes";
+import ParentIcon from "@/styles/svg/ParentIcon";
+import MarriageIcon from "@/styles/svg/MarriageIcon";
+import BelongsIcon from "@/styles/svg/BelongsIcon";
 
 export type FiltersPopperProps = {};
 
@@ -148,7 +155,12 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
           dispatch(setCurrentFilter(newActualFilter));
         }
       } else {
-        dispatch(setCurrentFilter(initialState.currentFilter));
+        dispatch(
+          setCurrentFilter({
+            ...initialState.currentFilter,
+            enabled: currentFilter.enabled,
+          })
+        );
       }
     };
     const handleChange = (keys: string[], value: any) => {
@@ -158,7 +170,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
         curr[keys[i]] = { ...curr[keys[i]] };
         curr = curr[keys[i]];
       }
-      curr[keys[keys.length - 1]] = value;
+      curr[keys[keys.length - 1]] = value ?? null;
       dispatch(setCurrentFilter(newState));
     };
 
@@ -297,12 +309,58 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             </IconButton>
           )}
         </Box>
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 1.5 }} />
 
         {/* Two-column layout for filters */}
         <Box display="grid" gridTemplateColumns="repeat(2, 1fr)" gap={2}>
           {/* Column 1 */}
           <Box>
+            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+              Show Edge Types
+            </Typography>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={currentFilter.filterBy.edgeTypes.BELONGS_TO}
+                  onChange={(e) =>
+                    handleChange(
+                      ["filterBy", "edgeTypes", Edges.BELONGS_TO],
+                      e.target.checked
+                    )
+                  }
+                />
+              }
+              label="Belongs"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={currentFilter.filterBy.edgeTypes.MARRIED_TO}
+                  onChange={(e) =>
+                    handleChange(
+                      ["filterBy", "edgeTypes", Edges.MARRIED_TO],
+                      e.target.checked
+                    )
+                  }
+                />
+              }
+              label="Married"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={currentFilter.filterBy.edgeTypes.PARENT_OF}
+                  onChange={(e) =>
+                    handleChange(
+                      ["filterBy", "edgeTypes", Edges.PARENT_OF],
+                      e.target.checked
+                    )
+                  }
+                />
+              }
+              label="Parent"
+            />
+            <Divider sx={{ my: 1.5 }} />
             <Typography variant="subtitle1" sx={{ mb: 1 }}>
               Show Node Types
             </Typography>
@@ -334,7 +392,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
               }
               label="Houses"
             />
-            <Divider sx={{ my: 2 }} />
+            <Divider sx={{ my: 1.5 }} />
             <Typography variant="subtitle1" sx={{ mb: 1 }}>
               Filter by House
             </Typography>
@@ -375,7 +433,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
               sx={{ mb: 2 }}
             />
             <Divider sx={{ my: 2 }} />
-            <Typography variant="subtitle1" sx={{ mb: 1 }}>
+            <Typography variant="subtitle1" sx={{ mb: 1.5 }}>
               Start From Person
             </Typography>
             <Autocomplete
@@ -395,26 +453,28 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
               )}
               sx={{ mb: 1 }}
             />
-            <ToggleButtonGroup
-              value={
-                currentFilter.filterBy.rootPerson.onlyImmediate
-                  ? "immediate"
-                  : "full"
-              }
-              exclusive
-              onChange={(_, val) =>
-                handleChange(
-                  ["filterBy", "rootPerson", "onlyImmediate"],
-                  val === "immediate" ? true : false
-                )
-              }
-              size="small"
-              fullWidth
-              sx={{ mb: 2 }}
-            >
-              <ToggleButton value="immediate">Immediate Family</ToggleButton>
-              <ToggleButton value="full">Full Tree</ToggleButton>
-            </ToggleButtonGroup>
+            {currentFilter.filterBy.rootPerson.person && (
+              <ToggleButtonGroup
+                value={
+                  currentFilter.filterBy.rootPerson.onlyImmediate
+                    ? "immediate"
+                    : "full"
+                }
+                exclusive
+                onChange={(_, val) =>
+                  handleChange(
+                    ["filterBy", "rootPerson", "onlyImmediate"],
+                    val === "immediate" ? true : false
+                  )
+                }
+                size="small"
+                fullWidth
+                sx={{ mb: 2 }}
+              >
+                <ToggleButton value="immediate">Immediate Family</ToggleButton>
+                <ToggleButton value="full">Full Tree</ToggleButton>
+              </ToggleButtonGroup>
+            )}
           </Box>
 
           {/* Column 2 */}
@@ -498,12 +558,13 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
                 label="Born After"
                 type="date"
                 value={currentFilter.filterBy.nodeProps.person.bornAfter}
-                onChange={(e) =>
+                onChange={(e) => {
+                  console.log("born After", e.target.value);
                   handleChange(
                     ["filterBy", "nodeProps", "person", "bornAfter"],
                     e.target.value
-                  )
-                }
+                  );
+                }}
                 fullWidth
                 size="small"
                 slotProps={{ inputLabel: { shrink: true } }}
@@ -513,12 +574,13 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
                 label="Born Before"
                 type="date"
                 value={currentFilter.filterBy.nodeProps.person.bornBefore}
-                onChange={(e) =>
+                onChange={(e) => {
+                  console.log("born After", e.target.value);
                   handleChange(
                     ["filterBy", "nodeProps", "person", "bornBefore"],
                     e.target.value
-                  )
-                }
+                  );
+                }}
                 fullWidth
                 size="small"
                 slotProps={{ inputLabel: { shrink: true } }}
@@ -567,7 +629,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
                   size="small"
                 />
               )}
-              sx={{ my: 1 }}
+              sx={{ my: 2 }}
               fullWidth
             />
             <Autocomplete
@@ -611,7 +673,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
                   size="small"
                 />
               )}
-              sx={{ my: 1 }}
+              sx={{ my: 2 }}
               fullWidth
             />
             <Autocomplete
@@ -651,12 +713,12 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
               renderInput={(params) => (
                 <TextField {...params} label="Job Type" size="small" />
               )}
-              sx={{ my: 1 }}
+              sx={{ my: 2 }}
             />
           </Box>
         </Box>
 
-        <Divider sx={{ my: 2 }} />
+        <Divider sx={{ mt: 2, mb: 1 }} />
         {saveAsOpen && (
           <SaveAsNewView
             filterName={filterName}
@@ -674,18 +736,18 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             {getErrorMessage(errorOnUpdate)}
           </Alert>
         )}
-        <Stack
-          direction="row"
-          spacing={2}
-          justifyContent="space-between"
-          sx={{ mt: 3 }}
-        >
+        <Stack direction="row" spacing={2} justifyContent="space-between">
           <ButtonGroup fullWidth variant="text" sx={{ flex: 1, gap: 1 }}>
             <Tooltip title="Clear Filter">
               <Button
                 variant="outlined"
                 onClick={() =>
-                  dispatch(setCurrentFilter(initialState.currentFilter))
+                  dispatch(
+                    setCurrentFilter({
+                      ...initialState.currentFilter,
+                      enabled: currentFilter.enabled,
+                    })
+                  )
                 }
                 sx={{ color: "#b6a3c5", background: "#00000000" }}
               >
@@ -706,7 +768,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
             <Tooltip title="Apply Filter">
               <Button
                 variant="outlined"
-                onClick={() => console.log("clicked Apply Filters")}
+                onClick={() => dispatch(setApplyFilters())}
                 disabled={!currentFilter.enabled}
                 sx={{ color: "#5688fc", background: "#00000000" }}
               >

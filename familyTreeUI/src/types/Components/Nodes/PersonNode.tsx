@@ -173,7 +173,7 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
   );
 
   const personNodeClasses = `person-node person-node-hoverable ${
-    data.isAlive ? "alive" : "deceased"
+    data.isAlive==="Yes" ? "alive" : "deceased"
   } ${imageUrlToDisplay ? "has-image" : ""}`;
 
   const displayLabel = data.nickName

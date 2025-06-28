@@ -381,7 +381,13 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                           {subField.name === "jobType" && (
                             <Autocomplete
                               value={
-                                formState?.[field.name]?.[subField.name] ?? null
+                                formState?.[field.name]?.[subField.name]
+                                  ? options.JobTypeOptions.find(
+                                      (option) =>
+                                        option.label ===
+                                        formState[field.name][subField.name]
+                                    )
+                                  : null
                               }
                               autoComplete
                               autoHighlight
@@ -392,8 +398,8 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                               isOptionEqualToValue={(option, value) =>
                                 option.id === value.id
                               }
-                              options={options.JobTypeOptions.sort(
-                                (a, b) => a.group.localeCompare(b.group)
+                              options={options.JobTypeOptions.sort((a, b) =>
+                                a.group.localeCompare(b.group)
                               )}
                               renderInput={(params) => (
                                 <TextField
@@ -403,7 +409,11 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                               )}
                               onChange={(
                                 _e,
-                                newValue: { id: string; label: string } | null
+                                newValue: {
+                                  id: string;
+                                  label: string;
+                                  group: string;
+                                } | null
                               ) =>
                                 handleChange(
                                   field.name,
@@ -416,7 +426,13 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                           {subField.name === "fieldOfStudy" && (
                             <Autocomplete
                               value={
-                                formState?.[field.name]?.[subField.name] ?? null
+                                formState?.[field.name]?.[subField.name]
+                                  ? options.fieldOfStudyOptions.find(
+                                      (option) =>
+                                        option.label ===
+                                        formState[field.name][subField.name]
+                                    )
+                                  : null
                               }
                               autoComplete
                               autoHighlight
@@ -438,7 +454,11 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                               )}
                               onChange={(
                                 _e,
-                                newValue: { id: string; label: string } | null
+                                newValue: {
+                                  id: string;
+                                  label: string;
+                                  group: string;
+                                } | null
                               ) =>
                                 handleChange(
                                   field.name,
@@ -451,7 +471,13 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                           {subField.name === "highestQualification" && (
                             <Autocomplete
                               value={
-                                formState?.[field.name]?.[subField.name] ?? null
+                                formState?.[field.name]?.[subField.name]
+                                  ? options.QualificationOptions.find(
+                                      (option) =>
+                                        option.label ===
+                                        formState[field.name][subField.name]
+                                    )
+                                  : null
                               }
                               autoComplete
                               autoHighlight
@@ -473,7 +499,11 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                               )}
                               onChange={(
                                 _e,
-                                newValue: { id: string; label: string } | null
+                                newValue: {
+                                  id: string;
+                                  label: string;
+                                  group: string;
+                                } | null
                               ) =>
                                 handleChange(
                                   field.name,

@@ -1,6 +1,7 @@
 package dev.anudeep.familytree.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import dev.anudeep.familytree.utils.Constants;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -33,6 +34,11 @@ public class Filter {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class FilterBy {
+        private Map<String, Boolean> edgeTypes = new HashMap<String, Boolean>() {{
+            put(Constants.BELONGS_REL, true);
+            put(Constants.MARRIED_REL, true);
+            put(Constants.PARENT_REL, true);
+        }};
         private Map<String, Boolean> nodeTypes = new HashMap<String, Boolean>() {{
             put("Person", true);
             put("House", true);
