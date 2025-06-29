@@ -1,32 +1,58 @@
-import { Nodes } from "@/types/nodeTypes";
-import { MiniMapNodeProps } from "@xyflow/react";
+import { Nodes } from "@/types/nodeTypes"; // Assuming Nodes enum is here
+import { MiniMapNodeProps } from "@xyflow/react"; // Import Node for type safety if needed, MiniMapNodeProps is key
 
-const MiniMapNode: React.FC<MiniMapNodeProps> = (props) => {
-  const isPerson = props.className.toLowerCase() === Nodes.Person.toLowerCase();
-  const isHouse = props.className.toLowerCase() === Nodes.House.toLowerCase();
-  console.log(props);
-  return isPerson ? (
-    <circle
-      cx={(props.width ?? 10) / 2}
-      cy={(props.height ?? 10) / 2}
-      r={(props.height ?? 10) / 2}
-      fill="#66bb6a"
-      stroke="#2e7d32"
-      strokeWidth={1}
-    />
-  ) : (
-    <rect
-      x={0}
-      y={0}
-      width={props.width ?? 10}
-      height={props.height ?? 10}
-      rx={3}
-      ry={3}
-      fill="#42a5f5"
-      stroke="#1565c0"
-      strokeWidth={1}
-    />
-  );
+const MiniMapNode: React.FC<MiniMapNodeProps> = ({
+  x,
+  y,
+  width,
+  height,
+  borderRadius,
+  color,
+  strokeColor,
+  strokeWidth,
+  shapeRendering,
+  style,
+  selected,
+  className,
+}) => {
+  const type = className;
+  const isPerson = type === Nodes.Person;
+  const isHouse = type === Nodes.House;
+  if (isHouse)
+    return (
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        rx={borderRadius}
+        ry={borderRadius}
+        fill={color}
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+        shapeRendering={shapeRendering}
+        style={style}
+        opacity={selected ? 1 : 0.8}
+      />
+    );
+  if (isPerson)
+    return (
+      <circle
+        r={Math.min(width, height) / 2}
+        width={width}
+        height={height}
+        cx={x}
+        cy={y}
+        fill={color}
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+        shapeRendering={shapeRendering}
+        style={style}
+        opacity={selected ? 1 : 0.8}
+      />
+    );
+
+  return <></>;
 };
 
 export default MiniMapNode;

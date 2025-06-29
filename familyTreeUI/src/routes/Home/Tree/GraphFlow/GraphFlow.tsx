@@ -2,7 +2,7 @@ import { AppEdge, Edges, edgeTypes } from "@/types/edgeTypes";
 import { AppNode, Nodes, nodeTypes } from "@/types/nodeTypes";
 import { getLayoutedElements } from "@/utils/layout";
 import { useUpdateGraphMutation } from "@/redux/queries/graph-endpoints"; // Path verified by ls
-import { Alert, Box, Popover, Snackbar, Typography } from "@mui/material";
+import { Alert, Box, Snackbar } from "@mui/material";
 import {
   useNodesState,
   useEdgesState,
@@ -44,7 +44,6 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 // import { PersonNode as PersonNodeType } from "@/types/Components/Nodes/PersonNode"; // No longer needed here
 import { NodeDataMap, Nodes as NodeTypesEnum } from "@/types/nodeTypes"; // Renamed Nodes to NodeTypesEnum to avoid conflict
-import dayjs from "dayjs"; // Keep for PersonNodePopover if it still uses it, or manage there
 import { PersonNodePopover } from "@/types/Components/Nodes/PersonNodePopover";
 import { HouseNodePopover } from "@/types/Components/Nodes/HouseNodePopover";
 import MiniMapNode from "./MiniMap/MiniMapNode";
@@ -478,19 +477,15 @@ const GraphFlow: FC<GraphFlowProps> = ({
   };
 
   const nodeColor = (node: Node): string => {
-    if (node.type === "House") return "#1e88e5"; // blue fill
-    if (node.type === "Person") return node.data?.isAlive ? "#4caf50" : "#c9c9c9"; // white fill for person
+    if (node.type === "House") return "#33b0fa"; // blue fill
+    if (node.type === "Person") return node.data?.isAlive==="Yes" ? "#72b79d" : "#7c7c7c"; // white fill for person
     return "#ccc";
   };
 
   const nodeStrokeColor = (node: Node): string => {
-    if (node.type === "House") return "#2196f3"; // blue
-    if (node.type === "Person") return "#4caf50"; // green border
+    if (node.type === "House") return "#33b0fa"; // blue
+    if (node.type === "Person") return "#72b79d"; // green border
     return "#999";
-  };
-
-  const nodeShape = (node: Node): number => {
-    return node.type === "Person" ? 4 : 0;
   };
 
   return (
@@ -595,9 +590,9 @@ const GraphFlow: FC<GraphFlowProps> = ({
             maskColor="rgba(0, 0, 0, 0.5)"
             style={{
               height: 120,
-              background: "#111", // dark minimap background
-              border: "1px solid #333",
-              borderRadius: 4,
+              background: "#1d1d1d", // dark minimap background
+              border: "0.5px solid white",
+              borderRadius: 0,
             }}
             pannable
             zoomable
@@ -607,11 +602,16 @@ const GraphFlow: FC<GraphFlowProps> = ({
           <Controls
             showInteractive
             position="bottom-right"
+            orientation="horizontal"
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.7)",
               color: "black",
-              borderRadius: "8px",
-              boxShadow: "0 0 5px rgba(255,255,255,0.1)",
+              background: 'rgba(0, 0, 0, 0)',
+              borderRadius: 0,
+              padding: 0,
+              boxShadow: '0 0 6px rgba(0, 0, 0, 0.5)',
+              flexDirection: 'row', // Horizontal layout
+              gap: '6px',           // Add spacing between buttons
+              
             }}
           />
           {!isViewer && (
