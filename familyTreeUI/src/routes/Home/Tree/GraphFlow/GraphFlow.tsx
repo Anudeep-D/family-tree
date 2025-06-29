@@ -478,7 +478,8 @@ const GraphFlow: FC<GraphFlowProps> = ({
 
   const nodeColor = (node: Node): string => {
     if (node.type === "House") return "#33b0fa"; // blue fill
-    if (node.type === "Person") return node.data?.isAlive==="Yes" ? "#72b79d" : "#7c7c7c"; // white fill for person
+    if (node.type === "Person")
+      return node.data?.isAlive === "Yes" ? "#72b79d" : "#7c7c7c"; // white fill for person
     return "#ccc";
   };
 
@@ -524,9 +525,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
           edgeTypes={edgeTypes}
           onEdgesChange={onEdgesChange}
           onConnect={isViewer ? undefined : onConnect}
-          onNodeClick={
-            isViewer ? undefined : (event, node) => handleNodeClick(event, node)
-          }
+          onNodeClick={(event, node) => handleNodeClick(event, node)}
           onNodeDoubleClick={
             isViewer ? undefined : (_event, node) => handleNodeDoubleClick(node)
           }
@@ -537,13 +536,9 @@ const GraphFlow: FC<GraphFlowProps> = ({
                   console.log("show node's context info", node);
                 }
           }
-          onEdgeClick={
-            isViewer
-              ? undefined
-              : (_event, edge) => {
-                  console.log("show edge's extra info", edge);
-                }
-          }
+          onEdgeClick={(_event, edge) => {
+            console.log("show edge's extra info", edge);
+          }}
           onEdgeDoubleClick={
             isViewer
               ? undefined
@@ -573,20 +568,14 @@ const GraphFlow: FC<GraphFlowProps> = ({
           }
           fitView
           nodesConnectable={!isViewer}
-          nodesFocusable={!isViewer}
-          edgesFocusable={!isViewer}
-          zoomOnDoubleClick={!isViewer}
-          zoomOnScroll={!isViewer}
-          panOnDrag={!isViewer}
           proOptions={{ hideAttribution: true }}
         >
           <Background />
           <MiniMap
             nodeColor={nodeColor}
             nodeStrokeColor={nodeStrokeColor}
-            nodeClassName={(node)=>node.type ?? "None"}
+            nodeClassName={(node) => node.type ?? "None"}
             nodeComponent={MiniMapNode}
-
             maskColor="rgba(0, 0, 0, 0.5)"
             style={{
               height: 120,
@@ -597,7 +586,6 @@ const GraphFlow: FC<GraphFlowProps> = ({
             pannable
             zoomable
             position="bottom-left"
-            
           />
           <Controls
             showInteractive
@@ -605,13 +593,12 @@ const GraphFlow: FC<GraphFlowProps> = ({
             orientation="horizontal"
             style={{
               color: "black",
-              background: 'rgba(0, 0, 0, 0)',
+              background: "rgba(0, 0, 0, 0)",
               borderRadius: 0,
               padding: 0,
-              boxShadow: '0 0 6px rgba(0, 0, 0, 0.5)',
-              flexDirection: 'row', // Horizontal layout
-              gap: '6px',           // Add spacing between buttons
-              
+              boxShadow: "0 0 6px rgba(0, 0, 0, 0.5)",
+              flexDirection: "row", // Horizontal layout
+              gap: "6px", // Add spacing between buttons
             }}
           />
           {!isViewer && (

@@ -92,8 +92,6 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [dialogOpen, setDialogOpen] = useState<ConfirmProps>({ open: false });
-  const [deletableTrees, setDeletableTrees] = useState<Tree[]>([]);
-  const [skippedTrees, setSkippedTrees] = useState<Tree[]>([]);
 
   const [
     deleteMultipleTrees,
@@ -133,14 +131,12 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => {
 
   const filteredTrees = useMemo(() => {
     // Changed
-    if (!allTrees) return []; // Changed
-    return allTrees // Changed
+    if (!allTrees) return [];
+    return allTrees
       .filter(
-        (
-          tree // Changed
-        ) =>
-          isSearchTermInTree(tree) && // Changed
-          (!filterRole || tree.access === filterRole) // Changed
+        (tree) =>
+          isSearchTermInTree(tree) &&
+          (filterRole.length > 0 ? (tree.access ?? "") === filterRole : true)
       )
       .sort(getComparator(order, orderBy));
   }, [allTrees, search, filterRole, order, orderBy]); // Changed
@@ -180,9 +176,6 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => {
     const otherAccessTrees = currentSelectedTrees.filter(
       (tree) => tree.access !== Role.Admin
     );
-
-    setDeletableTrees(adminTrees);
-    setSkippedTrees(otherAccessTrees);
 
     let message = "";
     if (adminTrees.length > 0) {
@@ -229,9 +222,9 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => {
     });
   };
 
-  const handleConfirmDelete = async (trees:Tree[]) => {
+  const handleConfirmDelete = async (trees: Tree[]) => {
     const deletableTreeIds = trees.map((tree) => tree.elementId!);
-    console.log("deletableTreeIds",deletableTreeIds);
+    console.log("deletableTreeIds", deletableTreeIds);
     if (deletableTreeIds.length > 0) {
       try {
         await deleteMultipleTrees({ ids: deletableTreeIds }).unwrap();
@@ -244,8 +237,6 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => {
     }
     setDialogOpen({ open: false });
     setSelectedTreeIds([]); // Clear selection
-    setDeletableTrees([]);
-    setSkippedTrees([]);
   };
 
   return (
@@ -272,9 +263,9 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => {
             onChange={(e) => setFilterRole(e.target.value)}
           >
             <MenuItem value="">All</MenuItem>
-            <MenuItem value="Admin">Admin</MenuItem>
-            <MenuItem value="Editor">Editor</MenuItem>
-            <MenuItem value="Viewer">Viewer</MenuItem>
+            <MenuItem value="admin">Admin</MenuItem>
+            <MenuItem value="editor">Editor</MenuItem>
+            <MenuItem value="viewer">Viewer</MenuItem>
           </Select>
         </FormControl>
       </Box>
@@ -293,8 +284,6 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => {
             variant="outlined"
             onClick={() => {
               setSelectedTreeIds([]);
-              setDeletableTrees([]);
-              setSkippedTrees([]);
             }}
             disabled={isDeletingMultiple}
           >
@@ -427,11 +416,8 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => {
         {...dialogOpen}
         onClose={() => {
           setDialogOpen({ open: false });
-          // Also clear deletable/skipped trees if dialog is closed without confirming
-          setDeletableTrees([]);
-          setSkippedTrees([]);
         }}
-        onConfirm={ () => dialogOpen.onConfirm || handleConfirmDelete} // Ensure onConfirm is correctly passed
+        onConfirm={() => dialogOpen.onConfirm || handleConfirmDelete} // Ensure onConfirm is correctly passed
       />
     </Container>
   );
