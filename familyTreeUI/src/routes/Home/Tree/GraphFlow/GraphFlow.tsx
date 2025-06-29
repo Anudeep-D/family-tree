@@ -47,6 +47,7 @@ import { NodeDataMap, Nodes as NodeTypesEnum } from "@/types/nodeTypes"; // Rena
 import dayjs from "dayjs"; // Keep for PersonNodePopover if it still uses it, or manage there
 import { PersonNodePopover } from "@/types/Components/Nodes/PersonNodePopover";
 import { HouseNodePopover } from "@/types/Components/Nodes/HouseNodePopover";
+import MiniMapNode from "./MiniMap/MiniMapNode";
 
 // Define defaultMarker outside the component if it's static, or inside if it depends on props/theme
 const defaultMarker = {
@@ -476,6 +477,22 @@ const GraphFlow: FC<GraphFlowProps> = ({
     setNodeDialogMode("edit");
   };
 
+  const nodeColor = (node: Node): string => {
+    if (node.type === "House") return "#1e88e5"; // blue fill
+    if (node.type === "Person") return node.data?.isAlive ? "#4caf50" : "#c9c9c9"; // white fill for person
+    return "#ccc";
+  };
+
+  const nodeStrokeColor = (node: Node): string => {
+    if (node.type === "House") return "#2196f3"; // blue
+    if (node.type === "Person") return "#4caf50"; // green border
+    return "#999";
+  };
+
+  const nodeShape = (node: Node): number => {
+    return node.type === "Person" ? 4 : 0;
+  };
+
   return (
     <Box display="flex" flexDirection="column" height="85vh" width="97.5vw">
       {deleteError && (
@@ -570,35 +587,32 @@ const GraphFlow: FC<GraphFlowProps> = ({
         >
           <Background />
           <MiniMap
-            nodeColor={(node) => {
-              // Attempt to use CSS variables if defined, otherwise fallback.
-              // Make sure these CSS variables are defined in your SCSS/CSS.
-              // For example, in GraphFlow.scss or a global style sheet:
-              // :root {
-              //   --person-node-bg-minimap: #ff6b6b;
-              //   --house-node-bg-minimap: #4db6ac;
-              //   --default-node-bg-minimap: #ccc;
-              //   --minimap-node-stroke-color: #333;
-              // }
-              if (node.type === "person") return "var(--person-node-bg-minimap, #ff6b6b)";
-              if (node.type === "house") return "var(--house-node-bg-minimap, #4db6ac)";
-              return "var(--default-node-bg-minimap, #cccccc)";
+            nodeColor={nodeColor}
+            nodeStrokeColor={nodeStrokeColor}
+            nodeClassName={(node)=>node.type ?? "None"}
+            // nodeComponent={MiniMapNode}
+
+            maskColor="rgba(0, 0, 0, 0.5)"
+            style={{
+              height: 120,
+              background: "#111", // dark minimap background
+              border: "1px solid #333",
+              borderRadius: 4,
             }}
-            nodeBorderRadius={10} // Makes nodes more circular. Adjust if your nodes have a fixed small size.
-                                 // If nodes are small, a value like 5 or 10 might be enough for a circular look.
-                                 // For truly circular nodes irrespective of size, this might need to be paired
-                                 // with node width/height if MiniMap allows that, or custom node rendering.
-                                 // React Flow MiniMap nodes are typically small rectangles.
-            nodeStrokeColor="var(--minimap-node-stroke-color, #555555)"
-            nodeStrokeWidth={1}
-            maskColor="rgba(150, 150, 150, 0.2)" // Light grey mask with some transparency
-            // style={{ backgroundColor: 'rgba(240, 240, 240, 0.85)' }} // Optional: style the MiniMap background
-            // pannable // Optional: enable panning the MiniMap
-            // zoomable // Optional: enable zooming the MiniMap
+            pannable
+            zoomable
             position="bottom-left"
+            
           />
           <Controls
+            showInteractive
             position="bottom-right"
+            style={{
+              backgroundColor: "rgba(255, 255, 255, 0.7)",
+              color: "black",
+              borderRadius: "8px",
+              boxShadow: "0 0 5px rgba(255,255,255,0.1)",
+            }}
           />
           {!isViewer && (
             <NodeButtons
