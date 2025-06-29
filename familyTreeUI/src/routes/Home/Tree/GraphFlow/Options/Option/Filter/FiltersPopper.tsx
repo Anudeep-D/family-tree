@@ -624,7 +624,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
                   onChange={(date) => {
                     handleChange(
                       ["filterBy", "nodeProps", "person", "bornAfter"],
-                      date ? date.format("DD-MMM-YYYY") : null
+                      date ? date.toISOString() : null
                     );
                   }}
                   slotProps={{
@@ -647,7 +647,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
                   onChange={(date) => {
                     handleChange(
                       ["filterBy", "nodeProps", "person", "bornBefore"],
-                      date ? date.format("DD-MMM-YYYY") : null
+                      date ? date.toISOString() : null
                     );
                   }}
                   slotProps={{

@@ -255,7 +255,7 @@ export const EdgeDialog: React.FC<EdgeDialogProps> = ({
                     <DatePicker
                       label={field.label}
                       value={dateValue}
-                      onChange={(date) => handleChange(field.name, date)} // Pass dayjs object or null
+                      onChange={(date) => handleChange(field.name, date ? date.toISOString() : null)} // Pass dayjs object or null
                       slotProps={{
                         textField: {
                           fullWidth: true,

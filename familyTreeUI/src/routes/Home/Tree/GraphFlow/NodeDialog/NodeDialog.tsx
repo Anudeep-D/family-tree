@@ -884,7 +884,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                     label={field.label}
                     value={value ? dayjs(value) : null}
                     onChange={(date) =>
-                      handleChange(field.name, date ? date.format("DD-MMM-YYYY") : null)
+                      handleChange(field.name, date ? date.toISOString() : null)
                     }
                     slotProps={{
                       textField: {
