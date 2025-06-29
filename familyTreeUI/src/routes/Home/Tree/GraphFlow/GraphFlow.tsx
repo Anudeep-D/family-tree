@@ -438,12 +438,15 @@ const GraphFlow: FC<GraphFlowProps> = ({
 
   const clickTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const handleNodeClick = (event:React.MouseEvent<Element, MouseEvent>, node:AppNode) => {
+  const handleNodeClick = (
+    event: React.MouseEvent<Element, MouseEvent>,
+    node: AppNode
+  ) => {
     // delay the click to distinguish from double click
     if (clickTimeout.current) clearTimeout(clickTimeout.current);
 
     // Capture currentTarget before setTimeout
-    const currentTarget = event.currentTarget as HTMLElement; 
+    const currentTarget = event.currentTarget as HTMLElement;
 
     clickTimeout.current = setTimeout(() => {
       console.log("Single Click:", node);
@@ -466,7 +469,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
     }, 250); // adjust delay as needed
   };
 
-  const handleNodeDoubleClick =(node:AppNode) => {
+  const handleNodeDoubleClick = (node: AppNode) => {
     if (clickTimeout.current) clearTimeout(clickTimeout.current);
     console.log("Double Click:", node);
     setEditingNode(node);
@@ -474,7 +477,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
   };
 
   return (
-    <Box display="flex" flexDirection="column" height="85vh" width="100vw">
+    <Box display="flex" flexDirection="column" height="85vh" width="97.5vw">
       {deleteError && (
         <Alert severity="error" sx={{ mb: 2 }}>
           Failed to delete tree. Error: {JSON.stringify(deleteError)}
@@ -513,9 +516,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
             isViewer ? undefined : (event, node) => handleNodeClick(event, node)
           }
           onNodeDoubleClick={
-            isViewer
-              ? undefined
-              : (_event, node) => handleNodeDoubleClick(node)
+            isViewer ? undefined : (_event, node) => handleNodeDoubleClick(node)
           }
           onNodeContextMenu={
             isViewer
@@ -568,8 +569,37 @@ const GraphFlow: FC<GraphFlowProps> = ({
           proOptions={{ hideAttribution: true }}
         >
           <Background />
-          <MiniMap />
-          <Controls />
+          <MiniMap
+            nodeColor={(node) => {
+              // Attempt to use CSS variables if defined, otherwise fallback.
+              // Make sure these CSS variables are defined in your SCSS/CSS.
+              // For example, in GraphFlow.scss or a global style sheet:
+              // :root {
+              //   --person-node-bg-minimap: #ff6b6b;
+              //   --house-node-bg-minimap: #4db6ac;
+              //   --default-node-bg-minimap: #ccc;
+              //   --minimap-node-stroke-color: #333;
+              // }
+              if (node.type === "person") return "var(--person-node-bg-minimap, #ff6b6b)";
+              if (node.type === "house") return "var(--house-node-bg-minimap, #4db6ac)";
+              return "var(--default-node-bg-minimap, #cccccc)";
+            }}
+            nodeBorderRadius={10} // Makes nodes more circular. Adjust if your nodes have a fixed small size.
+                                 // If nodes are small, a value like 5 or 10 might be enough for a circular look.
+                                 // For truly circular nodes irrespective of size, this might need to be paired
+                                 // with node width/height if MiniMap allows that, or custom node rendering.
+                                 // React Flow MiniMap nodes are typically small rectangles.
+            nodeStrokeColor="var(--minimap-node-stroke-color, #555555)"
+            nodeStrokeWidth={1}
+            maskColor="rgba(150, 150, 150, 0.2)" // Light grey mask with some transparency
+            // style={{ backgroundColor: 'rgba(240, 240, 240, 0.85)' }} // Optional: style the MiniMap background
+            // pannable // Optional: enable panning the MiniMap
+            // zoomable // Optional: enable zooming the MiniMap
+            position="bottom-left"
+          />
+          <Controls
+            position="bottom-right"
+          />
           {!isViewer && (
             <NodeButtons
               onClose={onNodeDialogClose}
