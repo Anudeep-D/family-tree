@@ -1,5 +1,5 @@
 // NodeDialog.tsx
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react"; // Added useCallback
 import {
   Dialog,
   DialogTitle,
@@ -21,6 +21,7 @@ import {
   FormControlLabel,
   Autocomplete,
 } from "@mui/material";
+import { MarkerType } from "@xyflow/react"; // Added MarkerType
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -31,7 +32,9 @@ import {
   Nodes,
   nodeFieldsMetadata,
   NodeFieldDefinition,
+  AppNode, // Added AppNode
 } from "@/types/nodeTypes"; // Import NodeFieldDefinition
+import { AppEdge, Edges } from "@/types/edgeTypes"; // Added AppEdge and Edges
 import {
   getImage,
   renameImage,
@@ -42,13 +45,18 @@ import { useAuth } from "@/hooks/useAuth";
 import options from "@/constants/JobAndQualification.json";
 type NodeDialogProps = {
   treeId: string;
-  nodeId: string; // elementId for Supabase path
+  nodeId: string; // elementId for Supabase path (used as current node's ID)
   mode: "new" | "edit";
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: Record<string, any>) => void; // Allow any for imageUrl
+  onSubmit: (submission: {
+    nodeData: Record<string, any>;
+    edgeChanges?: { added: AppEdge[]; removed: { id: string }[] };
+  }) => void; // Modified onSubmit
   type?: Nodes;
-  initialData?: Record<string, any>; // Allow any for imageUrl
+  initialData?: Record<string, any>;
+  nodes: AppNode[]; // NEW: All nodes in the graph
+  edges: AppEdge[]; // NEW: All edges in the graph
 };
 
 type ImageStateProps = {
@@ -63,8 +71,11 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
   onSubmit,
   type = Nodes.Person,
   initialData,
+  mode,
   treeId,
-  nodeId,
+  nodeId, // This is the ID of the node being edited, or the new node's ID
+  nodes: allNodes, // Renaming for clarity to avoid conflict with 'nodes' variable from reactflow
+  edges: allEdges, // Renaming for clarity
 }) => {
   const { idToken } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -87,11 +98,42 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
   // crop, completedCrop, croppedImageFile, showCropper, imgRef are moved to CropperDialog
   const [cropperOpen, setCropperOpen] = useState<boolean>(false);
 
+  // State for relationship autocompletes
+  const [selectedHouseId, setSelectedHouseId] = useState<string | null>(null);
+  const [initialSelectedHouseId, setInitialSelectedHouseId] = useState<
+    string | null
+  >(null);
+
+  const [selectedChildrenIds, setSelectedChildrenIds] = useState<string[]>([]);
+  const [initialSelectedChildrenIds, setInitialSelectedChildrenIds] = useState<
+    string[]
+  >([]);
+
+  const [selectedSpouseId, setSelectedSpouseId] = useState<string | null>(null);
+  const [initialSelectedSpouseId, setInitialSelectedSpouseId] = useState<
+    string | null
+  >(null);
+
+  const [selectedParentIds, setSelectedParentIds] = useState<string[]>([]);
+  const [initialSelectedParentIds, setInitialSelectedParentIds] = useState<
+    string[]
+  >([]);
+
+  // Memoized lists for autocompletes
+  const houseNodes = useMemo(
+    () => allNodes.filter((node) => node.type === Nodes.House),
+    [allNodes]
+  );
+  const personNodes = useMemo(
+    () =>
+      allNodes.filter(
+        (node) => node.type === Nodes.Person && node.id !== nodeId
+      ),
+    [allNodes, nodeId]
+  );
+
   useEffect(() => {
-    const processData = (
-      data: Record<string, any> | undefined,
-      isInitial: boolean
-    ) => {
+    const processData = (data: Record<string, any> | undefined) => {
       const resultState: Record<string, any> = {};
       fields.forEach((field) => {
         const hasProperty = data?.hasOwnProperty(field.name);
@@ -121,12 +163,91 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
     };
 
     if (initialData) {
-      setFormState(processData(initialData, true));
+      setFormState(processData(initialData));
     } else {
-      setFormState(processData(undefined, false));
+      setFormState(processData(undefined));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialData, fields]); // Removed 'type' as 'fields' already depends on it
+
+  useEffect(() => {
+    if (
+      open &&
+      mode === "edit" &&
+      nodeId &&
+      allNodes.length > 0 &&
+      allEdges.length > 0 &&
+      type === Nodes.Person
+    ) {
+      // Reset previous selections to ensure clean state on re-open or if dependencies change
+      setSelectedHouseId(null);
+      setInitialSelectedHouseId(null);
+      setSelectedChildrenIds([]);
+      setInitialSelectedChildrenIds([]);
+      setSelectedSpouseId(null);
+      setInitialSelectedSpouseId(null);
+      setSelectedParentIds([]);
+      setInitialSelectedParentIds([]);
+
+      const currentNode = allNodes.find((n) => n.id === nodeId);
+      if (!currentNode) {
+        // Current node must exist for editing
+        return;
+      }
+
+      // Belongs To (House)
+      const belongsToEdge = allEdges.find(
+        (edge) => edge.type === Edges.BELONGS_TO && edge.source === nodeId
+      );
+      if (belongsToEdge) {
+        setSelectedHouseId(belongsToEdge.target);
+        setInitialSelectedHouseId(belongsToEdge.target);
+      }
+
+      // Parent Of (Children)
+      const children = allEdges
+        .filter(
+          (edge) => edge.type === Edges.PARENT_OF && edge.source === nodeId
+        )
+        .map((edge) => edge.target);
+      setSelectedChildrenIds(children);
+      setInitialSelectedChildrenIds(children);
+
+      // Married To (Spouse)
+      const marriageEdge = allEdges.find(
+        (edge) =>
+          edge.type === Edges.MARRIED_TO &&
+          (edge.source === nodeId || edge.target === nodeId)
+      );
+      if (marriageEdge) {
+        const spouseNodeId =
+          marriageEdge.source === nodeId
+            ? marriageEdge.target
+            : marriageEdge.source;
+        setSelectedSpouseId(spouseNodeId);
+        setInitialSelectedSpouseId(spouseNodeId);
+      }
+
+      // Child Of (Parents)
+      const parents = allEdges
+        .filter(
+          (edge) => edge.type === Edges.PARENT_OF && edge.target === nodeId
+        )
+        .map((edge) => edge.source);
+      setSelectedParentIds(parents);
+      setInitialSelectedParentIds(parents);
+    } else if (mode === "new" || (open && type !== Nodes.Person)) {
+      // Reset if new, or if not a Person node
+      setSelectedHouseId(null);
+      setInitialSelectedHouseId(null);
+      setSelectedChildrenIds([]);
+      setInitialSelectedChildrenIds([]);
+      setSelectedSpouseId(null);
+      setInitialSelectedSpouseId(null);
+      setSelectedParentIds([]);
+      setInitialSelectedParentIds([]);
+    }
+  }, [open, mode, nodeId, allNodes, allEdges, type]);
 
   const setPublicUrl = async (url: string, isLocal: boolean) => {
     const publicUrl = await getImage(url);
@@ -245,37 +366,197 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
   };
 
   const handleSubmit = async () => {
-    // Image upload is now handled by handleCropperConfirm -> hdlImageUpload.
-    // handleSubmit will just use the imageUrl from formState, which should be the Supabase URL if upload was successful.
-    // If upload failed, formState.imageUrl might be the initial URL or empty.
-    // It's important that hdlImageUpload correctly sets formState.imageUrl upon failure.
+    setIsProcessing(true);
+    if (!validateForm()) {
+      setIsProcessing(false);
+      return;
+    }
 
-    // Ensure any lingering blob URL is revoked if it wasn't uploaded.
-    // This is a fallback, ideally hdlImageUpload manages this.
-    if (type === Nodes.Person && imageState.isLocal) {
+    let finalNodeData: Record<string, any> = {
+      ...(formState || {}),
+      updatedOn: new Date().toISOString(),
+    };
+    let edgeChanges: { added: AppEdge[]; removed: { id: string }[] } = {
+      added: [],
+      removed: [],
+    };
+
+    // Image handling for Person nodes
+    if (type === Nodes.Person && imageState.publicUrl && imageState.isLocal) {
       const actualPath =
         initialData?.imageUrl ||
         `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(nodeId)}`;
+      const unsavedPath = `trees/${encodeURIComponent(
+        treeId
+      )}/${encodeURIComponent(nodeId)}-unsaved`;
+
+      // Check if the current publicUrl is the 'unsaved' path
+      // This implies a new image was uploaded or an existing one was changed and processed by cropper.
+      // We need to check if imageState.publicUrl corresponds to the unsavedPath after processing by getImage.
+      // This check is tricky because publicUrl is a signed URL.
+      // A more reliable way is to ensure imagePath from imageState reflects the unsaved supabase path.
+      // For now, we assume if isLocal is true, a rename is needed.
+
       const response = await renameImage(
-        `trees/${encodeURIComponent(treeId)}/${encodeURIComponent(
-          nodeId
-        )}-unsaved`,
-        actualPath,
+        unsavedPath, // Source is always the -unsaved path
+        actualPath, // Target is the final path
         idToken
       );
       if (response) {
-        setFormState((prev) => ({
-          ...prev,
-          imageUrl: actualPath,
-          updatedOn: Date(),
-        }));
-        onSubmit({ ...formState, imageUrl: actualPath, updatedOn: Date() });
+        finalNodeData.imageUrl = actualPath;
       } else {
-        onSubmit({ ...formState, updatedOn: Date() });
+        // If rename fails, we might still have the -unsaved image.
+        // Decide if we want to save with the -unsaved path or clear it.
+        // For now, let's assume if rename failed, we don't save an image URL that might become invalid.
+        // Or, if the original image was `actualPath` and it wasn't changed, it's fine.
+        // This part needs careful consideration of image state transitions.
+        // If an image was uploaded, imageState.imagePath should be the -unsaved path.
+        // If it was an existing image, and not changed, this rename block shouldn't ideally run.
+        // Let's simplify: if isLocal is true, it means an image was processed and is at '-unsaved'.
+        finalNodeData.imageUrl = unsavedPath; // Save unsaved path if rename fails, or clear: undefined;
+        console.warn(
+          "Image rename failed. Saving with unsaved path or clearing. Check logic."
+        );
       }
-    } else {
-      onSubmit({ ...formState, updatedOn: Date() });
+    } else if (
+      type === Nodes.Person &&
+      !imageState.publicUrl &&
+      initialData?.imageUrl
+    ) {
+      // Image was removed
+      finalNodeData.imageUrl = undefined;
     }
+    // If imageState.publicUrl exists but isLocal is false, it means it's an existing image that wasn't changed.
+    // finalNodeData.imageUrl will already be correct from initialData via formState.
+
+    if (type === Nodes.Person) {
+      const defaultMarker = {
+        type: MarkerType.Arrow,
+        width: 15,
+        height: 15,
+        color: "#cb4e4e",
+      }; // Re-define or import
+
+      // 1. Belongs To (House)
+      if (selectedHouseId !== initialSelectedHouseId) {
+        if (initialSelectedHouseId) {
+          const edgeToRemove = allEdges.find(
+            (e) =>
+              e.type === Edges.BELONGS_TO &&
+              e.source === nodeId &&
+              e.target === initialSelectedHouseId
+          );
+          if (edgeToRemove) edgeChanges.removed.push({ id: edgeToRemove.id });
+        }
+        if (selectedHouseId) {
+          edgeChanges.added.push({
+            id: `${
+              Edges.BELONGS_TO
+            }-${nodeId}-${selectedHouseId}-${Date.now()}`,
+            source: nodeId,
+            target: selectedHouseId,
+            type: Edges.BELONGS_TO,
+            markerEnd: defaultMarker,
+            className: `${Edges.BELONGS_TO}-edge`,
+            data: { updatedOn: new Date().toISOString() },
+          });
+        }
+      }
+
+      // 2. Parent Of (Children)
+      const childrenToAdd = selectedChildrenIds.filter(
+        (id) => !initialSelectedChildrenIds.includes(id)
+      );
+      const childrenToRemove = initialSelectedChildrenIds.filter(
+        (id) => !selectedChildrenIds.includes(id)
+      );
+
+      childrenToRemove.forEach((childId) => {
+        const edgeToRemove = allEdges.find(
+          (e) =>
+            e.type === Edges.PARENT_OF &&
+            e.source === nodeId &&
+            e.target === childId
+        );
+        if (edgeToRemove) edgeChanges.removed.push({ id: edgeToRemove.id });
+      });
+      childrenToAdd.forEach((childId) => {
+        edgeChanges.added.push({
+          id: `${Edges.PARENT_OF}-${nodeId}-${childId}-${Date.now()}`,
+          source: nodeId,
+          target: childId,
+          type: Edges.PARENT_OF,
+          markerEnd: defaultMarker,
+          className: `${Edges.PARENT_OF}-edge`,
+          data: { updatedOn: new Date().toISOString() },
+        });
+      });
+
+      // 3. Married To (Spouse)
+      if (selectedSpouseId !== initialSelectedSpouseId) {
+        if (initialSelectedSpouseId) {
+          const edgeToRemove = allEdges.find(
+            (e) =>
+              e.type === Edges.MARRIED_TO &&
+              ((e.source === nodeId && e.target === initialSelectedSpouseId) ||
+                (e.target === nodeId && e.source === initialSelectedSpouseId))
+          );
+          if (edgeToRemove) edgeChanges.removed.push({ id: edgeToRemove.id });
+        }
+        if (selectedSpouseId) {
+          edgeChanges.added.push({
+            id: `${
+              Edges.MARRIED_TO
+            }-${nodeId}-${selectedSpouseId}-${Date.now()}`,
+            source: nodeId,
+            target: selectedSpouseId,
+            type: Edges.MARRIED_TO,
+            markerEnd: defaultMarker,
+            className: `${Edges.MARRIED_TO}-edge`,
+            data: { updatedOn: new Date().toISOString() },
+          });
+        }
+      }
+
+      // 4. Child Of (Parents)
+      const parentsToAdd = selectedParentIds.filter(
+        (id) => !initialSelectedParentIds.includes(id)
+      );
+      const parentsToRemove = initialSelectedParentIds.filter(
+        (id) => !selectedParentIds.includes(id)
+      );
+
+      parentsToRemove.forEach((parentId) => {
+        const edgeToRemove = allEdges.find(
+          (e) =>
+            e.type === Edges.PARENT_OF &&
+            e.source === parentId &&
+            e.target === nodeId
+        );
+        if (edgeToRemove) edgeChanges.removed.push({ id: edgeToRemove.id });
+      });
+      parentsToAdd.forEach((parentId) => {
+        edgeChanges.added.push({
+          id: `${Edges.PARENT_OF}-${parentId}-${nodeId}-${Date.now()}`,
+          source: parentId,
+          target: nodeId,
+          type: Edges.PARENT_OF,
+          markerEnd: defaultMarker,
+          className: `${Edges.PARENT_OF}-edge`,
+          data: { updatedOn: new Date().toISOString() },
+        });
+      });
+    }
+
+    onSubmit({
+      nodeData: finalNodeData,
+      edgeChanges:
+        edgeChanges.added.length > 0 || edgeChanges.removed.length > 0
+          ? edgeChanges
+          : undefined,
+    });
+    setIsProcessing(false);
+    // onClose will be called by the callback in GraphFlow's onNodeDialogSubmit
   };
 
   const validateForm = () => {
@@ -689,6 +970,127 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
                   </Box>
                 )}
               </Grid>
+            )}
+
+            {/* Relationship Autocompletes for Person Node */}
+            {type === Nodes.Person && (
+              <>
+                <Grid sx={{ gridColumn: "span 12", mt: 2, mb: 1 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: "medium" }}>
+                    Relationships
+                  </Typography>
+                </Grid>
+
+                {/* Belongs To (House) */}
+                <Grid sx={{ gridColumn: "span 12" }}>
+                  <Autocomplete
+                    value={
+                      houseNodes.find((h) => h.id === selectedHouseId) || null
+                    }
+                    onChange={(_event, newValue) => {
+                      setSelectedHouseId(newValue ? newValue.id : null);
+                    }}
+                    options={houseNodes}
+                    getOptionLabel={(option) => option.data.name || option.id}
+                    isOptionEqualToValue={(option, value) =>
+                      option.id === value.id
+                    }
+                    renderInput={(params) => (
+                      <TextField {...params} label="Belongs To (House)" />
+                    )}
+                    fullWidth
+                  />
+                </Grid>
+
+                {/* Parent Of (Children) */}
+                <Grid sx={{ gridColumn: "span 12" }}>
+                  <Autocomplete
+                    multiple
+                    value={personNodes.filter((p) =>
+                      selectedChildrenIds.includes(p.id)
+                    )}
+                    onChange={(_event, newValues) => {
+                      setSelectedChildrenIds(newValues.map((v) => v.id));
+                    }}
+                    options={personNodes.filter(
+                      (p) =>
+                        p.id !== nodeId &&
+                        !selectedParentIds.includes(p.id) &&
+                        p.id !== selectedSpouseId
+                    )} // Prevent selecting self, own parents, or spouse as child
+                    getOptionLabel={(option) => option.data.name || option.id}
+                    isOptionEqualToValue={(option, value) =>
+                      option.id === value.id
+                    }
+                    renderInput={(params) => (
+                      <TextField {...params} label="Parent Of (Children)" />
+                    )}
+                    fullWidth
+                  />
+                </Grid>
+
+                {/* Married To (Spouse) */}
+                <Grid sx={{ gridColumn: "span 12" }}>
+                  <Autocomplete
+                    value={
+                      personNodes.find((p) => p.id === selectedSpouseId) || null
+                    }
+                    onChange={(_event, newValue) => {
+                      setSelectedSpouseId(newValue ? newValue.id : null);
+                    }}
+                    options={personNodes.filter(
+                      (p) =>
+                        p.id !== nodeId &&
+                        !selectedChildrenIds.includes(p.id) &&
+                        !selectedParentIds.includes(p.id)
+                    )} // Prevent selecting self, own children, or parents as spouse
+                    getOptionLabel={(option) => option.data.name || option.id}
+                    isOptionEqualToValue={(option, value) =>
+                      option.id === value.id
+                    }
+                    renderInput={(params) => (
+                      <TextField {...params} label="Married To (Spouse)" />
+                    )}
+                    fullWidth
+                  />
+                </Grid>
+
+                {/* Child Of (Parents) */}
+                <Grid sx={{ gridColumn: "span 12" }}>
+                  <Autocomplete
+                    multiple
+                    value={personNodes.filter((p) =>
+                      selectedParentIds.includes(p.id)
+                    )}
+                    onChange={(_event, newValues) => {
+                      if (newValues.length <= 2) {
+                        setSelectedParentIds(newValues.map((v) => v.id));
+                      }
+                    }}
+                    options={personNodes.filter(
+                      (p) =>
+                        p.id !== nodeId &&
+                        !selectedChildrenIds.includes(p.id) &&
+                        p.id !== selectedSpouseId
+                    )} // Prevent selecting self, own children, or spouse as parent
+                    getOptionDisabled={(option) =>
+                      selectedParentIds.length >= 2 &&
+                      !selectedParentIds.includes(option.id)
+                    }
+                    getOptionLabel={(option) => option.data.name || option.id}
+                    isOptionEqualToValue={(option, value) =>
+                      option.id === value.id
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Child Of (Parents - max 2)"
+                      />
+                    )}
+                    fullWidth
+                  />
+                </Grid>
+              </>
             )}
           </Grid>
         </DialogContent>

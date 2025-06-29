@@ -1,4 +1,5 @@
 import { AppNode, nodeTypes, Nodes } from "@/types/nodeTypes";
+import { AppEdge } from "@/types/edgeTypes"; // Added AppEdge
 import { Box, IconButton, Tooltip } from "@mui/material";
 // import { v4 as uuidv4 } from 'uuid'; // Removed uuid import
 import "./NodeButtons.scss";
@@ -14,9 +15,11 @@ const typeToIcon: Record<Nodes, ReactNode> = {
 type NodeButtonsProps = {
   treeId: string;
   onClose: () => void;
-  onSubmit: (node: AppNode) => void;
+  onSubmit: (node: AppNode, edgeChanges?: { added: AppEdge[]; removed: { id: string }[] }) => void; // Modified onSubmit
   dialogMode?: "new" | "edit";
   editingNode?: AppNode;
+  nodes: AppNode[]; // NEW
+  edges: AppEdge[]; // NEW
   pendingNodeDrop?: {
     type: Nodes;
     position: XYPosition;
@@ -29,13 +32,15 @@ export const NodeButtons: React.FC<NodeButtonsProps> = ({
   dialogMode,
   editingNode,
   pendingNodeDrop,
+  nodes, // Destructure new props
+  edges, // Destructure new props
 }) => {
   const [internalNewNodeId, setInternalNewNodeId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (dialogMode === 'new' && pendingNodeDrop && !internalNewNodeId) {
       setInternalNewNodeId(crypto.randomUUID()); // Changed to crypto.randomUUID()
-    } else if (dialogMode !== 'new' && internalNewNodeId) { // Reset if dialog closes or mode changes
+    } else if (dialogMode !== 'new' && internalNewNodeId) { // Reset if dialog closes or mode changes also fixed typo internalNewNowId
       setInternalNewNodeId(undefined);
     }
   }, [dialogMode, pendingNodeDrop, internalNewNodeId]);
@@ -50,12 +55,12 @@ export const NodeButtons: React.FC<NodeButtonsProps> = ({
   };
 
   // handleDialogSubmit is called by NodeDialog's onSubmit
-  const handleDialogSubmit = (formData: Record<string, any>) => {
+  const handleDialogSubmit = (submission: { nodeData: Record<string, any>; edgeChanges?: { added: AppEdge[]; removed: { id: string }[] } }) => {
     let finalNodeData: AppNode;
     if (dialogMode === 'edit') {
       finalNodeData = {
         ...editingNode!,
-        data: { ...editingNode!.data, ...formData }, // Merge, formData might have new imageUrl
+        data: { ...editingNode!.data, ...submission.nodeData }, // Use submission.nodeData
       };
     } else { // dialogMode === 'new'
       if (!internalNewNodeId || !pendingNodeDrop) {
@@ -67,10 +72,10 @@ export const NodeButtons: React.FC<NodeButtonsProps> = ({
         id: internalNewNodeId!, // Use the generated ID
         type: pendingNodeDrop!.type,
         position: pendingNodeDrop!.position,
-        data: formData, // formData from dialog includes all fields + imageUrl
+        data: submission.nodeData, // Use submission.nodeData from dialog includes all fields + imageUrl
       };
     }
-    onSubmit(finalNodeData);
+    onSubmit(finalNodeData, submission.edgeChanges); // Pass submission.edgeChanges
     if (dialogMode === 'new') {
       setInternalNewNodeId(undefined);
     }
@@ -127,6 +132,8 @@ export const NodeButtons: React.FC<NodeButtonsProps> = ({
           onSubmit={handleDialogSubmit}
           treeId={treeId}
           nodeId={dialogMode === 'edit' ? editingNode!.id : internalNewNodeId!}
+          nodes={nodes} // Pass nodes down
+          edges={edges} // Pass edges down
         />
       )}
     </Box>

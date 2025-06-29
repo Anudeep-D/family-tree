@@ -171,13 +171,23 @@ const GraphFlow: FC<GraphFlowProps> = ({
     setNodeDialogMode(undefined);
   };
 
-  const onNodeDialogSubmit = (curNode: AppNode) => {
+  const onNodeDialogSubmit = (curNode: AppNode, edgeChanges?: { added: AppEdge[]; removed: { id: string }[] }) => {
     if (nodeDialogMode === "edit") {
       setNodes((nds) =>
         nds.map((node) => (node.id === curNode?.id ? curNode : node))
       );
     } else if (nodeDialogMode === "new") {
       setNodes((nds) => nds.concat(curNode));
+    }
+
+    if (edgeChanges) {
+      setEdges((eds) => {
+        // Filter out removed edges
+        const remainingEdges = eds.filter(edge => !edgeChanges.removed.some(removedEdge => removedEdge.id === edge.id));
+        // Add new edges
+        const updatedEdges = remainingEdges.concat(edgeChanges.added);
+        return updatedEdges;
+      });
     }
     onNodeDialogClose();
   };
@@ -196,21 +206,51 @@ const GraphFlow: FC<GraphFlowProps> = ({
 
   const onConnect: OnConnect = useCallback(
     (connection) => {
-      console.log(connection);
-      setNewEdge({
-        id: `${Date.now()}-new-pending`, // Temporary ID for the pending edge
-        ...connection,
-        markerEnd: defaultMarker, // Add default marker to the edge being templated
-      });
-      const edgeSource = nodes.find((nodeS) => nodeS.id === connection.source);
-      const edgeTarget = nodes.find((nodeT) => nodeT.id === connection.target);
-      edgeSource &&
-        edgeTarget &&
-        setInvolvedNodes({ source: edgeSource, target: edgeTarget });
-      setEdgeDialogMode("new");
+      const edgeSourceNode = nodes.find((nodeS) => nodeS.id === connection.source);
+      const edgeTargetNode = nodes.find((nodeT) => nodeT.id === connection.target);
+
+      if (edgeSourceNode && edgeTargetNode) {
+        const isSourcePerson = edgeSourceNode.type === Nodes.Person;
+        const isTargetPerson = edgeTargetNode.type === Nodes.Person;
+        const isSourceHouse = edgeSourceNode.type === Nodes.House;
+        const isTargetHouse = edgeTargetNode.type === Nodes.House;
+
+        if ((isSourcePerson && isTargetHouse) || (isSourceHouse && isTargetPerson)) {
+          // Determine correct source and target for BELONGS_TO (Person -> House)
+          const sourceId = isSourcePerson ? connection.source : connection.target;
+          const targetId = isTargetHouse ? connection.target : connection.source;
+          // Preserve original handles if possible, adjust if direction is flipped
+          const sourceHandle = isSourcePerson ? connection.sourceHandle : connection.targetHandle;
+          const targetHandle = isTargetHouse ? connection.targetHandle : connection.sourceHandle;
+
+
+          const newBelongsToEdge: AppEdge = {
+            id: `${Edges.BELONGS_TO}-${sourceId}-${targetId}-${Date.now()}`,
+            source: sourceId,
+            target: targetId,
+            sourceHandle,
+            targetHandle,
+            type: Edges.BELONGS_TO,
+            markerEnd: defaultMarker,
+            className: `${Edges.BELONGS_TO}-edge`,
+            data: {}, // Add any default data if necessary
+          };
+          setEdges((eds) => addEdge(newBelongsToEdge, eds));
+          // Skip opening the dialog
+        } else {
+          // Original behavior: open EdgeDialog for other types of connections
+          console.log("Opening Edge Dialog for connection:", connection);
+          setNewEdge({
+            id: `${Date.now()}-new-pending`, // Temporary ID for the pending edge
+            ...connection,
+            markerEnd: defaultMarker, // Add default marker to the edge being templated
+          });
+          setInvolvedNodes({ source: edgeSourceNode, target: edgeTargetNode });
+          setEdgeDialogMode("new");
+        }
+      }
     },
-    // defaultMarker is a const, not reactive. Add other state setters if they are used directly.
-    [setNewEdge, setEdgeDialogMode, nodes]
+    [nodes, setEdges, setNewEdge, setInvolvedNodes, setEdgeDialogMode] // Ensure all dependencies are listed
   );
 
   const onEdgeDialogClose = () => {
@@ -452,6 +492,8 @@ const GraphFlow: FC<GraphFlowProps> = ({
               editingNode={editingNode}
               pendingNodeDrop={pendingNodeDrop}
               treeId={tree.elementId!} // Pass tree.id as treeId
+              nodes={nodes} // NEW: Pass nodes
+              edges={edges} // NEW: Pass edges
             />
           )}
           <CoreButtons
