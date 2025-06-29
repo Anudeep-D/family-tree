@@ -219,21 +219,18 @@ const GraphFlow: FC<GraphFlowProps> = ({
           // Determine correct source and target for BELONGS_TO (Person -> House)
           const sourceId = isSourcePerson ? connection.source : connection.target;
           const targetId = isTargetHouse ? connection.target : connection.source;
-          // Preserve original handles if possible, adjust if direction is flipped
-          const sourceHandle = isSourcePerson ? connection.sourceHandle : connection.targetHandle;
-          const targetHandle = isTargetHouse ? connection.targetHandle : connection.sourceHandle;
 
 
           const newBelongsToEdge: AppEdge = {
             id: `${Edges.BELONGS_TO}-${sourceId}-${targetId}-${Date.now()}`,
             source: sourceId,
             target: targetId,
-            sourceHandle,
-            targetHandle,
+            sourceHandle: null, // Use null for default connection
+            targetHandle: null, // Use null for default connection
             type: Edges.BELONGS_TO,
             markerEnd: defaultMarker,
             className: `${Edges.BELONGS_TO}-edge`,
-            data: {}, // Add any default data if necessary
+            data: { updatedOn: new Date().toISOString() }, 
           };
           setEdges((eds) => addEdge(newBelongsToEdge, eds));
           // Skip opening the dialog

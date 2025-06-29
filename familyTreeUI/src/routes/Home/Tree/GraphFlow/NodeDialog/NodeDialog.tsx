@@ -197,11 +197,22 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
 
       // Belongs To (House)
       const belongsToEdge = allEdges.find(
-        (edge) => edge.type === Edges.BELONGS_TO && edge.source === nodeId
+        (edge) =>
+          edge.type === Edges.BELONGS_TO &&
+          (edge.source === nodeId || edge.target === nodeId)
       );
       if (belongsToEdge) {
-        setSelectedHouseId(belongsToEdge.target);
-        setInitialSelectedHouseId(belongsToEdge.target);
+        const houseNodeId =
+          belongsToEdge.source === nodeId
+            ? belongsToEdge.target
+            : belongsToEdge.source;
+        const houseNode = allNodes.find(
+          (n) => n.id === houseNodeId && n.type === Nodes.House
+        );
+        if (houseNode) {
+          setSelectedHouseId(houseNode.id);
+          setInitialSelectedHouseId(houseNode.id);
+        }
       }
 
       // Parent Of (Children)
@@ -443,8 +454,8 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
           const edgeToRemove = allEdges.find(
             (e) =>
               e.type === Edges.BELONGS_TO &&
-              e.source === nodeId &&
-              e.target === initialSelectedHouseId
+              ((e.source === nodeId && e.target === initialSelectedHouseId) ||
+                (e.target === nodeId && e.source === initialSelectedHouseId))
           );
           if (edgeToRemove) edgeChanges.removed.push({ id: edgeToRemove.id });
         }
