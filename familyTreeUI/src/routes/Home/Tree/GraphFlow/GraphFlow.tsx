@@ -590,7 +590,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
             nodeColor={nodeColor}
             nodeStrokeColor={nodeStrokeColor}
             nodeClassName={(node)=>node.type ?? "None"}
-            // nodeComponent={MiniMapNode}
+            nodeComponent={MiniMapNode}
 
             maskColor="rgba(0, 0, 0, 0.5)"
             style={{
