@@ -442,25 +442,28 @@ const GraphFlow: FC<GraphFlowProps> = ({
     // delay the click to distinguish from double click
     if (clickTimeout.current) clearTimeout(clickTimeout.current);
 
+    // Capture currentTarget before setTimeout
+    const currentTarget = event.currentTarget as HTMLElement; 
+
     clickTimeout.current = setTimeout(() => {
       console.log("Single Click:", node);
       handleClosePopover(); // Close any existing popover first
       if (node.type === NodeTypesEnum.Person) {
         const personData = node.data as NodeDataMap[NodeTypesEnum.Person];
         if (hasExtraDetailsPerson(personData)) {
-          setPopoverAnchorElement(event.currentTarget as HTMLElement);
+          setPopoverAnchorElement(currentTarget); // Use captured currentTarget
           setActivePopoverType("person");
           setActiveNodeData(node as AppNode);
         }
       } else if (node.type === NodeTypesEnum.House) {
         const houseData = node.data as NodeDataMap[NodeTypesEnum.House];
         if (hasExtraDetailsHouse(houseData)) {
-          setPopoverAnchorElement(event.currentTarget as HTMLElement);
+          setPopoverAnchorElement(currentTarget); // Use captured currentTarget
           setActivePopoverType("house");
           setActiveNodeData(node as AppNode);
         }
       }
-    }, 300); // adjust delay as needed
+    }, 250); // adjust delay as needed
   };
 
   const handleNodeDoubleClick =(node:AppNode) => {
