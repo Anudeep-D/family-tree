@@ -631,7 +631,7 @@ export const NodeDialog: React.FC<NodeDialogProps> = ({
               }
 
               const commonProps = {
-                key: field.name,
+                // key: field.name, // Removed: key is correctly applied to the wrapping Grid
                 label: field.label,
                 error: !!errors[field.name],
                 helperText: errors[field.name],
