@@ -120,7 +120,7 @@ export const EdgeDialog: React.FC<EdgeDialogProps> = ({
     const fieldDefinition = fields.find((f) => f.name === key);
 
     if (fieldDefinition?.type === "date") {
-      processedValue = value ? (value as dayjs.Dayjs).toISOString() : null;
+      processedValue = value ? (value as dayjs.Dayjs).format("DD-MMM-YYYY") : null;
     }
     // if fieldDefinition is boolean, `value` is already the boolean state from checkbox's onChange.
 
