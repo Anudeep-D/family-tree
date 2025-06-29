@@ -226,24 +226,6 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
             >
               {displayLabel}
             </Button>
-            {/* {hasExtraDetails && (
-              <IconButton
-                aria-describedby={popoverId}
-                size="small" // Consistent with the other usage
-                onClick={handlePopoverOpen}
-                // sx prop for s
-                // pecific styling on image, e.g., making icon color white if text is white
-                sx={{ 
-                  marginLeft: '4px', 
-                  color: 'white', // Assuming text on image is white
-                  // Add a subtle background to the icon if needed for contrast,
-                  // but be mindful of how it looks on various images.
-                  // backgroundColor: 'rgba(0, 0, 0, 0.2)' 
-                }}
-              >
-                <InfoTwoTone fontSize="small" />
-              </IconButton>
-            )} */}
           </div>
         </div>
       ) : (
