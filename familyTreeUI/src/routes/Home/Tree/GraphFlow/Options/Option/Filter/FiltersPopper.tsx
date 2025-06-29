@@ -18,13 +18,7 @@ import {
   ButtonGroup,
   Tooltip,
 } from "@mui/material";
-import {
-  forwardRef,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import DeleteFilterDialog from "./components/DeleteFilterDialog";
 import SaveAsNewView from "./components/SaveAsNewView";
 import options from "@/constants/JobAndQualification.json";
@@ -42,6 +36,7 @@ import {
   setApplyFilters,
   selectRootedGraph,
   selectAllLocations,
+  setGraphChanged,
 } from "@/redux/treeConfigSlice";
 import { Nodes } from "@/types/nodeTypes";
 import {
@@ -251,6 +246,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
     const rootedGraph = useSelector(selectRootedGraph);
     const [waitForRootedGraph, setWaitForRootedGraph] = useState(false);
     const handleApplyFilter = () => {
+      dispatch(setGraphChanged(true));
       if (!currentFilter.filterBy.rootPerson.person) {
         dispatch(setApplyFilters());
         onClose();
@@ -306,7 +302,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
                 onChange={(e) => handleChange(["enabled"], e.target.checked)}
               />
             }
-            label="Enabled"
+            label="Auto apply filters"
             labelPlacement="start"
             sx={{ ml: 1 }}
           />
@@ -712,11 +708,7 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
                 )
               }
               renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="current location"
-                  size="small"
-                />
+                <TextField {...params} label="current location" size="small" />
               )}
               sx={{ my: 2 }}
               fullWidth
@@ -902,7 +894,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
                 <RotateLeftTwoTone />
               </Button>
             </Tooltip>
-
             <Tooltip title="Apply Filter">
               <Button
                 variant="outlined"

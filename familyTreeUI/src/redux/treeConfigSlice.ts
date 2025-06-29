@@ -18,6 +18,7 @@ export type TreeConfigState = {
   edges: AppEdge[];
   filteredNodes: AppNode[];
   filteredEdges: AppEdge[];
+  graphChanged: boolean;
   savedFilters: (FilterProps & { elementId: string })[];
   selectedFilter: { id: string; label: string } | null;
   currentFilter: FilterProps;
@@ -64,6 +65,7 @@ export const initialState: TreeConfigState = {
   filteredEdges: [],
   savedFilters: [],
   selectedFilter: null,
+  graphChanged: false,
   currentFilter: {
     filterName: null,
     enabled: false,
@@ -120,6 +122,9 @@ const treeConfigSlice = createSlice({
     },
     setFilteredEdges: (state, action: PayloadAction<AppEdge[]>) => {
       state.filteredEdges = action.payload;
+    },
+    setGraphChanged: (state, action: PayloadAction<boolean>) => {
+      state.graphChanged = action.payload;
     },
     setSelectedFilter: (
       state,
@@ -187,6 +192,7 @@ const applyFilters = (state: TreeConfigState) => {
   const rootedEdgeIds = state.rootedGraph?.edges
     ? state.rootedGraph.edges.map((edge) => edge.id)
     : [];
+
   const nodes =
     rootedNodeIds.length > 0
       ? state.nodes.filter((node) => rootedNodeIds.includes(node.id))
@@ -195,6 +201,18 @@ const applyFilters = (state: TreeConfigState) => {
     rootedEdgeIds.length > 0
       ? state.edges.filter((edge) => rootedEdgeIds.includes(edge.id))
       : state.edges;
+
+  if (!state.graphChanged) {
+    const filterNodeIds = state.filteredNodes.map((node) => node.id);
+    const filterEdgeIds = state.filteredEdges.map((edge) => edge.id);
+    state.filteredEdges = edges.filter((edge) =>
+      filterEdgeIds.includes(edge.id)
+    );
+    state.filteredNodes = nodes.filter((node) =>
+      filterNodeIds.includes(node.id)
+    );
+    return;
+  }
 
   const nodeIdsToRemove = [];
 
@@ -433,6 +451,8 @@ export const selectCurrentFilter = (state: ParameterSetState) =>
   state.treeConfig.currentFilter;
 export const selectRootedGraph = (state: ParameterSetState) =>
   state.treeConfig.rootedGraph;
+export const selectGraphChanged = (state: ParameterSetState) =>
+  state.treeConfig.graphChanged;
 export const selectAllLocations = (state: ParameterSetState) => {
   const allLocs = state.treeConfig.nodes
     .filter((node) => Boolean(node.data.currLocation))
@@ -446,6 +466,7 @@ export const {
   setReduxEdges,
   setFilteredNodes,
   setFilteredEdges,
+  setGraphChanged,
   setApplyFilters,
   setSelectedFilter,
   setSavedFilters,

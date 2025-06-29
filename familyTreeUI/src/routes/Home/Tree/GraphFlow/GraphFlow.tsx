@@ -37,7 +37,7 @@ import "./GraphFlow.scss";
 import { Tree } from "@/types/entityTypes";
 import { EdgeDialog } from "./EdgeDialog/EdgeDialog";
 import { Role } from "@/types/common";
-import { getDiff } from "@/utils/common";
+import { getDiff, isDiff } from "@/utils/common";
 import {
   setReduxNodes,
   setReduxEdges,
@@ -46,6 +46,10 @@ import {
   setApplyFilters,
   selectCurrentFilter,
   selectRootedGraph,
+  selectGraphChanged,
+  setGraphChanged,
+  selectEdges,
+  selectNodes,
 } from "@/redux/treeConfigSlice";
 import { useDispatch, useSelector } from "react-redux";
 import useRootPersonGraph from "@/hooks/useRootPersonGraph";
@@ -97,6 +101,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
   // Initialize useEdgesState with edges that have markers and classNames
   const [edges, setEdges, onEdgesChange] = useEdgesState(initEdgesWithMarkers);
   const currentFilter = useSelector(selectCurrentFilter);
+  const graphChanged = useSelector(selectGraphChanged);
   useRootPersonGraph(
     currentFilter.filterBy.rootPerson.person?.id,
     currentFilter.filterBy.rootPerson.onlyImmediate
@@ -122,7 +127,10 @@ const GraphFlow: FC<GraphFlowProps> = ({
     }
   }, [waitForRootedGraph, rootedGraph]);
 
+  const oldNodes = useSelector(selectNodes);
+  const oldEdges = useSelector(selectEdges);
   useEffect(() => {
+    dispatch(setGraphChanged(isDiff(oldNodes,nodes, oldEdges,edges)));
     nodes && dispatch(setReduxNodes(nodes));
     edges && dispatch(setReduxEdges(edges));
     handleApplyFilter();
@@ -132,7 +140,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
   const filteredEdges = useSelector(selectFilteredEdges);
 
   useEffect(() => {
-    currentFilter.enabled && setSnackBarMsg(
+    currentFilter.enabled && graphChanged && setSnackBarMsg(
       <Box>
         <strong>Filters applied!</strong> Displaying a filtered tree.
       </Box>
