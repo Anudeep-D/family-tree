@@ -1,14 +1,8 @@
 import { AppEdge, Edges, edgeTypes } from "@/types/edgeTypes";
 import { AppNode, Nodes, nodeTypes } from "@/types/nodeTypes";
 import { getLayoutedElements } from "@/utils/layout";
-import {
-  useUpdateGraphMutation,
-} from "@/redux/queries/graph-endpoints"; // Path verified by ls
-import {
-  Alert,
-  Box,
-  Snackbar,
-} from "@mui/material";
+import { useUpdateGraphMutation } from "@/redux/queries/graph-endpoints"; // Path verified by ls
+import { Alert, Box, Popover, Snackbar, Typography } from "@mui/material";
 import {
   useNodesState,
   useEdgesState,
@@ -22,6 +16,7 @@ import {
   useReactFlow,
   XYPosition,
   MarkerType, // Added MarkerType
+  Node, // Import Node for activeNodeData
 } from "@xyflow/react";
 import { FC, ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -47,6 +42,11 @@ import {
   selectNodes,
 } from "@/redux/treeConfigSlice";
 import { useDispatch, useSelector } from "react-redux";
+// import { PersonNode as PersonNodeType } from "@/types/Components/Nodes/PersonNode"; // No longer needed here
+import { NodeDataMap, Nodes as NodeTypesEnum } from "@/types/nodeTypes"; // Renamed Nodes to NodeTypesEnum to avoid conflict
+import dayjs from "dayjs"; // Keep for PersonNodePopover if it still uses it, or manage there
+import { PersonNodePopover } from "@/types/Components/Nodes/PersonNodePopover";
+import { HouseNodePopover } from "@/types/Components/Nodes/HouseNodePopover";
 
 // Define defaultMarker outside the component if it's static, or inside if it depends on props/theme
 const defaultMarker = {
@@ -104,7 +104,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
   const oldNodes = useSelector(selectNodes);
   const oldEdges = useSelector(selectEdges);
   useEffect(() => {
-    dispatch(setGraphChanged(isDiff(oldNodes,nodes, oldEdges,edges)));
+    dispatch(setGraphChanged(isDiff(oldNodes, nodes, oldEdges, edges)));
     nodes && dispatch(setReduxNodes(nodes));
     edges && dispatch(setReduxEdges(edges));
     handleApplyFilter();
@@ -114,17 +114,58 @@ const GraphFlow: FC<GraphFlowProps> = ({
   const filteredEdges = useSelector(selectFilteredEdges);
 
   useEffect(() => {
-    currentFilter.enabled && graphChanged && setSnackBarMsg(
-      <Box>
-        <strong>Filters applied!</strong> Displaying a filtered tree.
-      </Box>
-    );
+    currentFilter.enabled &&
+      graphChanged &&
+      setSnackBarMsg(
+        <Box>
+          <strong>Filters applied!</strong> Displaying a filtered tree.
+        </Box>
+      );
   }, [filteredEdges, filteredNodes]);
   const [prevNodes, setPrevNodes] = useNodesState(initNodes);
   // Initialize prevEdges with edges that have markers and classNames
   const [prevEdges, setPrevEdges] = useEdgesState(initEdgesWithMarkers);
   const reactFlowWrapper = useRef<HTMLDivElement | null>(null);
   const { screenToFlowPosition } = useReactFlow();
+
+  // Popover State
+  const [popoverAnchorElement, setPopoverAnchorElement] =
+    useState<HTMLElement | null>(null);
+  const [activePopoverType, setActivePopoverType] = useState<
+    "person" | "house" | null
+  >(null);
+  const [activeNodeData, setActiveNodeData] = useState<AppNode | null>(null);
+
+  const handleClosePopover = () => {
+    setPopoverAnchorElement(null);
+    setActivePopoverType(null);
+    setActiveNodeData(null);
+  };
+
+  // Helper functions to determine if a node has extra details
+  const hasExtraDetailsPerson = (
+    data: NodeDataMap[NodeTypesEnum.Person]
+  ): boolean => {
+    return !!(
+      data.gender ||
+      data.dob ||
+      data.doe ||
+      (data.education &&
+        (data.education.fieldOfStudy ||
+          data.education.highestQualification ||
+          data.education.institution ||
+          data.education.location)) ||
+      (data.job &&
+        (data.job.jobType || data.job.employer || data.job.jobTitle)) ||
+      data.currLocation
+    );
+  };
+
+  const hasExtraDetailsHouse = (
+    data: NodeDataMap[NodeTypesEnum.House]
+  ): boolean => {
+    return !!data.homeTown;
+  };
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
@@ -171,7 +212,10 @@ const GraphFlow: FC<GraphFlowProps> = ({
     setNodeDialogMode(undefined);
   };
 
-  const onNodeDialogSubmit = (curNode: AppNode, edgeChanges?: { added: AppEdge[]; removed: { id: string }[] }) => {
+  const onNodeDialogSubmit = (
+    curNode: AppNode,
+    edgeChanges?: { added: AppEdge[]; removed: { id: string }[] }
+  ) => {
     if (nodeDialogMode === "edit") {
       setNodes((nds) =>
         nds.map((node) => (node.id === curNode?.id ? curNode : node))
@@ -183,7 +227,12 @@ const GraphFlow: FC<GraphFlowProps> = ({
     if (edgeChanges) {
       setEdges((eds) => {
         // Filter out removed edges
-        const remainingEdges = eds.filter(edge => !edgeChanges.removed.some(removedEdge => removedEdge.id === edge.id));
+        const remainingEdges = eds.filter(
+          (edge) =>
+            !edgeChanges.removed.some(
+              (removedEdge) => removedEdge.id === edge.id
+            )
+        );
         // Add new edges
         const updatedEdges = remainingEdges.concat(edgeChanges.added);
         return updatedEdges;
@@ -206,8 +255,12 @@ const GraphFlow: FC<GraphFlowProps> = ({
 
   const onConnect: OnConnect = useCallback(
     (connection) => {
-      const edgeSourceNode = nodes.find((nodeS) => nodeS.id === connection.source);
-      const edgeTargetNode = nodes.find((nodeT) => nodeT.id === connection.target);
+      const edgeSourceNode = nodes.find(
+        (nodeS) => nodeS.id === connection.source
+      );
+      const edgeTargetNode = nodes.find(
+        (nodeT) => nodeT.id === connection.target
+      );
 
       if (edgeSourceNode && edgeTargetNode) {
         const isSourcePerson = edgeSourceNode.type === Nodes.Person;
@@ -215,11 +268,17 @@ const GraphFlow: FC<GraphFlowProps> = ({
         const isSourceHouse = edgeSourceNode.type === Nodes.House;
         const isTargetHouse = edgeTargetNode.type === Nodes.House;
 
-        if ((isSourcePerson && isTargetHouse) || (isSourceHouse && isTargetPerson)) {
+        if (
+          (isSourcePerson && isTargetHouse) ||
+          (isSourceHouse && isTargetPerson)
+        ) {
           // Determine correct source and target for BELONGS_TO (Person -> House)
-          const sourceId = isSourcePerson ? connection.source : connection.target;
-          const targetId = isTargetHouse ? connection.target : connection.source;
-
+          const sourceId = isSourcePerson
+            ? connection.source
+            : connection.target;
+          const targetId = isTargetHouse
+            ? connection.target
+            : connection.source;
 
           const newBelongsToEdge: AppEdge = {
             id: `${Edges.BELONGS_TO}-${sourceId}-${targetId}-${Date.now()}`,
@@ -230,7 +289,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
             type: Edges.BELONGS_TO,
             markerEnd: defaultMarker,
             className: `${Edges.BELONGS_TO}-edge`,
-            data: { updatedOn: new Date().toISOString() }, 
+            data: { updatedOn: new Date().toISOString() },
           };
           setEdges((eds) => addEdge(newBelongsToEdge, eds));
           // Skip opening the dialog
@@ -377,6 +436,40 @@ const GraphFlow: FC<GraphFlowProps> = ({
     setEdges(sortedEdges);
   };
 
+  const clickTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  const handleNodeClick = (event:React.MouseEvent<Element, MouseEvent>, node:AppNode) => {
+    // delay the click to distinguish from double click
+    if (clickTimeout.current) clearTimeout(clickTimeout.current);
+
+    clickTimeout.current = setTimeout(() => {
+      console.log("Single Click:", node);
+      handleClosePopover(); // Close any existing popover first
+      if (node.type === NodeTypesEnum.Person) {
+        const personData = node.data as NodeDataMap[NodeTypesEnum.Person];
+        if (hasExtraDetailsPerson(personData)) {
+          setPopoverAnchorElement(event.currentTarget as HTMLElement);
+          setActivePopoverType("person");
+          setActiveNodeData(node as AppNode);
+        }
+      } else if (node.type === NodeTypesEnum.House) {
+        const houseData = node.data as NodeDataMap[NodeTypesEnum.House];
+        if (hasExtraDetailsHouse(houseData)) {
+          setPopoverAnchorElement(event.currentTarget as HTMLElement);
+          setActivePopoverType("house");
+          setActiveNodeData(node as AppNode);
+        }
+      }
+    }, 300); // adjust delay as needed
+  };
+
+  const handleNodeDoubleClick =(node:AppNode) => {
+    if (clickTimeout.current) clearTimeout(clickTimeout.current);
+    console.log("Double Click:", node);
+    setEditingNode(node);
+    setNodeDialogMode("edit");
+  };
+
   return (
     <Box display="flex" flexDirection="column" height="85vh" width="100vw">
       {deleteError && (
@@ -414,19 +507,12 @@ const GraphFlow: FC<GraphFlowProps> = ({
           onEdgesChange={onEdgesChange}
           onConnect={isViewer ? undefined : onConnect}
           onNodeClick={
-            isViewer
-              ? undefined
-              : (_event, node) => {
-                  console.log("show node's extra info", node);
-                }
+            isViewer ? undefined : (event, node) => handleNodeClick(event, node)
           }
           onNodeDoubleClick={
             isViewer
               ? undefined
-              : (_event, node) => {
-                  setEditingNode(node);
-                  setNodeDialogMode("edit");
-                }
+              : (_event, node) => handleNodeDoubleClick(node)
           }
           onNodeContextMenu={
             isViewer
@@ -529,6 +615,24 @@ const GraphFlow: FC<GraphFlowProps> = ({
           {snackBarMsg}
         </Alert>
       </Snackbar>
+
+      {activePopoverType === "person" && activeNodeData && (
+        <PersonNodePopover
+          open={Boolean(popoverAnchorElement)}
+          anchorEl={popoverAnchorElement}
+          onClose={handleClosePopover}
+          nodeData={activeNodeData.data as NodeDataMap[NodeTypesEnum.Person]}
+        />
+      )}
+
+      {activePopoverType === "house" && activeNodeData && (
+        <HouseNodePopover
+          open={Boolean(popoverAnchorElement)}
+          anchorEl={popoverAnchorElement}
+          onClose={handleClosePopover}
+          nodeData={activeNodeData.data as NodeDataMap[NodeTypesEnum.House]}
+        />
+      )}
     </Box>
   );
 };
