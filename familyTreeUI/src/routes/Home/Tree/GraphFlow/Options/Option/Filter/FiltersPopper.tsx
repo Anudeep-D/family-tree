@@ -34,7 +34,6 @@ import {
   selectCurrentFilter,
   initialState,
   setApplyFilters,
-  selectRootedGraph,
   selectAllLocations,
   setGraphChanged,
 } from "@/redux/treeConfigSlice";
@@ -243,29 +242,12 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
       setFilterName("");
       setNameExists(null);
     };
-    const rootedGraph = useSelector(selectRootedGraph);
-    const [waitForRootedGraph, setWaitForRootedGraph] = useState(false);
     const handleApplyFilter = () => {
       dispatch(setGraphChanged(true));
-      if (!currentFilter.filterBy.rootPerson.person) {
-        dispatch(setApplyFilters());
-        onClose();
-      } else {
-        setWaitForRootedGraph(true); // wait for rootedGraph to load
-      }
+      dispatch(setApplyFilters());
+      onClose()
     };
-    useEffect(() => {
-      if (
-        waitForRootedGraph &&
-        rootedGraph &&
-        rootedGraph.isloading === false &&
-        rootedGraph.error === undefined
-      ) {
-        dispatch(setApplyFilters());
-        setWaitForRootedGraph(false); // reset the flag
-        onClose();
-      }
-    }, [waitForRootedGraph, rootedGraph]);
+
     const handleSaveAs = () => {
       setSaveAsOpen((prev) => !prev);
       setChecking(false);
@@ -899,7 +881,6 @@ const FiltersPopper = forwardRef<HTMLDivElement, FiltersPopperProps>(
                 variant="outlined"
                 onClick={handleApplyFilter}
                 disabled={!currentFilter.enabled}
-                loading={waitForRootedGraph}
                 sx={{ color: "#5688fc", background: "#00000000" }}
               >
                 <FilterAltTwoTone />

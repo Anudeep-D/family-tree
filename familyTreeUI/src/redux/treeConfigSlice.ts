@@ -6,12 +6,6 @@ import { getLayoutedElements } from "@/utils/layout";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import dayjs from "dayjs";
 
-export type RootedGraphProps = {
-  nodes: AppNode[];
-  edges: AppEdge[];
-  isloading: boolean;
-  error?: string;
-};
 export type TreeConfigState = {
   currentTree: Tree | null;
   nodes: AppNode[];
@@ -22,7 +16,6 @@ export type TreeConfigState = {
   savedFilters: (FilterProps & { elementId: string })[];
   selectedFilter: { id: string; label: string } | null;
   currentFilter: FilterProps;
-  rootedGraph?: RootedGraphProps;
 };
 
 export type FilterProps = {
@@ -141,12 +134,6 @@ const treeConfigSlice = createSlice({
     setCurrentFilter: (state, action: PayloadAction<FilterProps>) => {
       state.currentFilter = action.payload;
     },
-    setRootedGraph: (
-      state,
-      action: PayloadAction<RootedGraphProps | undefined>
-    ) => {
-      state.rootedGraph = action.payload;
-    },
   },
 });
 
@@ -177,6 +164,67 @@ const validateAge = (range: number[], data: Record<string, any>) => {
   return age >= range[0] && age <= range[1];
 };
 
+export const getFamilyTree = (
+  state: TreeConfigState
+): { nodeIds: string[]; edgeIds: string[] } => {
+  const rootId = state.currentFilter.filterBy.rootPerson.person?.id;
+  if (rootId === undefined) return { nodeIds: [], edgeIds: [] };
+  const maxDepth = state.currentFilter.filterBy.rootPerson.onlyImmediate ? 1 : Infinity;
+  const visitedNodeIds = new Set<string>();
+  const queue: { id: string; depth: number }[] = [{ id: rootId, depth: 0 }];
+
+  while (queue.length > 0) {
+    const { id, depth } = queue.shift()!;
+    if (visitedNodeIds.has(id)) continue;
+    visitedNodeIds.add(id);
+
+    // Add spouse
+    const spouseEdge = state.edges.find(
+      (e) => e.type === Edges.MARRIED_TO && (e.source === id || e.target === id)
+    );
+    if (spouseEdge) {
+      const spouseId =
+        spouseEdge.source === id ? spouseEdge.target : spouseEdge.source;
+      if (!visitedNodeIds.has(spouseId)) {
+        queue.push({ id: spouseId, depth }); // same level
+      }
+    }
+
+    // Add house
+    const houseEdge = state.edges.find(
+      (e) => e.type === Edges.BELONGS_TO && (e.source === id || e.target === id)
+    );
+    if (houseEdge) {
+      const houseId =
+        houseEdge.source === id ? houseEdge.target : houseEdge.source;
+      visitedNodeIds.add(houseId);
+    }
+
+    // Add children (descendants)
+    if (depth < maxDepth) {
+      const childEdges = state.edges.filter(
+        (e) => e.type === Edges.PARENT_OF && e.source === id
+      );
+      childEdges.forEach((e) => {
+        queue.push({ id: e.target, depth: depth + 1 });
+      });
+    }
+  }
+
+  // Once all nodeIds are collected, add valid edges
+  const visitedEdgeIds = new Set<string>();
+  for (const edge of state.edges) {
+    if (visitedNodeIds.has(edge.source) && visitedNodeIds.has(edge.target)) {
+      visitedEdgeIds.add(edge.id);
+    }
+  }
+
+  return {
+    nodeIds: Array.from(visitedNodeIds),
+    edgeIds: Array.from(visitedEdgeIds),
+  };
+};
+
 const applyFilters = (state: TreeConfigState) => {
   const currentFilter = state.currentFilter;
 
@@ -186,20 +234,15 @@ const applyFilters = (state: TreeConfigState) => {
     return;
   }
 
-  const rootedNodeIds = state.rootedGraph?.nodes
-    ? state.rootedGraph.nodes.map((node) => node.id)
-    : [];
-  const rootedEdgeIds = state.rootedGraph?.edges
-    ? state.rootedGraph.edges.map((edge) => edge.id)
-    : [];
+  const familyTreeids = getFamilyTree(state);
 
   const nodes =
-    rootedNodeIds.length > 0
-      ? state.nodes.filter((node) => rootedNodeIds.includes(node.id))
+    familyTreeids.nodeIds.length > 0
+      ? state.nodes.filter((node) => familyTreeids.nodeIds.includes(node.id))
       : state.nodes;
   const edges =
-    rootedEdgeIds.length > 0
-      ? state.edges.filter((edge) => rootedEdgeIds.includes(edge.id))
+    familyTreeids.edgeIds.length > 0
+      ? state.edges.filter((edge) => familyTreeids.edgeIds.includes(edge.id))
       : state.edges;
 
   if (!state.graphChanged) {
@@ -449,8 +492,6 @@ export const selectSelectedFilter = (state: ParameterSetState) =>
   state.treeConfig.selectedFilter;
 export const selectCurrentFilter = (state: ParameterSetState) =>
   state.treeConfig.currentFilter;
-export const selectRootedGraph = (state: ParameterSetState) =>
-  state.treeConfig.rootedGraph;
 export const selectGraphChanged = (state: ParameterSetState) =>
   state.treeConfig.graphChanged;
 export const selectAllLocations = (state: ParameterSetState) => {
@@ -471,7 +512,6 @@ export const {
   setSelectedFilter,
   setSavedFilters,
   setCurrentFilter,
-  setRootedGraph,
 } = treeConfigSlice.actions;
 
 export default treeConfigSlice.reducer;

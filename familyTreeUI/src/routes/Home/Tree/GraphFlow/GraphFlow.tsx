@@ -2,15 +2,11 @@ import { AppEdge, Edges, edgeTypes } from "@/types/edgeTypes";
 import { AppNode, Nodes, nodeTypes } from "@/types/nodeTypes";
 import { getLayoutedElements } from "@/utils/layout";
 import {
-  graphApi,
   useUpdateGraphMutation,
 } from "@/redux/queries/graph-endpoints"; // Path verified by ls
 import {
   Alert,
-  AlertTitle,
   Box,
-  Slide,
-  SlideProps,
   Snackbar,
 } from "@mui/material";
 import {
@@ -45,14 +41,12 @@ import {
   selectFilteredEdges,
   setApplyFilters,
   selectCurrentFilter,
-  selectRootedGraph,
   selectGraphChanged,
   setGraphChanged,
   selectEdges,
   selectNodes,
 } from "@/redux/treeConfigSlice";
 import { useDispatch, useSelector } from "react-redux";
-import useRootPersonGraph from "@/hooks/useRootPersonGraph";
 
 // Define defaultMarker outside the component if it's static, or inside if it depends on props/theme
 const defaultMarker = {
@@ -102,30 +96,10 @@ const GraphFlow: FC<GraphFlowProps> = ({
   const [edges, setEdges, onEdgesChange] = useEdgesState(initEdgesWithMarkers);
   const currentFilter = useSelector(selectCurrentFilter);
   const graphChanged = useSelector(selectGraphChanged);
-  useRootPersonGraph(
-    currentFilter.filterBy.rootPerson.person?.id,
-    currentFilter.filterBy.rootPerson.onlyImmediate
-  );
-  const rootedGraph = useSelector(selectRootedGraph);
-  const [waitForRootedGraph, setWaitForRootedGraph] = useState(false);
+
   const handleApplyFilter = () => {
-    if (!currentFilter.filterBy.rootPerson.person) {
-      dispatch(setApplyFilters());
-    } else {
-      setWaitForRootedGraph(true); // wait for rootedGraph to load
-    }
+    dispatch(setApplyFilters());
   };
-  useEffect(() => {
-    if (
-      waitForRootedGraph &&
-      rootedGraph &&
-      rootedGraph.isloading === false &&
-      rootedGraph.error === undefined
-    ) {
-      dispatch(setApplyFilters());
-      setWaitForRootedGraph(false); // reset the flag
-    }
-  }, [waitForRootedGraph, rootedGraph]);
 
   const oldNodes = useSelector(selectNodes);
   const oldEdges = useSelector(selectEdges);
