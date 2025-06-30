@@ -40,6 +40,13 @@ dependencies {
 
 	// For GoogleNetHttpTransport
 	implementation 'com.google.http-client:google-http-client-gson:1.44.1'
+
+	// RabbitMQ client
+	implementation 'org.springframework.boot:spring-boot-starter-amqp'
+
+	// WebSocket support
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	annotationProcessor 'org.projectlombok:lombok'

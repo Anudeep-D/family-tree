@@ -38,6 +38,21 @@ services:
     depends_on:
       - neo4j  # Wait for Neo4j before starting
       - redis  # Wait for Redis before starting
+      - rabbitmq # Wait for RabbitMQ before starting
+
+  rabbitmq:
+    container_name: familytree-rabbitmq
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"    # AMQP protocol
+      - "15672:15672"  # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - backendnet
 
   neo4j:
     container_name: familytree-neo4j     # Name of the Neo4j database container
@@ -65,6 +80,7 @@ services:
 volumes:
   neo4j-data:  # Volume for Neo4j data
   redis-data:  # Volume for Redis data
+  rabbitmq-data: # Volume for RabbitMQ data
 
 networks:
   backendnet:

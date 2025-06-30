@@ -6,6 +6,8 @@ import dev.anudeep.familytree.dto.RoleAssignmentRequest;
 import dev.anudeep.familytree.model.Role;
 import dev.anudeep.familytree.model.Tree;
 import dev.anudeep.familytree.model.User;
+import dev.anudeep.familytree.dto.notification.EventType;
+import dev.anudeep.familytree.dto.notification.NotificationEvent;
 import dev.anudeep.familytree.repository.TreeRepository;
 import dev.anudeep.familytree.repository.UserRepository;
 import dev.anudeep.familytree.utils.Constants;
@@ -13,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +30,7 @@ public class UserTreeService {
     private final UserRepository userRepo;
     private final TreeRepository treeRepo;
     private final Neo4jClient neo4jClient;
+    private final NotificationService notificationService; // Added NotificationService
 
     public Optional<User> getUserByElementId(String elementId) {
         return userRepo.findByElementId(elementId);
@@ -83,6 +87,19 @@ public class UserTreeService {
 
     public void createTree(Tree tree) {
         treeRepo.save(tree);
+        // Notify about tree creation
+        if (tree.getElementId() != null && tree.getCreatedBy() != null) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("treeName", tree.getName());
+            data.put("createdBy", tree.getCreatedBy());
+            NotificationEvent event = new NotificationEvent(
+                    EventType.TREE_CREATED,
+                    tree.getElementId(),
+                    tree.getCreatedBy(), // Actor is the creator
+                    data
+            );
+            notificationService.sendNotification(event);
+        }
     }
 
     public Tree getTreeByDetails(String name, String createdAt, String createdBy) {
@@ -97,6 +114,20 @@ public class UserTreeService {
                     WHERE elementId(t) = $treeId
                     MERGE (u)-[:%s]->(t)
                 """, relationType)).bindAll(Map.of("userId", userId, "treeId", treeId)).run();
+
+        // Notify about user access change
+        String actorUserId = SecurityContextHolder.getContext().getAuthentication().getName(); // Assumes principal is user elementId
+        Map<String, Object> data = new HashMap<>();
+        data.put("affectedUserId", userId);
+        data.put("newRole", relationType); // In this system, relationType IS the role (e.g., ADMIN_REL)
+        data.put("changeType", "GRANT"); // Or "UPDATE" if more context is available
+        NotificationEvent event = new NotificationEvent(
+                EventType.USER_ACCESS_CHANGED,
+                treeId,
+                actorUserId,
+                data
+        );
+        notificationService.sendNotification(event);
     }
 
     public RelationChangeSummary updateUsersRelationShip(String treeId, List<RoleAssignmentRequest> users) throws Exception {
@@ -110,7 +141,24 @@ public class UserTreeService {
                 })
                 .collect(Collectors.toList());
         log.info("Users to update {} for treeId {}", userMaps, treeId);
-        return treeRepo.updateUsersRelationShip(treeId, userMaps);
+        RelationChangeSummary summary = treeRepo.updateUsersRelationShip(treeId, userMaps);
+
+        // Notify for each user whose role might have been changed
+        String actorUserId = SecurityContextHolder.getContext().getAuthentication().getName(); // Assumes principal is user elementId
+        for (RoleAssignmentRequest userRole : users) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("affectedUserId", userRole.getElementId());
+            data.put("newRole", userRole.getRelation()); // Relation string, e.g., "ADMIN_REL", "viewer"
+            data.put("changeType", "UPDATE");
+            NotificationEvent event = new NotificationEvent(
+                    EventType.USER_ACCESS_CHANGED,
+                    treeId,
+                    actorUserId,
+                    data
+            );
+            notificationService.sendNotification(event);
+        }
+        return summary;
     }
 
     @Transactional // Recommended for operations that modify data
@@ -130,6 +178,17 @@ public class UserTreeService {
         // If relationships block deletion, a custom DETACH DELETE query in TreeRepository would be needed.
         treeRepo.detachAndDeleteByElementId(elementId);
         log.info("Tree {} deleted successfully (with detach) by user {}", elementId, currentUser.getEmail());
+
+        // Notify about tree deletion
+        Map<String, Object> data = new HashMap<>();
+        data.put("treeName", tree.getName()); // Include tree name for context if available
+        NotificationEvent event = new NotificationEvent(
+                EventType.TREE_DELETED,
+                elementId, // treeId is elementId here
+                currentUser.getElementId(),
+                data
+        );
+        notificationService.sendNotification(event);
     }
 
     @Transactional // Recommended for operations that modify data
@@ -177,6 +236,20 @@ public class UserTreeService {
             // If elementId is the actual @Id field in the Tree entity, then deleteAllById(idsToDelete) should work.
             treeRepo.detachAndDeleteAllByElementIdIn(idsToDelete);
             log.info("Successfully deleted (with detach) trees with IDs: {} by user {}.", idsToDelete, currentUser.getEmail());
+
+            // Notify for each deleted tree
+            for (String deletedTreeId : idsToDelete) {
+                Map<String, Object> data = new HashMap<>();
+                // We don't have tree names here without another fetch, so keeping data minimal
+                data.put("reason", "Bulk deletion operation");
+                NotificationEvent event = new NotificationEvent(
+                        EventType.TREE_DELETED,
+                        deletedTreeId,
+                        currentUser.getElementId(),
+                        data
+                );
+                notificationService.sendNotification(event);
+            }
         } else {
             log.info("No trees were eligible for deletion by user {} from the provided list.", currentUser.getEmail());
         }

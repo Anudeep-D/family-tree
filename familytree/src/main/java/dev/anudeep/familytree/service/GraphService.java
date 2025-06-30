@@ -8,23 +8,30 @@ import dev.anudeep.familytree.utils.Constants;
 import dev.anudeep.familytree.utils.PersonNodeConverter;
 import lombok.extern.slf4j.Slf4j;
 import org.neo4j.driver.types.Node;
+import dev.anudeep.familytree.dto.notification.EventType;
+import dev.anudeep.familytree.dto.notification.NotificationEvent;
 import org.neo4j.driver.types.Relationship;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.neo4j.core.Neo4jClient;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
 public class GraphService {
     private final ObjectMapper objectMapper;
-    @Autowired
-    private Neo4jClient neo4jClient;
+    private final Neo4jClient neo4jClient;
+    private final NotificationService notificationService; // Added NotificationService
 
-    public GraphService(ObjectMapper objectMapper) {
+    @Autowired
+    public GraphService(ObjectMapper objectMapper, Neo4jClient neo4jClient, NotificationService notificationService) {
         this.objectMapper = objectMapper;
+        this.neo4jClient = neo4jClient;
+        this.notificationService = notificationService;
     }
 
     public FlowGraphDTO getGraph(String treeId) {
@@ -405,5 +412,33 @@ public class GraphService {
         }
 
         log.info("Graph update completed for treeId: {}", treeId);
+
+        // Send notification if any changes were made
+        boolean changesMade = (diff.getAddedNodes() != null && !diff.getAddedNodes().isEmpty()) ||
+                (diff.getAddedEdges() != null && !diff.getAddedEdges().isEmpty()) ||
+                (diff.getUpdatedNodes() != null && !diff.getUpdatedNodes().isEmpty()) ||
+                (diff.getUpdatedEdges() != null && !diff.getUpdatedEdges().isEmpty()) ||
+                (diff.getDeletedNodeIds() != null && !diff.getDeletedNodeIds().isEmpty()) ||
+                (diff.getDeletedEdgeIds() != null && !diff.getDeletedEdgeIds().isEmpty());
+
+        if (changesMade) {
+            String actorUserId = SecurityContextHolder.getContext().getAuthentication().getName(); // Assumes principal is user elementId
+            Map<String, Object> data = new HashMap<>();
+            data.put("addedNodesCount", diff.getAddedNodes() != null ? diff.getAddedNodes().size() : 0);
+            data.put("addedEdgesCount", diff.getAddedEdges() != null ? diff.getAddedEdges().size() : 0);
+            data.put("updatedNodesCount", diff.getUpdatedNodes() != null ? diff.getUpdatedNodes().size() : 0);
+            data.put("updatedEdgesCount", diff.getUpdatedEdges() != null ? diff.getUpdatedEdges().size() : 0);
+            data.put("deletedNodesCount", diff.getDeletedNodeIds() != null ? diff.getDeletedNodeIds().size() : 0);
+            data.put("deletedEdgesCount", diff.getDeletedEdgeIds() != null ? diff.getDeletedEdgeIds().size() : 0);
+            // Could add a summary string if desired, e.g., "Graph updated: 2 nodes added, 1 edge deleted."
+
+            NotificationEvent event = new NotificationEvent(
+                    EventType.TREE_STRUCTURE_MODIFIED,
+                    treeId,
+                    actorUserId,
+                    data
+            );
+            notificationService.sendNotification(event);
+        }
     }
 }
