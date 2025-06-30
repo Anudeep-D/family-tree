@@ -68,9 +68,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws")
+        registry.addEndpoint("/api/ws") // Changed from /ws to /api/ws
                 .addInterceptors(customHandshakeInterceptor)
-               .setHandshakeHandler(new DefaultHandshakeHandler() {
+                .setHandshakeHandler(new DefaultHandshakeHandler() {
                     @Override
                     protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler, Map<String, Object> attributes) {
                         String elementId = (String) attributes.get("elementId");
