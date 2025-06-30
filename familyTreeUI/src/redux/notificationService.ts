@@ -29,7 +29,17 @@ const connect = (authToken?: string | null) => {
     return;
   }
 
-  const socket = new SockJS(SOCKET_URL);
+  let socketUrl = SOCKET_URL;
+  if (authToken) {
+    // Ensure SOCKET_URL doesn't already have query params for simplicity here
+    // If SOCKET_URL could have params, proper URL construction is needed.
+    socketUrl = `${SOCKET_URL}?token=${encodeURIComponent(authToken)}`;
+    console.log(`NotificationService: Connecting to SockJS with URL: ${socketUrl}`);
+  } else {
+    console.log(`NotificationService: Connecting to SockJS with URL: ${socketUrl} (no auth token)`);
+  }
+
+  const socket = new SockJS(socketUrl);
   stompClient = Stomp.over(socket);
 
   stompClient.reconnect_delay = 5000; // Reconnect every 5 seconds
@@ -54,26 +64,41 @@ const connect = (authToken?: string | null) => {
   stompClient.connect(
     headers, // Headers for the STOMP connect frame
     () => { // onConnect
-      console.log('NotificationService: Connected to WebSocket');
+      console.log('NotificationService: STOMP Connected to broker.'); 
       
       // Subscribe to user-specific notifications
-      stompClient?.subscribe(USER_SPECIFIC_TOPIC, message => {
-        console.log('NotificationService: Received user-specific message:', message.body);
-        try {
-          const notificationPayload = JSON.parse(message.body);
-          // Assuming backend sends id, message, timestamp, link
-          // Use addBackendNotification if backend provides full structure
-          // Use addNotification if backend only sends message and link
-          if (notificationPayload.id && notificationPayload.timestamp) {
-             storeInstance?.dispatch(addBackendNotification(notificationPayload));
-          } else {
-             storeInstance?.dispatch(addNotification({ message: notificationPayload.message, link: notificationPayload.link }));
-          }
-        } catch (error) {
-          console.error('NotificationService: Error parsing message or dispatching action:', error);
-           storeInstance?.dispatch(addNotification({ message: 'Received an invalid notification.' }));
-        }
-      });
+      if (stompClient?.connected) { 
+        // console.log(`NotificationService: Attempting to SUBSCRIBE to ${USER_SPECIFIC_TOPIC}`); // Verbose, can be commented out
+        const subscription = stompClient.subscribe(
+          USER_SPECIFIC_TOPIC, 
+          message => { // Message callback
+            // console.log('NotificationService: Received raw STOMP message on user-specific topic:', message); // Verbose
+            console.log('NotificationService: Received message body:', message.body); // Keep this one
+            try {
+              const notificationPayload = JSON.parse(message.body);
+              // Assuming backend sends id, message, timestamp, link
+              // Use addBackendNotification if backend provides full structure
+              // Use addNotification if backend only sends message and link
+              if (notificationPayload.id && notificationPayload.timestamp) {
+                 storeInstance?.dispatch(addBackendNotification(notificationPayload));
+              } else {
+                 storeInstance?.dispatch(addNotification({ message: notificationPayload.message, link: notificationPayload.link }));
+              }
+            } catch (error) {
+              console.error('NotificationService: Error parsing message or dispatching action:', error);
+               storeInstance?.dispatch(addNotification({ message: 'Received an invalid notification.' }));
+            }
+          },
+          // Optional: Add subscription-specific headers or handle specific errors for this subscription
+          { id: 'user-notifications-subscription' } 
+          // Note: The STOMP `subscribe` method itself doesn't typically have a direct error callback like `connect` does.
+          // Errors related to subscription often come as ERROR frames from the broker,
+          // which might be caught by the general stompClient.onStompError or by inspecting messages.
+        );
+        console.log(`NotificationService: Subscribed to ${USER_SPECIFIC_TOPIC} with client-side ID: ${subscription.id}`);
+      } else {
+        console.warn('NotificationService: STOMP client not connected at time of subscription attempt, cannot subscribe.');
+      }
 
       // Example: Subscribe to a general topic (if you have one)
       /*

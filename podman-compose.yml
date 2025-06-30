@@ -51,6 +51,7 @@ services:
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins:ro
     networks:
       - backendnet
 

@@ -43,6 +43,8 @@ dependencies {
 
 	// WebSocket support
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	// Required for STOMP security with AbstractSecurityWebSocketMessageBrokerConfigurer
+	implementation 'org.springframework.security:spring-security-messaging'
 
 	// ✅ Add this line to fix STOMP Broker Relay startup issue
 	implementation 'io.projectreactor.netty:reactor-netty:1.1.17'

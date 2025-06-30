@@ -77,13 +77,15 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
       setLocalIsLoading(false);
       // Attempt to refresh the Supabase client's session
       // This is useful if auth is primarily cookie-based and the client needs to sync.
-      supabase.auth.refreshSession().then(({ error }) => {
-        if (error) {
-          console.error("Error refreshing Supabase session:", error.message);
-        } else {
-          console.log("Supabase session refreshed successfully after user session update.");
-        }
-      });
+      // --- Temporarily commented out for debugging WebSocket idToken issues ---
+      // console.log("DEBUG: Skipping supabase.auth.refreshSession() in useAuth useEffect");
+      // supabase.auth.refreshSession().then(({ error }) => {
+      //   if (error) {
+      //     console.error("Error refreshing Supabase session:", error.message); // This was the source of "Auth session missing!"
+      //   } else {
+      //     console.log("Supabase session refreshed successfully after user session update.");
+      //   }
+      // });
     } else if (sessionError) {
       console.error("Session fetch error:", sessionError);
       setLocalUser(null);
@@ -91,7 +93,9 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
       setLocalIsAuthenticated(false);
       setLocalIsLoading(false);
       // Also clear Supabase session on error
-      supabase.auth.signOut().catch(err => console.error("Error signing out Supabase session on error:", err.message));
+      // --- Temporarily commented out for debugging WebSocket idToken issues ---
+      // console.log("DEBUG: Skipping supabase.auth.signOut() on sessionError in useAuth useEffect");
+      // supabase.auth.signOut().catch(err => console.error("Error signing out Supabase session on error:", err.message));
     } else {
       // This case handles when sessionUser is null and no error (e.g., initial state or after logout)
       setLocalUser(null);
@@ -99,7 +103,9 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
       setLocalIsAuthenticated(false);
       setLocalIsLoading(false); // Ensure loading is set to false
       // Clear Supabase session when local session is cleared (e.g., after logout)
-      supabase.auth.signOut().catch(err => console.error("Error signing out Supabase session on logout:", err.message));
+      // --- Temporarily commented out for debugging WebSocket idToken issues ---
+      // console.log("DEBUG: Skipping supabase.auth.signOut() on null sessionUser in useAuth useEffect");
+      // supabase.auth.signOut().catch(err => console.error("Error signing out Supabase session on logout:", err.message));
     }
   }, [sessionUser, sessionError, isInitialSessionLoading, isSessionFetching, contextIsLoading]);
 

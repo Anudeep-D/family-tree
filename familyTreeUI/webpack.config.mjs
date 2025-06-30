@@ -5,6 +5,15 @@ import webpack from "webpack";
 import { fileURLToPath } from "url";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import CopyWebpackPlugin from "copy-webpack-plugin";
+
+// Get __dirname in ESM environment (since __dirname isn't available natively in ESM)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env file in the familyTreeUI directory
+// This makes them available to process.env within this webpack.config.mjs file
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+
 // Determine if the build is for production
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
 
@@ -13,10 +22,6 @@ export const mode = IS_PRODUCTION ? "production" : "development";
 
 // Entry point of the application (your React app starts here)
 export const entry = "./src/main.tsx";
-
-// Get __dirname in ESM environment (since __dirname isn't available natively in ESM)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Output settings for bundled files
 export const output = {
@@ -144,5 +149,14 @@ export default {
     client: {
       webSocketURL: "ws://localhost:3000/ws", // Fixes WebSocket path for live reload
     },
+    proxy: [
+      {
+        context: ['/api'], // Match requests to /api
+        target: process.env.BACKEND_TARGET_URL || 'http://localhost:8080',
+        changeOrigin: true,
+        ws: true, // Enable WebSocket proxying
+        logLevel: 'debug', // Optional: for detailed proxy logging
+      },
+    ],
   },
 };

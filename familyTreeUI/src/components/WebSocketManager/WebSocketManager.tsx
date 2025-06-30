@@ -23,12 +23,14 @@ const WebSocketManager = ({ children }: WebSocketManagerProps): JSX.Element => {
       return;
     }
 
-    if (isAuthenticated) {
-      console.log('WebSocketManager: User authenticated, connecting to WebSocket...');
-      // Pass idToken if your STOMP connection requires it.
-      // The notificationService.connect method has a placeholder for this.
-      notificationService.connect(idToken); 
-    } else {
+    if (isAuthenticated && idToken) {
+      console.log('WebSocketManager: User authenticated with token, connecting to WebSocket...');
+      notificationService.connect(idToken);
+    } else if (isAuthenticated && !idToken) {
+      console.warn('WebSocketManager: User authenticated but idToken is missing. WebSocket connection not attempted.');
+      // Optionally disconnect if previously connected or to ensure clean state
+      notificationService.disconnect();
+    } else { // Not authenticated
       console.log('WebSocketManager: User not authenticated, disconnecting WebSocket if connected.');
       notificationService.disconnect();
     }
