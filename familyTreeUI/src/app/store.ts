@@ -5,10 +5,12 @@ import { filterApi } from "@/redux/queries/filter-endpoints";
 import { userApi } from "@/redux/queries/user-endpoints";
 import { authApi } from "@/redux/queries/auth-endpoints";
 import treeConfigReducer from "@/redux/treeConfigSlice";
+import notificationReducer from "@/redux/notificationSlice"; // Import the notification slice
 
 export const store = configureStore({
   reducer: {
-    treeConfig: treeConfigReducer, // Add the treeConfigSlice reducer
+    treeConfig: treeConfigReducer,
+    notifications: notificationReducer, // Add the notification slice reducer
     [userApi.reducerPath]: userApi.reducer,
     [treeApi.reducerPath]: treeApi.reducer, // Changed from treeApi
     [graphApi.reducerPath]: graphApi.reducer,

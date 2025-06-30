@@ -1,15 +1,25 @@
 package dev.anudeep.familytree.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
+
+import java.security.Principal;
+import java.util.Map;
 
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
+
+    @Autowired
+    private CustomHandshakeInterceptor customHandshakeInterceptor;
 
     @Value("${spring.rabbitmq.host}")
     private String rabbitmqHost;
@@ -58,10 +68,16 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // WebSocket handshake endpoint for clients to connect to
-        // SockJS is used for fallback options if WebSocket is not available
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("*") // Allow all origins for now, refine in production
+                .addInterceptors(customHandshakeInterceptor)
+               .setHandshakeHandler(new DefaultHandshakeHandler() {
+                    @Override
+                    protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler, Map<String, Object> attributes) {
+                        String elementId = (String) attributes.get("elementId");
+                        return () -> elementId; // Set Principal name = elementId
+                    }
+                })
+                .setAllowedOriginPatterns("*")
                 .withSockJS();
     }
 }
