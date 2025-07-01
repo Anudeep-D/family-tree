@@ -27,6 +27,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .headers(headers -> headers
+                    .frameOptions(frameOptions -> frameOptions.sameOrigin()) // Allow framing from the same origin
+                )
                 // Enable CORS using our custom configuration
                 .cors(Customizer.withDefaults())
 
@@ -40,6 +43,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Allow public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/ws/**").permitAll()
                         // Any other request must be authenticated
                         .anyRequest().authenticated()
                 );

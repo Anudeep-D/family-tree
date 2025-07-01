@@ -5,17 +5,19 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.server.ServerHttpRequest;
-import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 import org.springframework.web.util.UriComponentsBuilder;
-// Assuming you have a service for token validation, e.g., JwtService or GoogleTokenVerifier
-// import dev.anudeep.familytree.service.auth.TokenValidationService; // Example
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -23,120 +25,102 @@ import java.util.Map;
 @Slf4j
 public class CustomHandshakeInterceptor implements HandshakeInterceptor {
 
-    // Example: Inject a service to validate tokens and extract user info
-    // @Autowired
-    // private TokenValidationService tokenValidationService;
+    private final GoogleIdTokenVerifier verifier;
+
+    // It's better to inject this from application.properties
+    // @Value("${google.oauth.client-id}")
+    // private String googleClientId;
+    // For now, using the one from the logs. User should configure this in properties.
+    private static final String GOOGLE_CLIENT_ID = "319883510416-0jbnd19i9d55p9ta53i739iet6het482.apps.googleusercontent.com";
+
+    public CustomHandshakeInterceptor(/*@Value("${google.oauth.client-id}") String clientId*/) {
+        // String clientIdToUse = (clientId != null && !clientId.isEmpty()) ? clientId : GOOGLE_CLIENT_ID;
+        // if (clientIdToUse == null || clientIdToUse.isEmpty()) {
+        //     log.error("Google Client ID is not configured. WebSocket authentication will fail.");
+        //     // Or throw an exception to prevent startup without proper config
+        // }
+        // log.info("Initializing GoogleIdTokenVerifier with Client ID: {}", clientIdToUse);
+        try {
+            this.verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), JacksonFactory.getDefaultInstance())
+                    .setAudience(Collections.singletonList(GOOGLE_CLIENT_ID))
+                    // Optionally, specify the issuer: .setIssuer("https://accounts.google.com")
+                    .build();
+        } catch (Exception e) {
+            log.error("Failed to initialize GoogleIdTokenVerifier. WebSocket authentication may fail.", e);
+            throw new RuntimeException("Failed to initialize GoogleIdTokenVerifier", e);
+        }
+    }
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
                                    WebSocketHandler wsHandler, Map<String, Object> attributes) {
-        String idToken = null;
+        String idTokenString = null;
         try {
-            // 1. Try to get token from query parameter "token"
             List<String> tokenParams = UriComponentsBuilder.fromHttpRequest(request)
                     .build().getQueryParams().get("token");
             if (tokenParams != null && !tokenParams.isEmpty() && tokenParams.get(0) != null && !tokenParams.get(0).isEmpty()) {
-                idToken = tokenParams.get(0);
+                idTokenString = tokenParams.get(0);
                 log.debug("Extracted token from 'token' query parameter for WebSocket handshake.");
             }
 
-            // 2. If not found in query param, try 'Authorization' header (less likely for SockJS initial handshake)
-            if (idToken == null) {
+            if (idTokenString == null) {
                 List<String> tokenHeaders = request.getHeaders().get("Authorization");
                 if (tokenHeaders != null && !tokenHeaders.isEmpty()) {
                     String authHeader = tokenHeaders.get(0);
                     if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                        idToken = authHeader.substring(7); // Remove "Bearer " prefix
+                        idTokenString = authHeader.substring(7);
                         log.debug("Extracted token from 'Authorization' header for WebSocket handshake.");
                     } else {
-                        log.warn("Authorization header found, but not in 'Bearer <token>' format.");
+                        log.warn("Authorization header found, but not in 'Bearer <token>' format for WebSocket handshake.");
                     }
                 }
             }
 
-            if (idToken != null && !idToken.isEmpty()) {
-                log.debug("Attempting to validate token for WebSocket handshake. Token: {}", idToken);
+            if (idTokenString != null && !idTokenString.isEmpty()) {
+                log.debug("Attempting to validate Google ID token for WebSocket handshake. Token snippet: {}",
+                        idTokenString.substring(0, Math.min(idTokenString.length(), 60)) + "...");
 
-                // --- THIS IS THE CRITICAL SECTION THAT NEEDS PROPER IMPLEMENTATION ---
-                // TODO: Replace this with actual, secure token validation and user ID extraction.
-                // This could involve:
-                // 1. Verifying the token's signature (e.g., using a JWT library and public keys).
-                // 2. Checking token expiration, issuer, audience.
-                // 3. Extracting the user identifier (elementId) from the token claims.
-                //
-                // Example using a hypothetical TokenValidationService:
-                // if (tokenValidationService.isValid(idToken)) {
-                //     String elementId = tokenValidationService.extractUserId(idToken);
-                //     if (elementId != null && !elementId.isEmpty()) {
-                //         attributes.put("elementId", elementId);
-                //         log.info("Successfully set elementId '{}' for WebSocket session.", elementId);
-                //         return true; // Allow handshake
-                //     } else {
-                //         log.warn("elementId could not be extracted from valid token.");
-                //     }
-                // } else {
-                //     log.warn("Invalid token provided for WebSocket handshake.");
-                // }
+                GoogleIdToken googleIdToken = null;
+                try {
+                    googleIdToken = verifier.verify(idTokenString);
+                } catch (Exception e) {
+                    log.warn("Google ID Token verification failed with exception: {}", e.getMessage());
+                    // It's important to log the exception details if it's not just an invalid token
+                    // For example, network issues fetching public keys, clock skew, etc.
+                    // log.debug("Token verification exception details:", e); // Uncomment for more verbose debugging
+                }
 
-                // Placeholder logic (REMOVE FOR PRODUCTION):
-                // For demonstration, if token is "dummy-valid-token:user123", extract "user123"
-                // if (idToken.startsWith("dummy-valid-token:")) {
-                //     String elementId = idToken.substring("dummy-valid-token:".length());
-                //     if (!elementId.isEmpty()) {
-                //         attributes.put("elementId", elementId);
-                //         log.info("Placeholder: Successfully set elementId '{}' for WebSocket session from dummy token.", elementId);
-                //         return true; // Allow handshake
-                //     } else {
-                //         log.warn("Placeholder: Extracted empty elementId from dummy token.");
-                //     }
-                // } else {
-                //      log.warn("Placeholder: Token does not match dummy format. Full token: {}", idToken);
-                // }
-                // --- END OF ORIGINAL PLACEHOLDER ---
+                if (googleIdToken != null) {
+                    GoogleIdToken.Payload payload = googleIdToken.getPayload();
+                    String userId = payload.getSubject(); // 'sub' claim, unique Google user ID
+                    String email = payload.getEmail();    // 'email' claim
 
-                // --- REINSTATED PLACEHOLDER (NON-PRODUCTION) ---
-                // This section provides a basic way to test connectivity if you send a token prefixed with "dummy-valid-token:".
-                // It is NOT secure and does NOT validate real tokens (e.g., Google JWTs).
-                //
-                // TODO: CRITICAL - REPLACE THIS ENTIRE 'if (idToken != null ...)' BLOCK with robust,
-                //  secure validation of the actual ID token (e.g., Google ID Token).
-                //  This includes:
-                //      1. Verifying the token's signature against Google's public keys.
-                //      2. Checking the token's issuer ('iss') and audience ('aud' - should be your Google Client ID).
-                //      3. Verifying the token is not expired ('exp').
-                //      4. Extracting a stable user identifier (e.g., 'sub' or 'email') from the token's claims
-                //         to use as 'elementId'. This 'elementId' will be the Principal name for the WebSocket session.
-                //  Consider creating a dedicated TokenValidationService for this logic.
-
-                if (idToken.startsWith("dummy-valid-token:")) {
-                    String extractedElementId = idToken.substring("dummy-valid-token:".length());
-                    if (!extractedElementId.isEmpty()) {
-                        attributes.put("elementId", extractedElementId);
-                        log.info("Placeholder: Successfully set elementId '{}' for WebSocket session using DUMMY token.", extractedElementId);
-                        return true; // Allow handshake with dummy token
+                    if (userId != null && !userId.isEmpty()) {
+                        // The 'elementId' attribute is used by WebSocketConfig's DefaultHandshakeHandler
+                        // to determine the Principal for the WebSocket session.
+                        // Using email as it's often more human-readable for logs, but 'sub' is more stable.
+                        // Ensure this matches what your application expects for user identification.
+                        attributes.put("elementId", email != null ? email : userId); // Prefer email if available, else sub
+                        log.info("Successfully validated Google ID token for WebSocket. User email: {}, User ID (sub): {}. Setting elementId to: {}",
+                                email, userId, attributes.get("elementId"));
+                        return true; // Allow handshake
                     } else {
-                        log.warn("Placeholder: Extracted empty elementId from DUMMY token. Denying handshake.");
+                        log.warn("Google ID Token validated, but user ID (sub) was missing or empty. Denying handshake. Email: {}", email);
                     }
                 } else {
-                    // If a real token is received, it will be logged here but will fail validation by this placeholder.
-                    log.warn("Placeholder: Received a token that does not match the 'dummy-valid-token:' format. " +
-                            "Handshake will be denied by this placeholder logic. Implement proper token validation. " +
-                            "Token snippet: {}", idToken.substring(0, Math.min(idToken.length(), 60)));
+                    log.warn("Invalid Google ID Token provided for WebSocket handshake. Token could not be verified.");
                 }
-                // --- END OF REINSTATED PLACEHOLDER ---
-
             } else {
                 log.warn("No token found in query parameter or Authorization header for WebSocket handshake.");
             }
         } catch (Exception e) {
+            // Catch broader exceptions during the process, e.g., from UriComponentsBuilder
             log.error("Error during WebSocket handshake interception: {}", e.getMessage(), e);
-            // Fall through to return false by default if an error occurs or no valid token found
         }
 
-        log.warn("WebSocket handshake denied due to missing or invalid token.");
-        // If elementId is not set, the DefaultHandshakeHandler in WebSocketConfig
-        // might fail or set a null principal. Denying handshake here is safer.
-        return false; // Deny handshake if token is invalid or not present
+        log.warn("WebSocket handshake denied.");
+        response.setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED); // Set 401 status
+        return false; // Deny handshake
     }
 
     @Override

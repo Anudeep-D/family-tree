@@ -39,8 +39,8 @@ const connect = (authToken?: string | null) => {
     console.log(`NotificationService: Connecting to SockJS with URL: ${socketUrl} (no auth token)`);
   }
 
-  const socket = new SockJS(socketUrl);
-  stompClient = Stomp.over(socket);
+  // const socket = new SockJS(socketUrl); // Socket will be created by the factory function
+  stompClient = Stomp.over(() => new SockJS(socketUrl));
 
   stompClient.reconnect_delay = 5000; // Reconnect every 5 seconds
 
