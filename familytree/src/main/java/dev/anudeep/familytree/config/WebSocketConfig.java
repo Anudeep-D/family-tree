@@ -5,11 +5,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
+import org.springframework.context.annotation.Bean; // Added for @Bean
 
 import java.security.Principal;
 import java.util.Map;
@@ -43,6 +45,17 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Value("${spring.rabbitmq.stomp-port:61613}")
     private int rabbitmqStompPort;
 
+    // Explicitly define the SockJS task scheduler
+    // This is often auto-configured, but can be defined explicitly
+    // if there are issues with default initialization of SockJS services.
+    @Bean
+    public ThreadPoolTaskScheduler sockJsTaskScheduler(){
+        ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
+        threadPoolTaskScheduler.setPoolSize(Runtime.getRuntime().availableProcessors());
+        threadPoolTaskScheduler.setThreadNamePrefix("sockjs-scheduler-");
+        threadPoolTaskScheduler.initialize(); // Ensure scheduler is initialized
+        return threadPoolTaskScheduler;
+    }
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
@@ -78,6 +91,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                     }
                 })
                 .setAllowedOriginPatterns("*")
-                .withSockJS();
+                .withSockJS()
+                .setTaskScheduler(sockJsTaskScheduler()); // Wire in the explicit scheduler
     }
 }
