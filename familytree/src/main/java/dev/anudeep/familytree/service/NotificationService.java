@@ -28,11 +28,15 @@ public class NotificationService {
         String routingKey = String.format("tree.%s.%s", event.getTreeId(), event.getEventType().name());
 
         try {
-            log.info("Sending notification to exchange: {}, routingKey: {}, eventId: {}", exchangeName, routingKey, event.getEventId());
+            log.info("Attempting to send notification event to RabbitMQ. Exchange: '{}', RoutingKey: '{}', EventId: '{}', TreeId: '{}', EventType: '{}'",
+                    exchangeName, routingKey, event.getEventId(), event.getTreeId(), event.getEventType());
             rabbitTemplate.convertAndSend(exchangeName, routingKey, event);
-            log.debug("Notification event sent successfully: {}", event);
+            log.info("Successfully sent notification event to RabbitMQ. Exchange: '{}', RoutingKey: '{}', EventId: '{}'",
+                    exchangeName, routingKey, event.getEventId());
+            log.debug("Full notification event details: {}", event);
         } catch (Exception e) {
-            log.error("Error sending notification event (eventId: {}): {}", event.getEventId(), e.getMessage(), e);
+            log.error("Error sending notification event (eventId: {}) to RabbitMQ. Exchange: '{}', RoutingKey: '{}'. Error: {}",
+                    event.getEventId(), exchangeName, routingKey, e.getMessage(), e);
             // Depending on requirements, might re-throw or handle (e.g., dead-letter queue)
         }
     }

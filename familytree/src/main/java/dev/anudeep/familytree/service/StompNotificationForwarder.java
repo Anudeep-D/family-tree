@@ -13,68 +13,63 @@ import org.springframework.stereotype.Service;
 public class StompNotificationForwarder {
 
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserTreeService userTreeService; // To get all users for a tree
 
     // Listening to the queue defined in application.properties (e.g., tree_event_queue)
     @RabbitListener(queues = "${rabbitmq.queue.name}")
     public void forwardNotificationToStomp(NotificationEvent event) {
-        if (event == null || event.getActorUserId() == null || event.getActorUserId().isEmpty()) {
-            log.warn("Received event without actorUserId, cannot forward to user-specific STOMP queue: {}", event);
+        if (event == null || event.getTreeId() == null || event.getTreeId().isEmpty()) {
+            log.warn("Received event without treeId, cannot determine recipients: {}", event);
             return;
         }
 
-        String destination = "/queue/notifications"; // Spring prepends /user/{username} automatically
-        log.info("Forwarding notification event (ID: {}) for user: {} to STOMP destination: /user/{}/{}",
-                event.getEventId(), event.getActorUserId(), event.getActorUserId(), destination);
+        // Get all users who should be notified for this tree event
+        // This part was missing and is crucial for notifying users other than just the actor.
+        java.util.List<dev.anudeep.familytree.model.User> usersToNotify = userTreeService.getUsersForTree(event.getTreeId());
 
-        try {
-            // The payload sent to the STOMP client will be the NotificationEvent object,
-            // serialized to JSON by default.
-            // The frontend's notificationService.ts uses addBackendNotification,
-            // which expects fields like id, message, timestamp.
-            // NotificationEvent has eventId, eventType, timestamp, etc.
-            // We need to ensure the fields align or transform the event.
-            // For now, sending the event as is. The frontend might need adjustment
-            // or we create a dedicated DTO for the STOMP message.
+        if (usersToNotify == null || usersToNotify.isEmpty()) {
+            log.info("No users found with access to treeId: {} for eventId: {}. No STOMP notifications will be sent.", event.getTreeId(), event.getEventId());
+            return;
+        }
 
-            // Let's check the fields expected by addBackendNotification in notificationSlice.ts:
-            // export interface Notification {
-            //   id: string;
-            //   message: string; // This needs to be constructed or mapped
-            //   timestamp: string; // ISO string for date and time
-            //   isRead: boolean;
-            //   link?: string; // Optional link to navigate to
-            // }
-            // NotificationEvent has: eventId, eventType, treeId, actorUserId, timestamp, data.
-            // We should map NotificationEvent to what the frontend expects.
+        String userQueueSuffix = "/queue/notifications"; // Path suffix for user-specific queue
 
-            // Create a simple message string for now.
-            // A more sophisticated approach would involve a proper DTO mapping.
-            String messageText = String.format("Event: %s on tree %s", event.getEventType(), event.getTreeId());
-            if (event.getData() != null && event.getData().containsKey("message")) {
-                messageText = event.getData().get("message").toString();
-            } else if (event.getData() != null && !event.getData().isEmpty()) {
-                messageText = String.format("Event: %s on tree %s. Details: %s", event.getEventType(), event.getTreeId(), event.getData().toString());
+        // Construct message payload once
+        String messageText = String.format("Event: %s on tree %s", event.getEventType(), event.getTreeId());
+        if (event.getData() != null && event.getData().containsKey("message")) {
+            messageText = event.getData().get("message").toString();
+        } else if (event.getData() != null && !event.getData().isEmpty()) {
+            messageText = String.format("Event: %s on tree %s. Details: %s", event.getEventType(), event.getTreeId(), event.getData().toString());
+        }
+
+        FrontendNotificationPayload payload = new FrontendNotificationPayload(
+                event.getEventId(),
+                messageText,
+                event.getTimestamp().toString()
+        );
+
+        log.info("Preparing to forward notification event (ID: {}) for treeId: {} to {} users.",
+                event.getEventId(), event.getTreeId(), usersToNotify.size());
+
+        for (dev.anudeep.familytree.model.User user : usersToNotify) {
+            if (user.getElementId() == null || user.getElementId().isEmpty()) {
+                log.warn("User object found for treeId {} has no elementId, skipping STOMP notification for this user object.", event.getTreeId());
+                continue;
             }
-
-
-            // Constructing a payload that matches the frontend's Notification interface
-            // (specifically what addBackendNotification expects: Omit<Notification, 'isRead'>)
-            FrontendNotificationPayload payload = new FrontendNotificationPayload(
-                    event.getEventId(),
-                    messageText, // Using the constructed message
-                    event.getTimestamp().toString() // Convert Instant to ISO string
-                    // link can be added if available in event.getData()
-            );
-
-            messagingTemplate.convertAndSendToUser(
-                    event.getActorUserId(), // User destination (Spring resolves this)
-                    destination,            // The specific queue for that user
-                    payload                 // The payload (NotificationEvent or a mapped DTO)
-            );
-            log.debug("Successfully forwarded notification event (ID: {}) to user {}", event.getEventId(), event.getActorUserId());
-        } catch (Exception e) {
-            log.error("Error forwarding notification event (ID: {}) to user {}: {}",
-                    event.getEventId(), event.getActorUserId(), e.getMessage(), e);
+            // Log the conceptual full path correctly
+            log.info("Forwarding notification event (ID: {}) for user: {} to STOMP destination: /user/{}{}",
+                    event.getEventId(), user.getElementId(), user.getElementId(), userQueueSuffix);
+            try {
+                messagingTemplate.convertAndSendToUser(
+                        user.getElementId(),    // User destination (Spring resolves this)
+                        userQueueSuffix,        // The specific queue for that user
+                        payload                 // The payload
+                );
+                log.debug("Successfully forwarded notification event (ID: {}) to user {}", event.getEventId(), user.getElementId());
+            } catch (Exception e) {
+                log.error("Error forwarding notification event (ID: {}) to user {}: {}",
+                        event.getEventId(), user.getElementId(), e.getMessage(), e);
+            }
         }
     }
 

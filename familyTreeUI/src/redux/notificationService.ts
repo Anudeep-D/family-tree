@@ -56,59 +56,79 @@ const connect = (authToken?: string | null) => {
     headers['X-XSRF-TOKEN'] = csrfToken;
     console.log('NotificationService: Adding X-CSRF-TOKEN header from cookie.');
   } else {
-    console.warn('NotificationService: XSRF-TOKEN cookie not found. CSRF protection might fail.');
+    // This is not necessarily an error if CSRF is handled differently or not strictly required for WS handshake
+    // depending on server config, but good to note.
+    console.info('NotificationService: XSRF-TOKEN cookie not found. If CSRF is enforced for WebSocket, this might be an issue.');
   }
 
-  console.log('NotificationService: Attempting to connect with headers:', headers);
+  console.log(`NotificationService: Attempting STOMP connection to ${socketUrl} with headers:`, JSON.stringify(headers));
 
 
   stompClient.connect(
     headers,
-    () => { // onConnect
-      console.log('NotificationService: STOMP Connected to broker.');
+    (frame?: Frame) => { // onConnect
+      console.log('NotificationService: STOMP Connected to broker. Frame:', frame);
       if (stompClient?.connected) {
+        console.log(`NotificationService: Attempting to subscribe to ${USER_SPECIFIC_TOPIC}`);
         const subscription = stompClient.subscribe(
           USER_SPECIFIC_TOPIC,
           message => {
+            console.log('NotificationService: Received raw message:', message);
             console.log('NotificationService: Received message body:', message.body);
             try {
               const notificationPayload = JSON.parse(message.body);
-              if (notificationPayload.id && notificationPayload.timestamp) {
-                 storeInstance?.dispatch(addBackendNotification(notificationPayload));
-              } else {
+              // Check if it's a structured backend notification or a simple one
+              if (notificationPayload.eventId && notificationPayload.treeId && notificationPayload.eventType) {
+                 console.log('NotificationService: Dispatching addBackendNotification with payload:', notificationPayload);
+                 storeInstance?.dispatch(addBackendNotification(notificationPayload as any)); // Cast as any to match expected structure more loosely initially
+              } else if (notificationPayload.message) { // Fallback for simpler message structure
+                 console.log('NotificationService: Dispatching addNotification (simple) with payload:', notificationPayload);
                  storeInstance?.dispatch(addNotification({ message: notificationPayload.message, link: notificationPayload.link }));
+              } else {
+                console.warn('NotificationService: Received notification payload does not match expected structures:', notificationPayload);
+                storeInstance?.dispatch(addNotification({ message: 'Received an unkown-format notification.' }));
               }
             } catch (error) {
-              console.error('NotificationService: Error parsing message or dispatching action:', error);
-               storeInstance?.dispatch(addNotification({ message: 'Received an invalid notification.' }));
+              console.error('NotificationService: Error parsing message or dispatching action:', error, 'Raw body:', message.body);
+               storeInstance?.dispatch(addNotification({ message: 'Received an invalid or unparseable notification.' }));
             }
           },
-          { id: 'user-notifications-subscription' }
+          { id: 'user-notifications-subscription' } // Custom headers for subscription if needed
         );
-        console.log(`NotificationService: Subscribed to ${USER_SPECIFIC_TOPIC} with client-side ID: ${subscription.id}`);
+        // Note: The actual user-specific topic on the broker side (e.g., /user/someuser-id/queue/notifications)
+        // isn't typically exposed directly back to the client's subscribe() callback in STOMP.
+        // The client subscribes to the logical name, and the broker handles routing.
+        console.log(`NotificationService: Successfully initiated subscription to logical destination ${USER_SPECIFIC_TOPIC}. Client subscription ID: ${subscription.id}`);
       } else {
-        console.warn('NotificationService: STOMP client not connected at time of subscription attempt, cannot subscribe.');
+        console.warn('NotificationService: STOMP client reported not connected after connect callback. Subscription not attempted.');
       }
     },
-    (errorFrame: Frame) => {
+    (errorFrameOrMessage: Frame | string) => { // onError
       console.error('NotificationService: STOMP connection error.');
-      if (errorFrame && errorFrame.headers) {
-        console.error('STOMP ERROR Frame Message:', errorFrame.headers['message']);
-        if (errorFrame.body) {
-          console.error('Details:', errorFrame.body);
+      if (typeof errorFrameOrMessage === 'string') {
+        console.error('STOMP Error Message:', errorFrameOrMessage);
+      } else if (errorFrameOrMessage && errorFrameOrMessage.headers) { // It's a Frame
+        console.error('STOMP ERROR Frame Headers:', errorFrameOrMessage.headers);
+        console.error('STOMP ERROR Frame Body:', errorFrameOrMessage.body);
+        if (errorFrameOrMessage.headers['message']) {
+          console.error('Detailed STOMP Error:', errorFrameOrMessage.headers['message']);
         }
       } else {
-        console.error('Non-FRAME error during STOMP connection:', errorFrame);
+        console.error('Non-FRAME or unknown error during STOMP connection:', errorFrameOrMessage);
       }
     }
   );
 
   if (stompClient) {
     stompClient.onWebSocketClose = (event: CloseEvent) => {
-      console.warn('NotificationService: WebSocket connection closed.', event);
+      console.warn(`NotificationService: WebSocket connection closed. Code: ${event.code}, Reason: "${event.reason}", Was Clean: ${event.wasClean}`);
     };
     stompClient.onWebSocketError = (event: Event) => {
       console.error('NotificationService: WebSocket error event.', event);
+      // Attempt to log more details from the event if possible, though generic Event objects are limited
+      if ('message' in event) {
+        console.error('WebSocket error message:', (event as any).message);
+      }
     };
   }
 };

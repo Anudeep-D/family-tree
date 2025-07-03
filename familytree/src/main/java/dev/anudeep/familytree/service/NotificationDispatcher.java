@@ -24,8 +24,9 @@ public class NotificationDispatcher {
 
     @RabbitHandler
     public void handleNotificationEvent(NotificationEvent event) {
-        log.info("Received notification event via RabbitMQ: eventId={}, treeId={}, type={}",
-                event.getEventId(), event.getTreeId(), event.getEventType());
+        log.info("NotificationDispatcher: Received event from RabbitMQ queue '{}'. EventId: {}, TreeId: {}, EventType: {}",
+                "${rabbitmq.queue.name:tree_event_queue}", event.getEventId(), event.getTreeId(), event.getEventType());
+        log.debug("Full received event details: {}", event);
 
         if (event.getTreeId() == null) {
             log.warn("Notification event (eventId: {}) has no treeId, cannot dispatch.", event.getEventId());
@@ -35,34 +36,37 @@ public class NotificationDispatcher {
         List<User> usersToNotify = userTreeService.getUsersForTree(event.getTreeId());
 
         if (usersToNotify == null || usersToNotify.isEmpty()) {
-            log.info("No users found with access to treeId: {} for eventId: {}", event.getTreeId(), event.getEventId());
+            log.warn("NotificationDispatcher: No users found with access to treeId: {} for eventId: {}. Cannot dispatch WebSocket notification.",
+                    event.getTreeId(), event.getEventId());
             return;
         }
 
-        log.debug("Dispatching event (eventId: {}) for treeId: {} to {} users.",
-                event.getEventId(), event.getTreeId(), usersToNotify.size());
+        log.info("NotificationDispatcher: Found {} users to notify for treeId: {}. Users: {}",
+                usersToNotify.size(), event.getTreeId(), usersToNotify.stream().map(User::getElementId).collect(java.util.stream.Collectors.toList()));
 
         for (User user : usersToNotify) {
-            // Ensure the user object has the identifier used by Spring Security for STOMP user destinations.
-            // This is typically the 'name' of the authenticated Principal.
-            // If User.getElementId() is what's stored as principal name:
-            String principalName = user.getElementId(); // Or user.getEmail() if that's the principal
+            String principalName = user.getElementId(); // This should be the name of the Principal object for the user's STOMP session.
+            if (principalName == null || principalName.trim().isEmpty()) {
+                log.warn("NotificationDispatcher: User object (elementId: {}, email: {}) has a null or empty principalName (getElementId). Skipping WebSocket send for this user for eventId: {}.",
+                        user.getElementId(), user.getEmail(), event.getEventId());
+                continue;
+            }
 
-            // Filter out the actor from receiving their own notification, unless desired.
-            // For now, sending to all, including the actor. This can be refined.
-            // if (user.getElementId().equals(event.getActorUserId())) {
-            //     log.debug("Skipping notification for actor {} for eventId: {}", user.getElementId(), event.getEventId());
+            // Optional: Filter out the actor from receiving their own notification, if desired.
+            // if (principalName.equals(event.getActorUserId())) {
+            //     log.info("NotificationDispatcher: Skipping notification for actor {} (self) for eventId: {}", principalName, event.getEventId());
             //     continue;
             // }
 
-            String destination = "/user/" + principalName + "/queue/notifications";
+            String destination = "/queue/notifications"; // Correct destination for SimpMessagingTemplate.convertAndSendToUser
+            log.info("NotificationDispatcher: Attempting to send WebSocket message for eventId: {} to user principal: {} (destination: '/user/{}/queue/notifications').",
+                    event.getEventId(), principalName, principalName);
             try {
-                log.debug("Sending WebSocket message for eventId: {} to user: {} at destination: {}",
-                        event.getEventId(), principalName, destination);
-                messagingTemplate.convertAndSendToUser(principalName, "/queue/notifications", event);
-                log.info("Successfully sent WebSocket notification for eventId: {} to user: {}", event.getEventId(), principalName);
+                messagingTemplate.convertAndSendToUser(principalName, destination, event);
+                log.info("NotificationDispatcher: Successfully sent WebSocket message for eventId: {} to user principal: {}",
+                        event.getEventId(), principalName);
             } catch (Exception e) {
-                log.error("Error sending WebSocket message for eventId: {} to user: {}: {}",
+                log.error("NotificationDispatcher: Error sending WebSocket message for eventId: {} to user principal: {}. Error: {}",
                         event.getEventId(), principalName, e.getMessage(), e);
             }
         }

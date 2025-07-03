@@ -34,7 +34,7 @@ const NotificationList: React.FC<NotificationListProps> = ({
   const { notifications, unreadCount, canUndo } = useSelector(
     (state: RootState) => state.notifications
   );
-
+  console.log("notifications",notifications);
   // Filter for unread notifications to display, or all if that's the requirement
   // The original request: "when clicked show the list of all unread messages"
   // "when user closes and opens again all read notifications are cleared"

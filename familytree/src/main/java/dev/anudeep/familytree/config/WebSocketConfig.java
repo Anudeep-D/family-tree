@@ -1,11 +1,12 @@
 package dev.anudeep.familytree.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
-import org.springframework.messaging.simp.config.ChannelRegistration; 
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -19,7 +20,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 
 import java.security.Principal;
 import java.util.Map;
-
+@Slf4j
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
@@ -50,7 +51,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
         threadPoolTaskScheduler.setPoolSize(Runtime.getRuntime().availableProcessors());
         threadPoolTaskScheduler.setThreadNamePrefix("sockjs-scheduler-");
-        threadPoolTaskScheduler.initialize(); 
+        threadPoolTaskScheduler.initialize();
         return threadPoolTaskScheduler;
     }
 
@@ -58,10 +59,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableStompBrokerRelay("/topic", "/queue")
                 .setRelayHost(rabbitmqHost)
-                .setRelayPort(rabbitmqStompPort) 
+                .setRelayPort(rabbitmqStompPort)
                 .setClientLogin(rabbitmqUser)
                 .setClientPasscode(rabbitmqPassword)
-                .setSystemLogin(rabbitmqUser)      
+                .setSystemLogin(rabbitmqUser)
                 .setSystemPasscode(rabbitmqPassword);
 
         registry.setApplicationDestinationPrefixes("/app");
@@ -70,28 +71,31 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/api/ws") 
+        registry.addEndpoint("/api/ws")
                 .addInterceptors(customHandshakeInterceptor)
                 .setHandshakeHandler(new DefaultHandshakeHandler() {
                     @Override
                     protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler, Map<String, Object> attributes) {
                         String elementId = (String) attributes.get("elementId");
+                        log.info("DefaultHandshakeHandler: determineUser called. Attributes: {}", attributes);
                         if (elementId == null) {
-                            // log.warn("elementId is null in determineUser. Cannot create Authentication token.");
+                            log.warn("DefaultHandshakeHandler: 'elementId' is null in WebSocket attributes after handshake. Cannot create authenticated Principal. Request URI: {}", request.getURI());
+                            // Returning null might lead to an anonymous user or connection rejection depending on further config.
+                            // For user-specific messaging, a non-null Principal with a name is essential.
                             return null;
                         }
-                        // Create a PreAuthenticatedAuthenticationToken directly.
-                        // This Authentication object will be set as the Principal for the WebSocket session.
-                        // Spring Security's SecurityContextChannelInterceptor should then pick this up.
+
+                        // Create a PreAuthenticatedAuthenticationToken. This token's getName() will return the first argument (elementId).
+                        // This Principal will be associated with the WebSocket session and used for STOMP user destination resolution.
                         PreAuthenticatedAuthenticationToken authToken = new PreAuthenticatedAuthenticationToken(
-                                elementId, "N/A", AuthorityUtils.createAuthorityList("ROLE_USER"));
-                        // log.info("DefaultHandshakeHandler: Determined user and created PreAuthenticatedAuthenticationToken for: {}", elementId);
+                                elementId, null, AuthorityUtils.createAuthorityList("ROLE_USER")); // Credentials can be null
+                        log.info("DefaultHandshakeHandler: Successfully created PreAuthenticatedAuthenticationToken for user principal name: '{}'. Request URI: {}", authToken.getName(), request.getURI());
                         return authToken;
                     }
                 })
                 .setAllowedOriginPatterns("*")
                 .withSockJS()
-                .setTaskScheduler(sockJsTaskScheduler()); 
+                .setTaskScheduler(sockJsTaskScheduler());
     }
 
     @Override
