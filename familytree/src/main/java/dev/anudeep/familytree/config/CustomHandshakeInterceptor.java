@@ -123,8 +123,7 @@ public class CustomHandshakeInterceptor implements HandshakeInterceptor {
 
     @Override
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
-                               WebSocketHandler
-                                       wsHandler, @Nullable Exception exception) {
+                               WebSocketHandler wsHandler, @Nullable Exception exception) {
         if (exception != null) {
             log.error("Exception occurred after WebSocket handshake was initiated for URI {} but before connection was fully established. Exception: {}",
                     request.getURI(), exception.getMessage(), exception);
