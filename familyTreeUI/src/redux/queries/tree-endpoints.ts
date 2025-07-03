@@ -1,6 +1,7 @@
 import { baseUrl } from "@/constants/constants";
 import { Role } from "@/types/common";
 import { Tree } from "@/types/entityTypes"; // Changed from Tree
+import { getCookie } from "@/utils/common";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const treeApi = createApi({
@@ -8,11 +9,20 @@ export const treeApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: `${baseUrl}/api/trees`, // Changed from /api/trees
     credentials: "include", // ✅ Send cookies (including session ID)
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "X-Requested-With": "XMLHttpRequest",
+    prepareHeaders: (headers) => {
+      // Set default headers
+      headers.set("Content-Type", "application/json");
+      headers.set("Accept", "application/json");
+      headers.set("X-Requested-With", "XMLHttpRequest");
+
+      // Add the X-XSRF-TOKEN header if the cookie is present
+      const csrfToken = getCookie('XSRF-TOKEN'); // Default cookie name used by Spring Security
+      if (csrfToken) {
+        headers.set('X-XSRF-TOKEN', csrfToken);
+      }
+      return headers;
     },
+    // The static 'headers' object is removed as prepareHeaders now handles them.
   }),
   tagTypes: ["treeApi"], // Changed from treeApi
   endpoints: (builder) => ({

@@ -1,6 +1,7 @@
 import { baseUrl } from "@/constants/constants";
 import { AppEdge } from "@/types/edgeTypes";
 import { AppNode } from "@/types/nodeTypes";
+import { getCookie } from "@/utils/common";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 // Define DTO interfaces matching the Java DTOs
@@ -32,10 +33,18 @@ export const graphApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: `${baseUrl}/api/trees`, // Changed from /api/trees
     credentials: "include", // ✅ Send cookies (including session ID)
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      "X-Requested-With": "XMLHttpRequest",
+    prepareHeaders: (headers) => {
+      // Set default headers
+      headers.set("Content-Type", "application/json");
+      headers.set("Accept", "application/json");
+      headers.set("X-Requested-With", "XMLHttpRequest");
+
+      // Add the X-XSRF-TOKEN header if the cookie is present
+      const csrfToken = getCookie("XSRF-TOKEN"); // Default cookie name used by Spring Security
+      if (csrfToken) {
+        headers.set("X-XSRF-TOKEN", csrfToken);
+      }
+      return headers;
     },
   }),
   tagTypes: ["graphApi"],
@@ -52,7 +61,7 @@ export const graphApi = createApi({
       providesTags: ["graphApi"],
     }),
     getFamilyTree: builder.query<
-       { nodes: AppNode[]; edges: AppEdge[] },
+      { nodes: AppNode[]; edges: AppEdge[] },
       { treeId: string; isImmediate: boolean; id: string }
     >({
       // Assuming this also needs treeId
