@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import DOMPurify from "dompurify";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch } from "@/app/store";
 import {
@@ -124,7 +125,13 @@ const NotificationList: React.FC<NotificationListProps> = ({ onClose }) => {
             }}
           >
             <ListItemText
-              primary={notification.message}
+              primary={
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(notification.message),
+                  }}
+                />
+              }
               secondary={formatTimestamp(notification.timestamp)}
             />
 
@@ -150,7 +157,13 @@ const NotificationList: React.FC<NotificationListProps> = ({ onClose }) => {
         {sortedRead.map((notification) => (
           <ListItem key={notification.id} divider>
             <ListItemText
-              primary={notification.message}
+              primary={
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: DOMPurify.sanitize(notification.message),
+                  }}
+                />
+              }
               secondary={formatTimestamp(notification.timestamp)}
               slotProps={{
                 primary: { sx: { color: "text.secondary" } },
