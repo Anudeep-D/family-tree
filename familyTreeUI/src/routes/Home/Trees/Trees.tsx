@@ -417,7 +417,14 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => {
         onClose={() => {
           setDialogOpen({ open: false });
         }}
-        onConfirm={() => dialogOpen.onConfirm || handleConfirmDelete} // Ensure onConfirm is correctly passed
+        onConfirm={() =>
+          dialogOpen.onConfirm?.() ||
+          handleConfirmDelete(
+            allTrees
+              ?.filter((tree) => selectedTreeIds.includes(tree.elementId!))
+              .filter((tree) => tree.access === Role.Admin) ?? []
+          )
+        } // Ensure onConfirm is correctly passed
       />
     </Container>
   );
