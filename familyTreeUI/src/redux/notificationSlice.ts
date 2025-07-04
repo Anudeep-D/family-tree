@@ -1,18 +1,18 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { v4 as uuidv4 } from 'uuid'; // For generating unique IDs for notifications
+import { v4 as uuidv4 } from 'uuid';
 
 export interface Notification {
   id: string;
   message: string;
-  timestamp: string; // ISO string for date and time
+  timestamp: string;
   isRead: boolean;
-  link?: string; // Optional link to navigate to
+  link?: string;
 }
 
 interface NotificationState {
   notifications: Notification[];
   unreadCount: number;
-  previousNotificationsState: Notification[] | null; // For undo functionality
+  previousNotificationsState: Notification[] | null;
   canUndo: boolean;
 }
 
@@ -35,10 +35,10 @@ const notificationSlice = createSlice({
         isRead: false,
         link: action.payload.link,
       };
-      state.notifications.unshift(newNotification); // Add to the beginning for latest first
+      state.notifications.unshift(newNotification);
       state.unreadCount += 1;
     },
-    markAsRead: (state, action: PayloadAction<string>) => { // Payload is notification ID
+    markAsRead: (state, action: PayloadAction<string>) => {
       const notification = state.notifications.find(n => n.id === action.payload);
       if (notification && !notification.isRead) {
         notification.isRead = true;
@@ -47,7 +47,7 @@ const notificationSlice = createSlice({
     },
     markAllAsRead: state => {
       if (state.notifications.some(n => !n.isRead)) {
-        state.previousNotificationsState = JSON.parse(JSON.stringify(state.notifications)); // Deep copy
+        state.previousNotificationsState = JSON.parse(JSON.stringify(state.notifications));
         state.notifications.forEach(notification => {
           if (!notification.isRead) {
             notification.isRead = true;
@@ -66,30 +66,36 @@ const notificationSlice = createSlice({
       }
     },
     clearReadNotifications: state => {
-      // This action will remove notifications that are marked as read.
-      // The request implies read notifications are "cleared" when the list is closed and opened.
-      // This could be handled by filtering in the component, or by actually removing them from state.
-      // For now, let's implement it as removing them from the state.
-      // However, this might conflict with "undo" if not handled carefully.
-      // Alternative: simply filter in the component that displays notifications.
-      // Let's assume for now "cleared" means they are no longer actively shown in the "unread" list,
-      // which is achieved by marking them read and filtering in the component.
-      // If actual removal is needed, this reducer can be used.
-      // For now, this reducer might not be directly used if filtering is preferred.
       state.notifications = state.notifications.filter(n => !n.isRead);
     },
-    // Example for a notification that comes with its own ID and timestamp from backend
     addBackendNotification: (state, action: PayloadAction<Omit<Notification, 'isRead'>>) => {
       const newNotification: Notification = {
         ...action.payload,
         isRead: false,
       };
-      // Prevent duplicate notifications if IDs are stable from backend
       if (!state.notifications.find(n => n.id === newNotification.id)) {
         state.notifications.unshift(newNotification);
         state.unreadCount += 1;
       }
-    }
+    },
+    // ✅ NEW: Undo single read
+    undoRead: (state, action: PayloadAction<string>) => {
+      const notification = state.notifications.find(n => n.id === action.payload);
+      if (notification && notification.isRead) {
+        notification.isRead = false;
+        state.unreadCount += 1;
+      }
+    },
+    // 🗑️ NEW: Delete a notification completely
+    deleteNotification: (state, action: PayloadAction<string>) => {
+      const toDelete = state.notifications.find(n => n.id === action.payload);
+      if (toDelete) {
+        state.notifications = state.notifications.filter(n => n.id !== action.payload);
+        if (!toDelete.isRead) {
+          state.unreadCount = Math.max(0, state.unreadCount - 1);
+        }
+      }
+    },
   },
 });
 
@@ -100,6 +106,8 @@ export const {
   undoMarkAllAsRead,
   clearReadNotifications,
   addBackendNotification,
+  undoRead,                // ✅ Export new action
+  deleteNotification       // 🗑️ Export new action
 } = notificationSlice.actions;
 
 export default notificationSlice.reducer;

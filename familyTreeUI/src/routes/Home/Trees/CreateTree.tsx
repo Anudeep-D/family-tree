@@ -28,6 +28,7 @@ import {
   useAddUsersToTreeMutation,
 } from "@/redux/queries/tree-endpoints";
 import { useAuth } from "@/hooks/useAuth";
+import { getErrorMessage } from "@/utils/common";
 
 type AssignedUser = {
   elementId: string;
@@ -184,7 +185,7 @@ const CreateTree = ({ open, onClose }: Props) => {
       return "Failed to create tree"; // Changed
     }
     if (isErrorOnAddUsers && errorOnAddUsers) {
-      return "Tree created but failed to add users to tree"; // Changed
+      return `Tree created but failed to add users to tree:  ${getErrorMessage(errorOnAddUsers)}`; // Changed
     }
     return null;
   }, [isErrorOnAddUsers, isErrorOnCreate, errorOnCreate, errorOnAddUsers]);
