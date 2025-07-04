@@ -1,16 +1,20 @@
 package dev.anudeep.familytree.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.anudeep.familytree.dto.notification.NotificationEvent;
+import dev.anudeep.familytree.model.Notification;
+import dev.anudeep.familytree.model.NotificationStatus;
 import dev.anudeep.familytree.model.User;
+import dev.anudeep.familytree.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -21,9 +25,11 @@ public class StompNotificationForwarder {
     private final SimpMessagingTemplate messagingTemplate;
     private final UserTreeService userTreeService; // To get all users for a tree
     private final ObjectMapper objectMapper; // Added for JSON conversion
+    private final NotificationRepository notificationRepository; // Injected repository
 
     // Listening to the queue defined in application.properties (e.g., tree_event_queue)
     @RabbitListener(queues = "${rabbitmq.queue.name}")
+    @Transactional // Ensure atomicity for saving notification and sending STOMP message
     public void forwardNotificationToStomp(NotificationEvent event) {
         if (event == null || event.getUsersToNotify() == null || event.getUsersToNotify().isEmpty()) {
             log.warn("Received event without usersToNotify list or list is empty, cannot dispatch: {}", event);
@@ -81,7 +87,31 @@ public class StompNotificationForwarder {
                 log.warn("User elementId is null or empty in usersToNotify list for eventId: {}. Skipping.", event.getEventId());
                 continue;
             }
-            log.info("Forwarding notification event (ID: {}) for user: {} to STOMP destination: /user/{}{}",
+
+            // Create and save the notification entity
+            Notification persistentNotification = new Notification(
+                    event.getEventId(),
+                    userElementId,
+                    event.getEventType(),
+                    event.getTreeId(),
+                    event.getTreeName(),
+                    event.getActorUserId(),
+                    event.getActorUserName(),
+                    messageTextJson // This is the JSON string payload
+            );
+            persistentNotification.setCreationTimestamp(); // Set createdAt and updatedAt
+            try {
+                notificationRepository.save(persistentNotification);
+                log.info("Saved notification (EventID: {}) for user {} to database. DB internalID: {}",
+                        persistentNotification.getEventId(), userElementId, persistentNotification.getInternalId());
+            } catch (Exception e) {
+                log.error("Error saving notification (EventID: {}) for user {} to database. Error: {}",
+                        event.getEventId(), userElementId, e.getMessage(), e);
+                // Decide if we should still try to send via STOMP if DB save fails
+                // For now, we'll continue and attempt to send to active users
+            }
+
+            log.info("Attempting to forward notification event (ID: {}) for user: {} to STOMP destination: /user/{}{}",
                     event.getEventId(), userElementId, userElementId, userQueueSuffix);
             try {
                 // Sending the FrontendNotificationPayload which now includes the original event
@@ -90,12 +120,9 @@ public class StompNotificationForwarder {
                         userQueueSuffix,
                         payload // This payload wrapper is sent
                 );
-                // If the frontend is set up to directly consume NotificationEvent, then 'event' could be sent directly:
-                // messagingTemplate.convertAndSendToUser(userElementId, userQueueSuffix, event);
-
-                log.debug("Successfully forwarded notification event (ID: {}) to user {}", event.getEventId(), userElementId);
+                log.debug("Successfully forwarded notification event (ID: {}) to user {} via STOMP", event.getEventId(), userElementId);
             } catch (Exception e) {
-                log.error("Error forwarding notification event (ID: {}) to user {}: {}",
+                log.error("Error forwarding notification event (ID: {}) to user {} via STOMP: {}",
                         event.getEventId(), userElementId, e.getMessage(), e);
             }
         }
