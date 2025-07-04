@@ -89,14 +89,19 @@ public class UserTreeService {
         treeRepo.save(tree);
         // Notify about tree creation
         if (tree.getElementId() != null && tree.getCreatedBy() != null) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("treeName", tree.getName());
-            data.put("createdBy", tree.getCreatedBy());
+            User creator = userRepo.findByElementId(tree.getCreatedBy())
+                    .orElse(new User(null, "Unknown User", null)); // Fallback user
+
+            List<String> usersToNotify = Collections.singletonList(tree.getCreatedBy());
+
             NotificationEvent event = new NotificationEvent(
                     EventType.TREE_CREATED,
                     tree.getElementId(),
-                    tree.getCreatedBy(), // Actor is the creator
-                    data
+                    tree.getName(),
+                    tree.getCreatedBy(), // Actor's elementId
+                    creator.getName(),   // Actor's name
+                    usersToNotify,
+                    null // No legacy data map needed
             );
             notificationService.sendNotification(event);
         }
@@ -116,16 +121,28 @@ public class UserTreeService {
                 """, relationType)).bindAll(Map.of("userId", userId, "treeId", treeId)).run();
 
         // Notify about user access change
-        String actorUserId = SecurityContextHolder.getContext().getAuthentication().getName(); // Assumes principal is user elementId
-        Map<String, Object> data = new HashMap<>();
-        data.put("affectedUserId", userId);
-        data.put("newRole", relationType); // In this system, relationType IS the role (e.g., ADMIN_REL)
-        data.put("changeType", "GRANT"); // Or "UPDATE" if more context is available
+        String actorUserElementId = SecurityContextHolder.getContext().getAuthentication().getName(); // Assumes principal is user elementId
+        User actor = userRepo.findByElementId(actorUserElementId)
+                .orElse(new User(null, "Unknown User", null)); // Fallback for actor name
+        Tree affectedTree = treeRepo.findByElementId(treeId)
+                .orElse(new Tree(null, "Unknown Tree", null, null)); // Fallback for tree name
+
+        List<String> usersToNotify = Collections.singletonList(userId); // Notify only the affected user
+
+        Map<String, Object> eventData = new HashMap<>(); // Keep other relevant data if any
+        eventData.put("affectedUserElementId", userId);
+        eventData.put("newRole", relationType);
+        eventData.put("changeType", "GRANT");
+
+
         NotificationEvent event = new NotificationEvent(
                 EventType.USER_ACCESS_CHANGED,
                 treeId,
-                actorUserId,
-                data
+                affectedTree.getName(),
+                actorUserElementId,
+                actor.getName(),
+                usersToNotify,
+                eventData
         );
         notificationService.sendNotification(event);
     }
@@ -144,17 +161,28 @@ public class UserTreeService {
         RelationChangeSummary summary = treeRepo.updateUsersRelationShip(treeId, userMaps);
 
         // Notify for each user whose role might have been changed
-        String actorUserId = SecurityContextHolder.getContext().getAuthentication().getName(); // Assumes principal is user elementId
+        String actorUserElementId = SecurityContextHolder.getContext().getAuthentication().getName(); // Assumes principal is user elementId
+        User actor = userRepo.findByElementId(actorUserElementId)
+                .orElse(new User(null, "Unknown User", null)); // Fallback for actor name
+        Tree affectedTree = treeRepo.findByElementId(treeId)
+                .orElse(new Tree(null, "Unknown Tree", null, null)); // Fallback for tree name
+
         for (RoleAssignmentRequest userRole : users) {
-            Map<String, Object> data = new HashMap<>();
-            data.put("affectedUserId", userRole.getElementId());
-            data.put("newRole", userRole.getRelation()); // Relation string, e.g., "ADMIN_REL", "viewer"
-            data.put("changeType", "UPDATE");
+            List<String> usersToNotify = Collections.singletonList(userRole.getElementId()); // Notify only the affected user
+
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put("affectedUserElementId", userRole.getElementId());
+            eventData.put("newRole", userRole.getRelation());
+            eventData.put("changeType", "UPDATE");
+
             NotificationEvent event = new NotificationEvent(
                     EventType.USER_ACCESS_CHANGED,
                     treeId,
-                    actorUserId,
-                    data
+                    affectedTree.getName(),
+                    actorUserElementId,
+                    actor.getName(),
+                    usersToNotify,
+                    eventData
             );
             notificationService.sendNotification(event);
         }
@@ -176,17 +204,23 @@ public class UserTreeService {
 
         // Assuming deleteById handles relationships or they are not an issue for this model.
         // If relationships block deletion, a custom DETACH DELETE query in TreeRepository would be needed.
+        // Fetch users who had access BEFORE deletion
+        List<String> usersToNotify = treeRepo.findAllUsersForTree(elementId).stream()
+                .map(User::getElementId)
+                .collect(Collectors.toList());
+
         treeRepo.detachAndDeleteByElementId(elementId);
         log.info("Tree {} deleted successfully (with detach) by user {}", elementId, currentUser.getEmail());
 
         // Notify about tree deletion
-        Map<String, Object> data = new HashMap<>();
-        data.put("treeName", tree.getName()); // Include tree name for context if available
         NotificationEvent event = new NotificationEvent(
                 EventType.TREE_DELETED,
                 elementId, // treeId is elementId here
-                currentUser.getElementId(),
-                data
+                tree.getName(), // treeName
+                currentUser.getElementId(), // actorUserId
+                currentUser.getName(), // actorUserName
+                usersToNotify,
+                null // No legacy data map
         );
         notificationService.sendNotification(event);
     }
@@ -200,6 +234,7 @@ public class UserTreeService {
         log.info("Attempting to delete multiple trees by user {}. Provided IDs: {}", currentUser.getEmail(), elementIds);
         List<String> idsToDelete = new ArrayList<>();
         List<String> skippedIdsLog = new ArrayList<>(); // To log which ones were skipped
+        Map<String, Tree> treesPendingDeletion = new HashMap<>(); // To store tree objects for notification
 
         for (String elementId : elementIds) {
             Optional<Tree> treeOpt = treeRepo.findByElementId(elementId);
@@ -214,6 +249,7 @@ public class UserTreeService {
 
             if (userRoleOpt.isPresent() && userRoleOpt.get() == Role.ADMIN) {
                 idsToDelete.add(elementId); // Add the elementId for deletion
+                treesPendingDeletion.put(elementId, tree); // Store for notification
             } else {
                 log.warn("User {} does not have ADMIN access for tree {} during bulk delete. Actual role: {}. Skipping.",
                         currentUser.getEmail(), elementId, userRoleOpt.map(Enum::name).orElse("NONE"));
@@ -222,31 +258,36 @@ public class UserTreeService {
         }
 
         if (!idsToDelete.isEmpty()) {
-            // Similar to deleteTree, ensure deleteAllById works as expected with elementIds.
-            // If these are custom IDs and not the internal Neo4j ID, a custom query is safer:
-            // e.g., @Query("MATCH (t:Tree) WHERE t.elementId IN $elementIds DETACH DELETE t")
-            // For now, proceeding with deleteAllById assuming it's configured for elementId or is a list of actual entities.
-            // A safer approach if deleteAllById expects entities or internal IDs:
-            // List<Tree> treesToDeleteObjects = treeRepo.findAllByElementIdIn(idsToDelete); // Assuming such a method exists or can be added
-            // treeRepo.deleteAll(treesToDeleteObjects);
-            // For this exercise, using deleteAllById as per prompt's structure, assuming it works with a list of elementIds.
-            // However, Spring Data JPA/Neo4j deleteAllById typically expects a list of internal IDs.
-            // A more robust way for custom IDs is to fetch entities then delete, or use a custom query.
-            // Let's assume for now treeRepo.deleteAllById can handle a list of custom @Id annotated fields or it's a custom method.
-            // If elementId is the actual @Id field in the Tree entity, then deleteAllById(idsToDelete) should work.
+            // Fetch users for all trees to be deleted BEFORE actual deletion
+            Map<String, List<String>> usersToNotifyByTreeId = new HashMap<>();
+            for (String treeId : idsToDelete) {
+                List<String> users = treeRepo.findAllUsersForTree(treeId).stream()
+                        .map(User::getElementId)
+                        .collect(Collectors.toList());
+                usersToNotifyByTreeId.put(treeId, users);
+            }
+
             treeRepo.detachAndDeleteAllByElementIdIn(idsToDelete);
             log.info("Successfully deleted (with detach) trees with IDs: {} by user {}.", idsToDelete, currentUser.getEmail());
 
             // Notify for each deleted tree
             for (String deletedTreeId : idsToDelete) {
-                Map<String, Object> data = new HashMap<>();
-                // We don't have tree names here without another fetch, so keeping data minimal
-                data.put("reason", "Bulk deletion operation");
+                Tree deletedTree = treesPendingDeletion.get(deletedTreeId); // Get stored tree
+                List<String> usersForThisTree = usersToNotifyByTreeId.getOrDefault(deletedTreeId, Collections.emptyList());
+
+                if (deletedTree == null) { // Should not happen if logic is correct
+                    log.error("Could not find tree details for {} during bulk delete notification.", deletedTreeId);
+                    continue;
+                }
+
                 NotificationEvent event = new NotificationEvent(
                         EventType.TREE_DELETED,
                         deletedTreeId,
-                        currentUser.getElementId(),
-                        data
+                        deletedTree.getName(), // treeName
+                        currentUser.getElementId(), // actorUserId
+                        currentUser.getName(), // actorUserName
+                        usersForThisTree, // usersToNotify
+                        null // No legacy data map
                 );
                 notificationService.sendNotification(event);
             }

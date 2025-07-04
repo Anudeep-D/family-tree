@@ -12,7 +12,8 @@ import org.springframework.data.neo4j.core.schema.Relationship;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.Instant; // Import Instant
+import java.util.Date;    // Keep Date if it's used elsewhere, or for the Date::new supplier
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -44,7 +45,9 @@ public class Tree implements Serializable {
     public Tree(String name, String desc, String createdAt, String createdBy) {
         this.name = name;
         this.desc = desc;
-        this.createdAt = (String) Objects.requireNonNullElseGet(createdAt, Date::new);
+        // If createdAt is null, generate a new timestamp in ISO 8601 format.
+        // Otherwise, use the provided createdAt string.
+        this.createdAt = Objects.requireNonNullElseGet(createdAt, () -> Instant.now().toString());
         this.createdBy = createdBy;
     }
 

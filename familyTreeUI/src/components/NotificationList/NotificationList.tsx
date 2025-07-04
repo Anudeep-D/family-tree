@@ -28,6 +28,7 @@ import {
   MarkEmailReadTwoTone,
 } from "@mui/icons-material";
 import { formatDistanceToNow } from "date-fns";
+import NotificationMessage from "./NotificationMessage";
 
 interface NotificationListProps {
   onClose: () => void;
@@ -125,13 +126,7 @@ const NotificationList: React.FC<NotificationListProps> = ({ onClose }) => {
             }}
           >
             <ListItemText
-              primary={
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(notification.message),
-                  }}
-                />
-              }
+              primary={<NotificationMessage message={notification.message} />}
               secondary={formatTimestamp(notification.timestamp)}
             />
 
@@ -157,13 +152,7 @@ const NotificationList: React.FC<NotificationListProps> = ({ onClose }) => {
         {sortedRead.map((notification) => (
           <ListItem key={notification.id} divider>
             <ListItemText
-              primary={
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: DOMPurify.sanitize(notification.message),
-                  }}
-                />
-              }
+              primary={<NotificationMessage message={notification.message} />}
               secondary={formatTimestamp(notification.timestamp)}
               slotProps={{
                 primary: { sx: { color: "text.secondary" } },

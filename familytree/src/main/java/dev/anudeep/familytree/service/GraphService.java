@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.anudeep.familytree.dto.*;
 import dev.anudeep.familytree.model.Person;
+import dev.anudeep.familytree.repository.TreeRepository;
+import dev.anudeep.familytree.repository.UserRepository;
 import dev.anudeep.familytree.utils.Constants;
 import dev.anudeep.familytree.utils.PersonNodeConverter;
 import lombok.extern.slf4j.Slf4j;
@@ -25,13 +27,24 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class GraphService {
     private final ObjectMapper objectMapper;
     private final Neo4jClient neo4jClient;
-    private final NotificationService notificationService; // Added NotificationService
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
+    private final TreeRepository treeRepository;
+    private final UserTreeService userTreeService;
 
     @Autowired
-    public GraphService(ObjectMapper objectMapper, Neo4jClient neo4jClient, NotificationService notificationService) {
+    public GraphService(ObjectMapper objectMapper,
+                        Neo4jClient neo4jClient,
+                        NotificationService notificationService,
+                        UserRepository userRepository,
+                        TreeRepository treeRepository,
+                        UserTreeService userTreeService) {
         this.objectMapper = objectMapper;
         this.neo4jClient = neo4jClient;
         this.notificationService = notificationService;
+        this.userRepository = userRepository;
+        this.treeRepository = treeRepository;
+        this.userTreeService = userTreeService;
     }
 
     public FlowGraphDTO getGraph(String treeId) {
@@ -422,21 +435,34 @@ public class GraphService {
                 (diff.getDeletedEdgeIds() != null && !diff.getDeletedEdgeIds().isEmpty());
 
         if (changesMade) {
-            String actorUserId = SecurityContextHolder.getContext().getAuthentication().getName(); // Assumes principal is user elementId
-            Map<String, Object> data = new HashMap<>();
-            data.put("addedNodesCount", diff.getAddedNodes() != null ? diff.getAddedNodes().size() : 0);
-            data.put("addedEdgesCount", diff.getAddedEdges() != null ? diff.getAddedEdges().size() : 0);
-            data.put("updatedNodesCount", diff.getUpdatedNodes() != null ? diff.getUpdatedNodes().size() : 0);
-            data.put("updatedEdgesCount", diff.getUpdatedEdges() != null ? diff.getUpdatedEdges().size() : 0);
-            data.put("deletedNodesCount", diff.getDeletedNodeIds() != null ? diff.getDeletedNodeIds().size() : 0);
-            data.put("deletedEdgesCount", diff.getDeletedEdgeIds() != null ? diff.getDeletedEdgeIds().size() : 0);
-            // Could add a summary string if desired, e.g., "Graph updated: 2 nodes added, 1 edge deleted."
+            String actorUserElementId = SecurityContextHolder.getContext().getAuthentication().getName(); // Assumes principal is user elementId
+            dev.anudeep.familytree.model.User actor = userRepository.findByElementId(actorUserElementId)
+                    .orElse(new dev.anudeep.familytree.model.User(null, "Unknown User", null)); // Fallback for actor name
+            dev.anudeep.familytree.model.Tree affectedTree = treeRepository.findByElementId(treeId)
+                    .orElse(new dev.anudeep.familytree.model.Tree(null, "Unknown Tree", null, null)); // Fallback for tree name
+
+            List<String> usersToNotify = userTreeService.getUsersForTree(treeId).stream()
+                    .map(dev.anudeep.familytree.model.User::getElementId)
+                    .collect(java.util.stream.Collectors.toList());
+
+            // The old 'data' map can still be used for detailed change counts if the frontend uses it.
+            // Alternatively, these counts could become specific fields in NotificationEvent if preferred.
+            Map<String, Object> eventData = new HashMap<>();
+            eventData.put("addedNodesCount", diff.getAddedNodes() != null ? diff.getAddedNodes().size() : 0);
+            eventData.put("addedEdgesCount", diff.getAddedEdges() != null ? diff.getAddedEdges().size() : 0);
+            eventData.put("updatedNodesCount", diff.getUpdatedNodes() != null ? diff.getUpdatedNodes().size() : 0);
+            eventData.put("updatedEdgesCount", diff.getUpdatedEdges() != null ? diff.getUpdatedEdges().size() : 0);
+            eventData.put("deletedNodesCount", diff.getDeletedNodeIds() != null ? diff.getDeletedNodeIds().size() : 0);
+            eventData.put("deletedEdgesCount", diff.getDeletedEdgeIds() != null ? diff.getDeletedEdgeIds().size() : 0);
 
             NotificationEvent event = new NotificationEvent(
                     EventType.TREE_STRUCTURE_MODIFIED,
                     treeId,
-                    actorUserId,
-                    data
+                    affectedTree.getName(),
+                    actorUserElementId,
+                    actor.getName(),
+                    usersToNotify,
+                    eventData // Pass the detailed counts via the data map
             );
             notificationService.sendNotification(event);
         }

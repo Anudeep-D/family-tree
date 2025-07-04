@@ -84,7 +84,7 @@ export default function Navbar() {
           horizontal: 'right',
         }}
       >
-        <NotificationList anchorEl={notificationAnchorEl} onClose={handleNotificationClose} />
+        <NotificationList onClose={handleNotificationClose} />
       </Popover>
     </>
   );
