@@ -103,49 +103,51 @@ const NotificationList: React.FC<NotificationListProps> = ({ onClose }) => {
 
       <Divider sx={{ mb: 1 }} />
 
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        px={1}
-        mb={1}
-      >
-        <Stack direction="row" spacing={1}>
-          <Tooltip title="Mark all as read">
-            <IconButton
-              size="small"
-              onClick={() => dispatch(markAllAsRead())}
-              disabled={unreadCount === 0}
-            >
-              <MarkEmailReadOutlined fontSize="small" />
-            </IconButton>
-          </Tooltip>
+      {notifications.length > 0 && (
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          px={1}
+          mb={1}
+        >
+          <Stack direction="row" spacing={1}>
+            <Tooltip title="Mark all as read">
+              <IconButton
+                size="small"
+                onClick={() => dispatch(markAllAsRead())}
+                disabled={unreadCount === 0}
+              >
+                <MarkEmailReadOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
 
-          <Tooltip title="Delete all read">
-            <IconButton
-              size="small"
-              onClick={() => setConfirmDeleteOpen(true)}
-              disabled={read.length === 0}
-            >
-              <DeleteSweepTwoTone fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Stack>
+            <Tooltip title="Delete all read">
+              <IconButton
+                size="small"
+                onClick={() => setConfirmDeleteOpen(true)}
+                disabled={read.length === 0}
+              >
+                <DeleteSweepTwoTone fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </Stack>
 
-        <Stack direction="row" alignItems="center" spacing={1}>
-          <Tooltip title="Show all">
-            <MarkAsUnreadTwoTone fontSize="small" />
-          </Tooltip>
-          <Switch
-            size="small"
-            checked={showOnlyUnread}
-            onChange={() => setShowOnlyUnread((prev) => !prev)}
-          />
-          <Tooltip title="Only unread">
-            <DraftsTwoTone fontSize="small" />
-          </Tooltip>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Tooltip title="Show all">
+              <MarkAsUnreadTwoTone fontSize="small" />
+            </Tooltip>
+            <Switch
+              size="small"
+              checked={showOnlyUnread}
+              onChange={() => setShowOnlyUnread((prev) => !prev)}
+            />
+            <Tooltip title="Only unread">
+              <DraftsTwoTone fontSize="small" />
+            </Tooltip>
+          </Stack>
         </Stack>
-      </Stack>
+      )}
 
       <List dense sx={{ maxHeight: 400, overflowY: "auto" }}>
         {visibleNotifications.length === 0 ? (
