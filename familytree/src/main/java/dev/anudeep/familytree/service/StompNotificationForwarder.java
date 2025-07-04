@@ -73,7 +73,7 @@ public class StompNotificationForwarder {
                 event.getTimestamp().toString()
         );
 
-        log.info("List of users to notify: {}",usersToNotify.toString());
+        log.info("For event: {}, List of users to notify: {}",event.getEventType(), usersToNotify.toString());
         log.info("Preparing to forward notification event (ID: {}) for treeId: {} to {} users.",
                 event.getEventId(), event.getTreeId(), usersToNotify.size());
 
