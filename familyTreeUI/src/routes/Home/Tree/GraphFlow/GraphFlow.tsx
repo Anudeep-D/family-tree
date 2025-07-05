@@ -294,8 +294,6 @@ const GraphFlow: FC<GraphFlowProps> = ({
           setEdges((eds) => addEdge(newBelongsToEdge, eds));
           // Skip opening the dialog
         } else {
-          // Original behavior: open EdgeDialog for other types of connections
-          console.log("Opening Edge Dialog for connection:", connection);
           setNewEdge({
             id: `${Date.now()}-new-pending`, // Temporary ID for the pending edge
             ...connection,
@@ -449,7 +447,6 @@ const GraphFlow: FC<GraphFlowProps> = ({
     const currentTarget = event.currentTarget as HTMLElement;
 
     clickTimeout.current = setTimeout(() => {
-      console.log("Single Click:", node);
       handleClosePopover(); // Close any existing popover first
       if (node.type === NodeTypesEnum.Person) {
         const personData = node.data as NodeDataMap[NodeTypesEnum.Person];
@@ -471,7 +468,6 @@ const GraphFlow: FC<GraphFlowProps> = ({
 
   const handleNodeDoubleClick = (node: AppNode) => {
     if (clickTimeout.current) clearTimeout(clickTimeout.current);
-    console.log("Double Click:", node);
     setEditingNode(node);
     setNodeDialogMode("edit");
   };

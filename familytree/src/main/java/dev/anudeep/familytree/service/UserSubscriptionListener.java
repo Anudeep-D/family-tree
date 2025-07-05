@@ -39,6 +39,7 @@ public class UserSubscriptionListener implements ApplicationListener<SessionSubs
 
     @Override
     public void onApplicationEvent(SessionSubscribeEvent event) {
+        log.debug("onApplicationEvent triggered");
         StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
         Principal userPrincipal = headerAccessor.getUser();
         String destination = headerAccessor.getDestination();

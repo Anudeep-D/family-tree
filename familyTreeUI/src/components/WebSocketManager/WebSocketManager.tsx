@@ -24,7 +24,6 @@ const WebSocketManager = ({ children }: WebSocketManagerProps): JSX.Element => {
     }
 
     if (isAuthenticated && idToken) {
-      console.log('WebSocketManager: User authenticated with token, connecting to WebSocket...');
       notificationService.connect(idToken);
     } else if (isAuthenticated && !idToken) {
       console.warn('WebSocketManager: User authenticated but idToken is missing. WebSocket connection not attempted.');

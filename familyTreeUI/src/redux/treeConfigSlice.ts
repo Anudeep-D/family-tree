@@ -169,7 +169,9 @@ export const getFamilyTree = (
 ): { nodeIds: string[]; edgeIds: string[] } => {
   const rootId = state.currentFilter.filterBy.rootPerson.person?.id;
   if (rootId === undefined) return { nodeIds: [], edgeIds: [] };
-  const maxDepth = state.currentFilter.filterBy.rootPerson.onlyImmediate ? 1 : Infinity;
+  const maxDepth = state.currentFilter.filterBy.rootPerson.onlyImmediate
+    ? 1
+    : Infinity;
   const visitedNodeIds = new Set<string>();
   const queue: { id: string; depth: number }[] = [{ id: rootId, depth: 0 }];
 
@@ -269,9 +271,6 @@ const applyFilters = (state: TreeConfigState) => {
     const localIdsToRemove = nodes
       .filter((node) => nodeTypesSkipped.includes(node.type as Nodes))
       .map((node) => node.id);
-    console.log(
-      `remove ${localIdsToRemove.length} nodes as nodeTypesSkipped: ${nodeTypesSkipped}`
-    );
     nodeIdsToRemove.push(...localIdsToRemove);
   }
 
@@ -288,9 +287,6 @@ const applyFilters = (state: TreeConfigState) => {
           node.type === Nodes.House && !selectedHouseIds.includes(node.id)
       )
       .map((node) => node.id);
-    console.log(
-      `remove ${localIdsToRemove.length} nodes as nodeProps.house.selectedHouses: ${currentFilter.filterBy.nodeProps.house.selectedHouses}`
-    );
     nodeIdsToRemove.push(...localIdsToRemove);
   }
   //Person
@@ -300,9 +296,6 @@ const applyFilters = (state: TreeConfigState) => {
       state,
       Edges.MARRIED_TO,
       !personFilters.married
-    );
-    console.log(
-      `remove ${localIdsToRemove.length} nodes as personFilters.married: ${personFilters.married}`
     );
     nodeIdsToRemove.push(...localIdsToRemove);
   }
@@ -314,9 +307,7 @@ const applyFilters = (state: TreeConfigState) => {
           node.data.gender !== personFilters.gender
       )
       .map((node) => node.id);
-    console.log(
-      `remove ${localIdsToRemove.length} nodes as personFilters.gender: ${personFilters.gender}`
-    );
+
     nodeIdsToRemove.push(...localIdsToRemove);
   }
 
@@ -328,9 +319,7 @@ const applyFilters = (state: TreeConfigState) => {
           !personFilters.locations.includes(node.data.currLocation)
       )
       .map((node) => node.id);
-    console.log(
-      `remove ${localIdsToRemove.length} nodes as personFilters.locations: ${personFilters.locations}`
-    );
+
     nodeIdsToRemove.push(...localIdsToRemove);
   }
 
@@ -342,9 +331,7 @@ const applyFilters = (state: TreeConfigState) => {
           !validateAge(personFilters.age, node.data)
       )
       .map((node) => node.id);
-    console.log(
-      `remove ${localIdsToRemove.length} nodes as personFilters.age: ${personFilters.age}`
-    );
+
     nodeIdsToRemove.push(...localIdsToRemove);
   }
 
@@ -356,9 +343,7 @@ const applyFilters = (state: TreeConfigState) => {
           (!node.data.dob || node.data.dob < personFilters.bornAfter!)
       )
       .map((node) => node.id);
-    console.log(
-      `remove ${localIdsToRemove.length} nodes as personFilters.bornAfter: ${personFilters.bornAfter}`
-    );
+
     nodeIdsToRemove.push(...localIdsToRemove);
   }
 
@@ -370,9 +355,7 @@ const applyFilters = (state: TreeConfigState) => {
           (!node.data.dob || node.data.dob > personFilters.bornBefore!)
       )
       .map((node) => node.id);
-    console.log(
-      `remove ${localIdsToRemove.length} nodes as personFilters.bornBefore: ${personFilters.bornBefore}`
-    );
+
     nodeIdsToRemove.push(...localIdsToRemove);
   }
 
@@ -385,9 +368,7 @@ const applyFilters = (state: TreeConfigState) => {
             (!personFilters.isAlive && node.data.isAlive === "Yes"))
       )
       .map((node) => node.id);
-    console.log(
-      `remove ${localIdsToRemove.length} nodes as personFilters.isAlive: ${personFilters.isAlive}`
-    );
+
     nodeIdsToRemove.push(...localIdsToRemove);
   }
 
@@ -400,9 +381,7 @@ const applyFilters = (state: TreeConfigState) => {
             !personFilters.jobTypes.includes(node.data.job?.jobType))
       )
       .map((node) => node.id);
-    console.log(
-      `remove ${localIdsToRemove.length} nodes as personFilters.jobTypes: ${personFilters.jobTypes}`
-    );
+
     nodeIdsToRemove.push(...localIdsToRemove);
   }
 
@@ -415,9 +394,7 @@ const applyFilters = (state: TreeConfigState) => {
             !personFilters.studies.includes(node.data.education.fieldOfStudy))
       )
       .map((node) => node.id);
-    console.log(
-      `remove ${localIdsToRemove.length} nodes as personFilters.studies: ${personFilters.studies}`
-    );
+
     nodeIdsToRemove.push(...localIdsToRemove);
   }
 
@@ -432,9 +409,7 @@ const applyFilters = (state: TreeConfigState) => {
             ))
       )
       .map((node) => node.id);
-    console.log(
-      `remove ${localIdsToRemove.length} nodes as personFilters.qualifications: ${personFilters.qualifications}`
-    );
+
     nodeIdsToRemove.push(...localIdsToRemove);
   }
 
@@ -461,9 +436,6 @@ const applyFilters = (state: TreeConfigState) => {
     const localIdsToRemove = edges
       .filter((edge) => edgeTypesSkipped.includes(edge.type as Edges))
       .map((edge) => edge.id);
-    console.log(
-      `remove ${localIdsToRemove.length} edges as edgeTypesSkipped: ${edgeTypesSkipped}`
-    );
     edgeIdsToRemove.push(...localIdsToRemove);
   }
   const excludeEdgeIds = [...new Set(edgeIdsToRemove)];

@@ -54,14 +54,12 @@ const connect = (authToken?: string | null) => {
   const csrfToken = getCookie('XSRF-TOKEN'); // Default cookie name used by Spring Security
   if (csrfToken) {
     headers['X-XSRF-TOKEN'] = csrfToken;
-    console.log('NotificationService: Adding X-CSRF-TOKEN header from cookie.');
   } else {
     // This is not necessarily an error if CSRF is handled differently or not strictly required for WS handshake
     // depending on server config, but good to note.
     console.info('NotificationService: XSRF-TOKEN cookie not found. If CSRF is enforced for WebSocket, this might be an issue.');
   }
 
-  console.log(`NotificationService: Attempting STOMP connection to ${socketUrl} with headers:`, JSON.stringify(headers));
 
 
   stompClient.connect(
@@ -79,10 +77,8 @@ const connect = (authToken?: string | null) => {
               const notificationPayload = JSON.parse(message.body);
               // Check if it's a structured backend notification or a simple one
               if (notificationPayload.eventId && notificationPayload.treeId && notificationPayload.eventType) {
-                 console.log('NotificationService: Dispatching addBackendNotification with payload:', notificationPayload);
                  storeInstance?.dispatch(addBackendNotification(notificationPayload as any)); // Cast as any to match expected structure more loosely initially
               } else if (notificationPayload.message) { // Fallback for simpler message structure
-                 console.log('NotificationService: Dispatching addNotification (simple) with payload:', notificationPayload);
                  storeInstance?.dispatch(addNotification({ message: notificationPayload.message, link: notificationPayload.link }));
               } else {
                 console.warn('NotificationService: Received notification payload does not match expected structures:', notificationPayload);
