@@ -55,11 +55,10 @@ public class UserSubscriptionListener implements ApplicationListener<SessionSubs
         // User subscribes to "/user/queue/notifications", STOMP resolves this to "/user/{userElementId}/queue/notifications"
         // The destination in the event might be the fully resolved one or the one client sent.
         // Let's check if the destination *is* the user's personal notification queue.
-        String expectedUserDestination = "/user/" + userElementId + USER_SPECIFIC_NOTIFICATION_SUFFIX;
-
-
-        if (destination != null && destination.equals(expectedUserDestination)) {
-            log.info("User {} subscribed to {}. Fetching pending notifications.", userElementId, destination);
+        // The 'destination' from the event is the one the client sent, e.g., "/user/queue/notifications".
+        // We should compare against this known destination string.
+        if (destination != null && destination.equals(NOTIFICATION_DESTINATION)) {
+            log.info("User {} subscribed to {}. Fetching pending notifications.", userElementId, NOTIFICATION_DESTINATION);
 
             try {
                 List<Notification> pendingNotifications = notificationRepository.findByRecipientUserIdAndStatusOrderByCreatedAtDesc(
@@ -83,8 +82,8 @@ public class UserSubscriptionListener implements ApplicationListener<SessionSubs
                         reconstructedEvent.setActorUserId(dbNotification.getActorUserId());
                         reconstructedEvent.setActorUserName(dbNotification.getActorUserName());
                         // Timestamps should be in a consistent format, ideally ISO 8601
-                        // dbNotification.getCreatedAt() is LocalDateTime
-                        reconstructedEvent.setTimestamp(Instant.from(dbNotification.getCreatedAt()));
+                        // dbNotification.getCreatedAt() is LocalDateTime, convert to Instant assuming UTC
+                        reconstructedEvent.setTimestamp(dbNotification.getCreatedAt().atZone(ZoneOffset.UTC).toInstant());
 
 
                         // Parse the stored messagePayload (JSON string) to get the 'details' map for NotificationEvent's data field

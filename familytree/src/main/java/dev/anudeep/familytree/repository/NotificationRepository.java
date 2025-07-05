@@ -17,6 +17,9 @@ public interface NotificationRepository extends Neo4jRepository<Notification, Lo
 
     List<Notification> findByRecipientUserIdAndStatus(String recipientUserId, NotificationStatus status);
 
+    // List<Notification> findByRecipientUserIdAndStatusOrderByCreatedAtDesc(String recipientUserId, NotificationStatus status);
+    @Query("MATCH (n:Notification) WHERE n.recipientUserId = $recipientUserId AND n.status = $status " +
+            "RETURN n ORDER BY n.createdAt DESC")
     List<Notification> findByRecipientUserIdAndStatusOrderByCreatedAtDesc(String recipientUserId, NotificationStatus status);
 
     // Finding a single notification by recipient and eventId (logical key)
