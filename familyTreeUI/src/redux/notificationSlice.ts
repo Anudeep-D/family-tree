@@ -166,9 +166,16 @@ const notificationSlice = createSlice({
         
         state.notifications = [...uniqueNewNotifications, ...state.notifications]
             .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()); // Ensure sorted
-        state.unreadCount = state.notifications.filter(n => !n.isRead).length;
+         
+         // Recalculate unreadCount based on the final merged list
+         const newUnreadCount = state.notifications.filter(n => !n.isRead).length;
+         console.log(`[Slice] fetchNotifications.fulfilled: Previous unreadCount: ${state.unreadCount}, New unreadCount: ${newUnreadCount}. Total notifications: ${state.notifications.length}`);
+         if (state.notifications.length > 0) {
+            console.log(`[Slice] fetchNotifications.fulfilled: First few notifications in state:`, JSON.stringify(state.notifications.slice(0,5).map(n => ({id: n.id, isRead: n.isRead, message: n.message})), null, 2));
+         }
+         state.unreadCount = newUnreadCount;
         state.status = 'succeeded';
-
+         console.log('[Slice] fetchNotifications.fulfilled: Final action.payload (notifications from API):', JSON.stringify(action.payload.map(n => ({id: n.id, isRead: n.isRead})), null, 2));
       })
       .addCase(fetchNotifications.rejected, (state, action) => {
         state.status = 'failed';
