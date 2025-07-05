@@ -41,6 +41,9 @@ const NotificationMessage: React.FC<NotificationMessageProps> = ({ message }) =>
       </Box>
     );
   } catch (e) {
+    // This is where the "Invalid notification format" message originates
+    // if the message prop is not a valid JSON string matching the expected structure.
+    console.error("Error parsing notification message JSON:", e, "Raw message was:", message);
     return (
       <Typography variant="body2" color="error">
         Invalid notification format

@@ -74,15 +74,64 @@ const connect = (authToken?: string | null) => {
             console.log('NotificationService: Received raw message:', message);
             console.log('NotificationService: Received message body:', message.body);
             try {
-              const notificationPayload = JSON.parse(message.body);
-              // Check if it's a structured backend notification or a simple one
-              if (notificationPayload.eventId && notificationPayload.treeId && notificationPayload.eventType) {
-                 storeInstance?.dispatch(addBackendNotification(notificationPayload as any)); // Cast as any to match expected structure more loosely initially
-              } else if (notificationPayload.message) { // Fallback for simpler message structure
-                 storeInstance?.dispatch(addNotification({ message: notificationPayload.message, link: notificationPayload.link }));
+              const rawPayload = JSON.parse(message.body);
+
+              // Assuming rawPayload is FrontendNotificationPayload from StompNotificationForwarder
+              // rawPayload.id = eventId
+              // rawPayload.message = JSON string of event properties
+              // rawPayload.timestamp = ISO timestamp string
+              // rawPayload.eventDetails = NotificationEvent object
+
+              if (rawPayload.id && rawPayload.timestamp && rawPayload.eventDetails) {
+                // Construct the object for NotificationMessage.tsx
+                // Fields are primarily from rawPayload.eventDetails
+                // rawPayload.message is the JSON string (messageTextJson) from the backend.
+                // This is what NotificationMessage.tsx expects.
+                let messageForFrontend: string;
+                if (typeof rawPayload.message === 'string' && rawPayload.message.trim().startsWith('{')) {
+                  messageForFrontend = rawPayload.message;
+                } else {
+                  console.warn(`[WS] Notification ${rawPayload.id}: rawPayload.message is not a valid JSON string or is missing. Payload:`, rawPayload.message);
+                  // Create a fallback JSON string for NotificationMessage.tsx to parse.
+                  // Use eventDetails for more reliable top-level fields.
+                  messageForFrontend = JSON.stringify({
+                    eventType: rawPayload.eventDetails?.eventType || "UNKNOWN_EVENT_TYPE_ERROR",
+                    actorUserName: rawPayload.eventDetails?.actorUserName || "Unknown User",
+                    treeName: rawPayload.eventDetails?.treeName || "Unknown Tree",
+                    details: { error: "Original WebSocket message payload was invalid or missing.", rawMessageField: String(rawPayload.message).slice(0,100) },
+                    treeId: rawPayload.eventDetails?.treeId || null,
+                    actorUserId: rawPayload.eventDetails?.actorUserId || null,
+                  });
+                }
+                console.log(`[WS] Notification ${rawPayload.id} using rawPayload.message (or fallback JSON string) for Notification.message: "${messageForFrontend}"`);
+
+                const frontendNotification: import('./notificationSlice').Notification = {
+                  id: rawPayload.id, 
+                  message: messageForFrontend, // Pass the JSON string from WebSocket's rawPayload.message
+                  timestamp: rawPayload.timestamp,
+                  isRead: false, // New notifications from WebSocket are unread
+                  link: rawPayload.link, 
+                };
+                storeInstance?.dispatch(addBackendNotification(frontendNotification));
+              } else if (rawPayload.message && (!rawPayload.eventDetails || !rawPayload.id || !rawPayload.timestamp)) { 
+                // This case handles if rawPayload.message exists but other critical parts of FrontendNotificationPayload are missing.
+                // It implies a simple string message not intended for structured display by NotificationMessage.tsx.
+                console.warn('[WS] Received simple message string without full event structure, passing as is. Message:', rawPayload.message);
+                storeInstance?.dispatch(addNotification({ message: rawPayload.message, link: rawPayload.link }));
               } else {
-                console.warn('NotificationService: Received notification payload does not match expected structures:', notificationPayload);
-                storeInstance?.dispatch(addNotification({ message: 'Received an unkown-format notification.' }));
+                console.warn('[WS] Received notification payload does not match expected structures (e.g., missing id, timestamp, or eventDetails):', rawPayload);
+                // Create a JSON string that NotificationMessage.tsx can parse to show an error.
+                const errorJsonForMessage = JSON.stringify({
+                    eventType: "ERROR_PARSING_WS_PAYLOAD",
+                    actorUserName: "System",
+                    treeName: "N/A",
+                    details: { error: "Received incomplete or unknown-format notification structure via WebSocket.", stringifiedPayload: JSON.stringify(rawPayload).slice(0,200) },
+                    treeId: null, actorUserId: null
+                });
+                storeInstance?.dispatch(addNotification({ message: errorJsonForMessage })); // addNotification typically uses uuid for ID.
+                                                                                             // addBackendNotification expects an ID from payload.
+                                                                                             // This might need a more specific error notification type.
+                                                                                             // For now, using addNotification which creates its own ID.
               }
             } catch (error) {
               console.error('NotificationService: Error parsing message or dispatching action:', error, 'Raw body:', message.body);

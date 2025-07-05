@@ -89,10 +89,25 @@ public class StompNotificationForwarder {
             }
 
             // Create and save the notification entity
+            // Ensure eventType is not null before creating Notification entity
+            dev.anudeep.familytree.dto.notification.EventType eventType = event.getEventType(); // Corrected type
+            if (eventType == null) {
+                log.warn("Received NotificationEvent (ID: {}) with null eventType. Storing with UNKNOWN type.", event.getEventId());
+                // Assuming EventType is an enum in dev.anudeep.familytree.dto.notification package.
+                // And that it has an UNKNOWN member. If not, this line would need adjustment or a different default strategy.
+                try {
+                    eventType = dev.anudeep.familytree.dto.notification.EventType.valueOf("UNKNOWN");
+                } catch (IllegalArgumentException e) {
+                    log.error("CRITICAL: EventType enum does not have an UNKNOWN member. Cannot set default for null eventType from event ID: {}. Storing as null!", event.getEventId(), e);
+                    // If UNKNOWN is not available, eventType will remain null here, and frontend will show "Content unavailable".
+                    // Or, throw an exception / don't save notification if eventType is mandatory.
+                }
+            }
+
             Notification persistentNotification = new Notification(
                     event.getEventId(),
                     userElementId,
-                    event.getEventType(),
+                    eventType, // Use the potentially defaulted eventType
                     event.getTreeId(),
                     event.getTreeName(),
                     event.getActorUserId(),

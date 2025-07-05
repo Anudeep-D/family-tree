@@ -1,489 +1,236 @@
-import { AppEdge, Edges } from "@/types/edgeTypes";
-import { Tree } from "@/types/entityTypes";
-import { AppNode, Nodes } from "@/types/nodeTypes";
-import { getDiff } from "@/utils/common";
-import { getLayoutedElements } from "@/utils/layout";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import dayjs from "dayjs";
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { v4 as uuidv4 } from 'uuid';
+import {
+  fetchNotificationsAPI,
+  markNotificationReadAPI,
+  markNotificationUnreadAPI,
+  deleteNotificationAPI,
+} from '@/services/notificationApi'; // Adjust path as necessary
 
-export type TreeConfigState = {
-  currentTree: Tree | null;
-  nodes: AppNode[];
-  edges: AppEdge[];
-  filteredNodes: AppNode[];
-  filteredEdges: AppEdge[];
-  graphChanged: boolean;
-  savedFilters: (FilterProps & { elementId: string })[];
-  selectedFilter: { id: string; label: string } | null;
-  currentFilter: FilterProps;
-};
+export interface Notification {
+  id: string; // Corresponds to eventId from backend
+  message: string;
+  timestamp: string; // ISO string
+  isRead: boolean;
+  link?: string;
+}
 
-export type FilterProps = {
-  filterName: string | null;
-  enabled: boolean;
-  filterBy: {
-    edgeTypes: { [K in Edges]: boolean };
-    nodeTypes: { [K in Nodes]: boolean };
-    nodeProps: {
-      house: {
-        selectedHouses: { id: string; label: string }[];
-      };
-      person: {
-        married: boolean | null;
-        gender: "male" | "female" | null;
-        locations: string[];
-        age: number[];
-        bornAfter: Date | null;
-        bornBefore: Date | null;
-        isAlive: boolean | null;
-        jobTypes: { id: string; label: string; group: string }[];
-        studies: { id: string; label: string; group: string }[];
-        qualifications: { id: string; label: string; group: string }[];
-      };
-    };
-    rootPerson: {
-      person: { id: string; label: string } | null;
-      onlyImmediate: boolean;
-    };
-  };
-};
-type ParameterSetState = {
-  treeConfig: TreeConfigState;
-};
-export const initialState: TreeConfigState = {
-  currentTree: null,
-  nodes: [],
-  edges: [],
-  filteredNodes: [],
-  filteredEdges: [],
-  savedFilters: [],
-  selectedFilter: null,
-  graphChanged: false,
-  currentFilter: {
-    filterName: null,
-    enabled: false,
-    filterBy: {
-      edgeTypes: {
-        [Edges.BELONGS_TO]: true,
-        [Edges.MARRIED_TO]: true,
-        [Edges.PARENT_OF]: true,
-      },
-      nodeTypes: { [Nodes.Person]: true, [Nodes.House]: true },
-      nodeProps: {
-        house: {
-          selectedHouses: [],
-        },
-        person: {
-          married: null,
-          gender: null,
-          locations: [],
-          age: [0, 100],
-          bornAfter: null,
-          bornBefore: null,
-          isAlive: null,
-          jobTypes: [],
-          studies: [],
-          qualifications: [],
-        },
-      },
-      rootPerson: {
-        person: null,
-        onlyImmediate: false,
-      },
-    },
-  },
+interface NotificationState {
+  notifications: Notification[];
+  unreadCount: number;
+  previousNotificationsState: Notification[] | null; // For undo mark all as read
+  canUndo: boolean; // For undo mark all as read
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  error: string | null | undefined;
+}
+
+const initialState: NotificationState = {
+  notifications: [],
+  unreadCount: 0,
+  previousNotificationsState: null,
+  canUndo: false,
+  status: 'idle',
+  error: null,
 };
 
-const treeConfigSlice = createSlice({
-  name: "treeConfig",
+// Async Thunks
+export const fetchNotifications = createAsyncThunk('notifications/fetchNotifications', async () => {
+  const response = await fetchNotificationsAPI();
+  return response; // This will be Notification[]
+});
+
+export const markNotificationRead = createAsyncThunk(
+  'notifications/markNotificationRead',
+  async (notificationId: string, { rejectWithValue }) => {
+    try {
+      await markNotificationReadAPI(notificationId);
+      return notificationId;
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const markNotificationUnread = createAsyncThunk(
+  'notifications/markNotificationUnread',
+  async (notificationId: string, { rejectWithValue }) => {
+    try {
+      await markNotificationUnreadAPI(notificationId);
+      return notificationId;
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const deleteNotificationThunk = createAsyncThunk(
+  'notifications/deleteNotification',
+  async (notificationId: string, { rejectWithValue }) => {
+    try {
+      await deleteNotificationAPI(notificationId);
+      return notificationId;
+    } catch (error: any) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+
+const notificationSlice = createSlice({
+  name: 'notifications',
   initialState,
   reducers: {
-    setCurrentTree: (state, action: PayloadAction<Tree | null>) => {
-      state.currentTree = action.payload;
+    // For client-side generated notifications (e.g., local alerts not from backend)
+    addNotification: (state, action: PayloadAction<{ message: string; link?: string }>) => {
+      const newNotification: Notification = {
+        id: uuidv4(), // Client-generated ID
+        message: action.payload.message,
+        timestamp: new Date().toISOString(),
+        isRead: false,
+        link: action.payload.link,
+      };
+      state.notifications.unshift(newNotification);
+      state.unreadCount += 1;
     },
-    setReduxNodes: (state, action: PayloadAction<AppNode[]>) => {
-      state.nodes = action.payload;
+    // Action to add a notification received from backend (e.g. via WebSocket)
+    // This assumes the backend notification object matches the frontend `Notification` type or is transformed before dispatch.
+    // Specifically, `id` should be the `eventId`.
+    addBackendNotification: (state, action: PayloadAction<Notification>) => {
+        // Check if notification already exists to prevent duplicates from WS + initial fetch
+        const existingNotification = state.notifications.find(n => n.id === action.payload.id);
+        if (!existingNotification) {
+            state.notifications.unshift(action.payload); // Add to the beginning of the list
+            if (!action.payload.isRead) {
+                state.unreadCount += 1;
+            }
+        } else {
+            // Optionally update existing notification if payload has newer info, though usually not needed for new items.
+            // For now, we just ignore if it's a duplicate ID.
+            // If it was an update (e.g. read status change from another client), we might handle it differently.
+        }
     },
-    setReduxEdges: (state, action: PayloadAction<AppEdge[]>) => {
-      state.edges = action.payload;
+    setNotifications: (state, action: PayloadAction<Notification[]>) => {
+        state.notifications = action.payload;
+        state.unreadCount = action.payload.filter(n => !n.isRead).length;
+        state.status = 'succeeded';
     },
-    setApplyFilters: (state) => {
-      applyFilters(state);
+    // Handles marking all as read locally. API call for this would be a separate thunk if needed.
+    markAllAsRead: state => {
+      if (state.notifications.some(n => !n.isRead)) {
+        state.previousNotificationsState = JSON.parse(JSON.stringify(state.notifications));
+        state.notifications.forEach(notification => {
+          if (!notification.isRead) {
+            notification.isRead = true;
+          }
+        });
+        state.unreadCount = 0;
+        state.canUndo = true;
+        // TODO: Consider if `markAllAsRead` should also call an API.
+        // For now, it's a local operation. If it needs to be persisted,
+        // a `markAllNotificationsRead` thunk would be needed.
+      }
     },
-    setFilteredNodes: (state, action: PayloadAction<AppNode[]>) => {
-      state.filteredNodes = action.payload;
+    undoMarkAllAsRead: state => {
+      if (state.previousNotificationsState) {
+        state.notifications = state.previousNotificationsState;
+        state.unreadCount = state.notifications.filter(n => !n.isRead).length;
+        state.previousNotificationsState = null;
+        state.canUndo = false;
+        // TODO: If `markAllAsRead` calls an API, this might need to revert those changes too.
+      }
     },
-    setFilteredEdges: (state, action: PayloadAction<AppEdge[]>) => {
-      state.filteredEdges = action.payload;
+    // Handles clearing read notifications locally. API call for this would be a separate thunk.
+    clearReadNotifications: state => {
+      const readNotifications = state.notifications.filter(n => n.isRead);
+      state.notifications = state.notifications.filter(n => !n.isRead);
+      // TODO: If `clearReadNotifications` should persist, a `deleteMultipleNotifications` thunk
+      // would be needed, taking IDs of read notifications.
+      // This is a potentially destructive operation if not confirmed or handled carefully on backend.
     },
-    setGraphChanged: (state, action: PayloadAction<boolean>) => {
-      state.graphChanged = action.payload;
-    },
-    setSelectedFilter: (
-      state,
-      action: PayloadAction<{ id: string; label: string } | null>
-    ) => {
-      state.selectedFilter = action.payload;
-    },
-    setSavedFilters: (
-      state,
-      action: PayloadAction<(FilterProps & { elementId: string })[]>
-    ) => {
-      state.savedFilters = action.payload;
-    },
-    setCurrentFilter: (state, action: PayloadAction<FilterProps>) => {
-      state.currentFilter = action.payload;
-    },
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchNotifications.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchNotifications.fulfilled, (state, action: PayloadAction<Notification[]>) => {
+        // state.status = 'succeeded'; // Moved to setNotifications reducer
+        // Merging fetched notifications with existing ones to avoid duplicates if WS already added some.
+        // A more sophisticated merge might be needed based on timestamps if order is critical
+        // and WS could deliver out of order with HTTP fetch.
+        // For simplicity, let's replace and recalculate unread count.
+        // If `addBackendNotification` is robust, it can handle duplicates.
+        const newNotifications = action.payload;
+        const existingIds = new Set(state.notifications.map(n => n.id));
+        const uniqueNewNotifications = newNotifications.filter(n => !existingIds.has(n.id));
+        
+        state.notifications = [...uniqueNewNotifications, ...state.notifications]
+            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()); // Ensure sorted
+         
+         // Recalculate unreadCount based on the final merged list
+         const newUnreadCount = state.notifications.filter(n => !n.isRead).length;
+         console.log(`[Slice] fetchNotifications.fulfilled: Previous unreadCount: ${state.unreadCount}, New unreadCount: ${newUnreadCount}. Total notifications: ${state.notifications.length}`);
+         if (state.notifications.length > 0) {
+            console.log(`[Slice] fetchNotifications.fulfilled: First few notifications in state:`, JSON.stringify(state.notifications.slice(0,5).map(n => ({id: n.id, isRead: n.isRead, message: n.message})), null, 2));
+         }
+         state.unreadCount = newUnreadCount;
+        state.status = 'succeeded';
+         console.log('[Slice] fetchNotifications.fulfilled: Final action.payload (notifications from API):', JSON.stringify(action.payload.map(n => ({id: n.id, isRead: n.isRead})), null, 2));
+      })
+      .addCase(fetchNotifications.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
+      })
+      .addCase(markNotificationRead.fulfilled, (state, action: PayloadAction<string>) => {
+        const notificationId = action.payload;
+        const notification = state.notifications.find(n => n.id === notificationId);
+        if (notification && !notification.isRead) {
+          notification.isRead = true;
+          state.unreadCount = Math.max(0, state.unreadCount - 1);
+        }
+      })
+      .addCase(markNotificationUnread.fulfilled, (state, action: PayloadAction<string>) => {
+        const notificationId = action.payload;
+        const notification = state.notifications.find(n => n.id === notificationId);
+        if (notification && notification.isRead) {
+          notification.isRead = false;
+          state.unreadCount += 1;
+        }
+      })
+      .addCase(deleteNotificationThunk.fulfilled, (state, action: PayloadAction<string>) => {
+        const notificationId = action.payload;
+        const toDelete = state.notifications.find(n => n.id === notificationId);
+        if (toDelete) {
+          if (!toDelete.isRead) {
+            state.unreadCount = Math.max(0, state.unreadCount - 1);
+          }
+          state.notifications = state.notifications.filter(n => n.id !== notificationId);
+        }
+      })
+      // Optional: Handle rejected states for specific thunks if needed for UI feedback
+      .addCase(markNotificationRead.rejected, (state, action) => {
+        console.error("Failed to mark notification as read:", action.payload || action.error.message);
+        // Optionally revert optimistic update or show error to user
+      })
+      .addCase(markNotificationUnread.rejected, (state, action) => {
+        console.error("Failed to mark notification as unread:", action.payload || action.error.message);
+      })
+      .addCase(deleteNotificationThunk.rejected, (state, action) => {
+        console.error("Failed to delete notification:", action.payload || action.error.message);
+      });
   },
 });
 
-const getNodeIdsFromEdges = (
-  state: TreeConfigState,
-  edgeType: Edges,
-  include: boolean = true
-) => {
-  const edges = state.edges;
-  const localIds: string[] = [];
-  edges
-    .filter((edge) => edge.type === edgeType)
-    .forEach((edge) => localIds.push(edge.source, edge.target));
-  if (include) return localIds;
-  const nodes = state.nodes;
-  return nodes
-    .filter((node) => !localIds.includes(node.id))
-    .map((node) => node.id);
-};
-
-const validateAge = (range: number[], data: Record<string, any>) => {
-  if (!data.dob) return range[1] - range[0] >= 90;
-  const start = data.dob;
-  const end = data.doe ?? new Date();
-
-  const age = dayjs(end).diff(start, "year");
-
-  return age >= range[0] && age <= range[1];
-};
-
-export const getFamilyTree = (
-  state: TreeConfigState
-): { nodeIds: string[]; edgeIds: string[] } => {
-  const rootId = state.currentFilter.filterBy.rootPerson.person?.id;
-  if (rootId === undefined) return { nodeIds: [], edgeIds: [] };
-  const maxDepth = state.currentFilter.filterBy.rootPerson.onlyImmediate
-    ? 1
-    : Infinity;
-  const visitedNodeIds = new Set<string>();
-  const queue: { id: string; depth: number }[] = [{ id: rootId, depth: 0 }];
-
-  while (queue.length > 0) {
-    const { id, depth } = queue.shift()!;
-    if (visitedNodeIds.has(id)) continue;
-    visitedNodeIds.add(id);
-
-    // Add spouse
-    const spouseEdge = state.edges.find(
-      (e) => e.type === Edges.MARRIED_TO && (e.source === id || e.target === id)
-    );
-    if (spouseEdge) {
-      const spouseId =
-        spouseEdge.source === id ? spouseEdge.target : spouseEdge.source;
-      if (!visitedNodeIds.has(spouseId)) {
-        queue.push({ id: spouseId, depth }); // same level
-      }
-    }
-
-    // Add house
-    const houseEdge = state.edges.find(
-      (e) => e.type === Edges.BELONGS_TO && (e.source === id || e.target === id)
-    );
-    if (houseEdge) {
-      const houseId =
-        houseEdge.source === id ? houseEdge.target : houseEdge.source;
-      visitedNodeIds.add(houseId);
-    }
-
-    // Add children (descendants)
-    if (depth < maxDepth) {
-      const childEdges = state.edges.filter(
-        (e) => e.type === Edges.PARENT_OF && e.source === id
-      );
-      childEdges.forEach((e) => {
-        queue.push({ id: e.target, depth: depth + 1 });
-      });
-    }
-  }
-
-  // Once all nodeIds are collected, add valid edges
-  const visitedEdgeIds = new Set<string>();
-  for (const edge of state.edges) {
-    if (visitedNodeIds.has(edge.source) && visitedNodeIds.has(edge.target)) {
-      visitedEdgeIds.add(edge.id);
-    }
-  }
-
-  return {
-    nodeIds: Array.from(visitedNodeIds),
-    edgeIds: Array.from(visitedEdgeIds),
-  };
-};
-
-const applyFilters = (state: TreeConfigState) => {
-  const currentFilter = state.currentFilter;
-
-  if (!currentFilter.enabled) {
-    state.filteredNodes = state.nodes;
-    state.filteredEdges = state.edges;
-    return;
-  }
-
-  const familyTreeids = getFamilyTree(state);
-
-  const nodes =
-    familyTreeids.nodeIds.length > 0
-      ? state.nodes.filter((node) => familyTreeids.nodeIds.includes(node.id))
-      : state.nodes;
-  const edges =
-    familyTreeids.edgeIds.length > 0
-      ? state.edges.filter((edge) => familyTreeids.edgeIds.includes(edge.id))
-      : state.edges;
-
-  if (!state.graphChanged) {
-    const filterNodeIds = state.filteredNodes.map((node) => node.id);
-    const filterEdgeIds = state.filteredEdges.map((edge) => edge.id);
-    state.filteredEdges = edges.filter((edge) =>
-      filterEdgeIds.includes(edge.id)
-    );
-    state.filteredNodes = nodes.filter((node) =>
-      filterNodeIds.includes(node.id)
-    );
-    return;
-  }
-
-  const nodeIdsToRemove = [];
-
-  /* Filter by nodeTypes */
-  const nodeTypesSkipped: Nodes[] = [];
-  if (!currentFilter.filterBy.nodeTypes.House)
-    nodeTypesSkipped.push(Nodes.House);
-  if (!currentFilter.filterBy.nodeTypes.Person)
-    nodeTypesSkipped.push(Nodes.Person);
-  if (nodeTypesSkipped.length > 0) {
-    const localIdsToRemove = nodes
-      .filter((node) => nodeTypesSkipped.includes(node.type as Nodes))
-      .map((node) => node.id);
-    nodeIdsToRemove.push(...localIdsToRemove);
-  }
-
-  /* Filter by nodeProps */
-  //House
-  if (currentFilter.filterBy.nodeProps.house.selectedHouses.length > 0) {
-    const selectedHouseIds =
-      currentFilter.filterBy.nodeProps.house.selectedHouses.map(
-        (house) => house.id
-      );
-    const localIdsToRemove = nodes
-      .filter(
-        (node) =>
-          node.type === Nodes.House && !selectedHouseIds.includes(node.id)
-      )
-      .map((node) => node.id);
-    nodeIdsToRemove.push(...localIdsToRemove);
-  }
-  //Person
-  const personFilters = currentFilter.filterBy.nodeProps.person;
-  if (personFilters.married !== null) {
-    const localIdsToRemove = getNodeIdsFromEdges(
-      state,
-      Edges.MARRIED_TO,
-      !personFilters.married
-    );
-    nodeIdsToRemove.push(...localIdsToRemove);
-  }
-  if (personFilters.gender !== null) {
-    const localIdsToRemove = nodes
-      .filter(
-        (node) =>
-          node.type === Nodes.Person &&
-          node.data.gender !== personFilters.gender
-      )
-      .map((node) => node.id);
-
-    nodeIdsToRemove.push(...localIdsToRemove);
-  }
-
-  if (personFilters.locations.length > 0) {
-    const localIdsToRemove = nodes
-      .filter(
-        (node) =>
-          node.type === Nodes.Person &&
-          !personFilters.locations.includes(node.data.currLocation)
-      )
-      .map((node) => node.id);
-
-    nodeIdsToRemove.push(...localIdsToRemove);
-  }
-
-  if (personFilters.age !== null) {
-    const localIdsToRemove = nodes
-      .filter(
-        (node) =>
-          node.type === Nodes.Person &&
-          !validateAge(personFilters.age, node.data)
-      )
-      .map((node) => node.id);
-
-    nodeIdsToRemove.push(...localIdsToRemove);
-  }
-
-  if (personFilters.bornAfter !== null) {
-    const localIdsToRemove = nodes
-      .filter(
-        (node) =>
-          node.type === Nodes.Person &&
-          (!node.data.dob || node.data.dob < personFilters.bornAfter!)
-      )
-      .map((node) => node.id);
-
-    nodeIdsToRemove.push(...localIdsToRemove);
-  }
-
-  if (personFilters.bornBefore !== null) {
-    const localIdsToRemove = nodes
-      .filter(
-        (node) =>
-          node.type === Nodes.Person &&
-          (!node.data.dob || node.data.dob > personFilters.bornBefore!)
-      )
-      .map((node) => node.id);
-
-    nodeIdsToRemove.push(...localIdsToRemove);
-  }
-
-  if (personFilters.isAlive !== null) {
-    const localIdsToRemove = nodes
-      .filter(
-        (node) =>
-          node.type === Nodes.Person &&
-          ((personFilters.isAlive && node.data.isAlive === "No") ||
-            (!personFilters.isAlive && node.data.isAlive === "Yes"))
-      )
-      .map((node) => node.id);
-
-    nodeIdsToRemove.push(...localIdsToRemove);
-  }
-
-  if (personFilters.jobTypes.length > 0) {
-    const localIdsToRemove = nodes
-      .filter(
-        (node) =>
-          node.type === Nodes.Person &&
-          (!node.data.job?.jobType ||
-            !personFilters.jobTypes.includes(node.data.job?.jobType))
-      )
-      .map((node) => node.id);
-
-    nodeIdsToRemove.push(...localIdsToRemove);
-  }
-
-  if (personFilters.studies.length > 0) {
-    const localIdsToRemove = nodes
-      .filter(
-        (node) =>
-          node.type === Nodes.Person &&
-          (!node.data.education?.fieldOfStudy ||
-            !personFilters.studies.includes(node.data.education.fieldOfStudy))
-      )
-      .map((node) => node.id);
-
-    nodeIdsToRemove.push(...localIdsToRemove);
-  }
-
-  if (personFilters.qualifications.length > 0) {
-    const localIdsToRemove = nodes
-      .filter(
-        (node) =>
-          node.type === Nodes.Person &&
-          (!node.data.education?.highestQualification ||
-            !personFilters.qualifications.includes(
-              node.data.education.highestQualification
-            ))
-      )
-      .map((node) => node.id);
-
-    nodeIdsToRemove.push(...localIdsToRemove);
-  }
-
-  // process the nodes and edges
-  const excludeNodeIds = [...new Set(nodeIdsToRemove)];
-
-  const edgeIdsToRemove = edges
-    .filter(
-      (edge) =>
-        excludeNodeIds.includes(edge.source) ||
-        excludeNodeIds.includes(edge.target)
-    )
-    .map((edge) => edge.id);
-
-  // Filter by edgeTypes
-  const edgeTypesSkipped: Edges[] = [];
-  if (!currentFilter.filterBy.edgeTypes.BELONGS_TO)
-    edgeTypesSkipped.push(Edges.BELONGS_TO);
-  if (!currentFilter.filterBy.edgeTypes.PARENT_OF)
-    edgeTypesSkipped.push(Edges.PARENT_OF);
-  if (!currentFilter.filterBy.edgeTypes.MARRIED_TO)
-    edgeTypesSkipped.push(Edges.MARRIED_TO);
-  if (edgeTypesSkipped.length > 0) {
-    const localIdsToRemove = edges
-      .filter((edge) => edgeTypesSkipped.includes(edge.type as Edges))
-      .map((edge) => edge.id);
-    edgeIdsToRemove.push(...localIdsToRemove);
-  }
-  const excludeEdgeIds = [...new Set(edgeIdsToRemove)];
-
-  const fEdges = edges.filter((edge) => !excludeEdgeIds.includes(edge.id));
-  const fNodes = nodes.filter((node) => !excludeNodeIds.includes(node.id));
-  // const { nodes: filteredNodes, edges: filteredEdges } = getLayoutedElements(
-  //   fNodes,
-  //   fEdges // Use the processed edges
-  // );
-  state.filteredEdges = fEdges;
-  state.filteredNodes = fNodes;
-};
-
-export const selectTree = (state: ParameterSetState) =>
-  state.treeConfig.currentTree;
-export const selectNodes = (state: ParameterSetState) => state.treeConfig.nodes;
-export const selectEdges = (state: ParameterSetState) => state.treeConfig.edges;
-export const selectFilteredNodes = (state: ParameterSetState) =>
-  state.treeConfig.filteredNodes;
-export const selectFilteredEdges = (state: ParameterSetState) =>
-  state.treeConfig.filteredEdges;
-export const selectSavedFilters = (state: ParameterSetState) =>
-  state.treeConfig.savedFilters;
-export const selectSelectedFilter = (state: ParameterSetState) =>
-  state.treeConfig.selectedFilter;
-export const selectCurrentFilter = (state: ParameterSetState) =>
-  state.treeConfig.currentFilter;
-export const selectGraphChanged = (state: ParameterSetState) =>
-  state.treeConfig.graphChanged;
-export const selectAllLocations = (state: ParameterSetState) => {
-  const allLocs = state.treeConfig.nodes
-    .filter((node) => Boolean(node.data.currLocation))
-    .map((node) => node.data.currLocation as string);
-  return [...new Set(allLocs)].sort();
-};
-
 export const {
-  setCurrentTree,
-  setReduxNodes,
-  setReduxEdges,
-  setFilteredNodes,
-  setFilteredEdges,
-  setGraphChanged,
-  setApplyFilters,
-  setSelectedFilter,
-  setSavedFilters,
-  setCurrentFilter,
-} = treeConfigSlice.actions;
+  addNotification, // For client-side only notifications
+  addBackendNotification, // For notifications from WebSocket
+  setNotifications, // For setting all notifications from API
+  markAllAsRead, // Local operation
+  undoMarkAllAsRead, // Local operation
+  clearReadNotifications, // Local operation
+} = notificationSlice.actions;
 
-export default treeConfigSlice.reducer;
+// Old action names are now thunks, so we don't export them from notificationSlice.actions directly.
+// Components will dispatch the thunks: `markNotificationRead`, `markNotificationUnread`, `deleteNotificationThunk`.
+
+export default notificationSlice.reducer;
