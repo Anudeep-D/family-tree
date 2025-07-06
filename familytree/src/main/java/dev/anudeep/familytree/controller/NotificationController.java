@@ -107,4 +107,63 @@ public class NotificationController {
             return ResponseEntity.status(500).body("Error processing request.");
         }
     }
+
+    @PostMapping("/read-all")
+    public ResponseEntity<?> markAllNotificationsAsRead(Principal principal) {
+        if (principal == null || principal.getName() == null) {
+            return ResponseEntity.status(401).body("User not authenticated.");
+        }
+        String userElementId = principal.getName();
+        log.info("Request received to mark all notifications as read for user {}", userElementId);
+        try {
+            List<String> updatedEventIds = notificationManagementService.markAllNotificationsAsReadForUser(userElementId);
+            if (updatedEventIds.isEmpty()) {
+                return ResponseEntity.ok().body("No unread notifications found to mark as read.");
+            }
+            // Return the list of eventIds that were marked as read
+            return ResponseEntity.ok(updatedEventIds);
+        } catch (Exception e) {
+            log.error("Error marking all notifications as read for user {}: {}", userElementId, e.getMessage(), e);
+            return ResponseEntity.status(500).body("Error processing request.");
+        }
+    }
+
+    @PostMapping("/unread-batch")
+    public ResponseEntity<?> markNotificationsAsUnreadBatch(@RequestBody List<String> eventIds, Principal principal) {
+        if (principal == null || principal.getName() == null) {
+            return ResponseEntity.status(401).body("User not authenticated.");
+        }
+        if (eventIds == null || eventIds.isEmpty()) {
+            return ResponseEntity.badRequest().body("List of eventIds cannot be empty.");
+        }
+        String userElementId = principal.getName();
+        log.info("Request received to mark {} notifications as unread for user {}", eventIds.size(), userElementId);
+        try {
+            notificationManagementService.markNotificationsAsUnreadBatch(userElementId, eventIds);
+            return ResponseEntity.ok().body("Batch unread operation successful.");
+        } catch (Exception e) {
+            log.error("Error marking batch of notifications as unread for user {}: {}", userElementId, e.getMessage(), e);
+            return ResponseEntity.status(500).body("Error processing request.");
+        }
+    }
+
+    @DeleteMapping("/read")
+    public ResponseEntity<?> deleteAllReadNotifications(Principal principal) {
+        if (principal == null || principal.getName() == null) {
+            return ResponseEntity.status(401).body("User not authenticated.");
+        }
+        String userElementId = principal.getName();
+        log.info("Request received to delete all read notifications for user {}", userElementId);
+        try {
+            boolean success = notificationManagementService.deleteAllReadNotificationsForUser(userElementId);
+            if (success) {
+                return ResponseEntity.ok().body("All read notifications deleted.");
+            } else {
+                return ResponseEntity.ok().body("No read notifications found to delete.");
+            }
+        } catch (Exception e) {
+            log.error("Error deleting all read notifications for user {}: {}", userElementId, e.getMessage(), e);
+            return ResponseEntity.status(500).body("Error processing request.");
+        }
+    }
 }

@@ -40,6 +40,18 @@ public interface NotificationRepository extends Neo4jRepository<Notification, Lo
             @Param("statusValue") String statusValue,
             @Param("updatedAtValue") LocalDateTime updatedAtValue);
 
+    @Query("MATCH (n:Notification) WHERE n.recipientUserId = $recipientUserId AND n.status = 'UNREAD' " +
+            "SET n.status = 'READ', n.updatedAt = $now " +
+            "RETURN n.eventId")
+    List<String> updateStatusForAllUnreadNotificationsByUser(@Param("recipientUserId") String recipientUserId, @Param("now") LocalDateTime now);
+
+    @Query("MATCH (n:Notification) WHERE n.recipientUserId = $recipientUserId AND n.eventId IN $eventIds " +
+            "SET n.status = 'UNREAD', n.updatedAt = $now")
+    void markNotificationsAsUnreadBatch(@Param("recipientUserId") String recipientUserId, @Param("eventIds") List<String> eventIds, @Param("now") LocalDateTime now);
+
+    @Query("MATCH (n:Notification) WHERE n.recipientUserId = $recipientUserId AND n.status = 'READ' " +
+            "DETACH DELETE n")
+    void deleteAllReadNotificationsByUser(@Param("recipientUserId") String recipientUserId);
 
     // Example of a custom Cypher query if needed, though the above should work by convention.
     // @Query("MATCH (n:Notification) WHERE n.recipientUserId = $recipientUserId AND n.eventId = $eventId RETURN n")

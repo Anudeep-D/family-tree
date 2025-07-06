@@ -6,12 +6,16 @@ import {
   // markAsRead,
   // undoRead,
   // deleteNotification,
-  markAllAsRead, // This is still a local operation as per current slice
-  clearReadNotifications, // This is still a local operation
-  fetchNotifications, // Thunk to fetch initial notifications
+  // fetchNotifications, // Assuming this is handled at a higher level as per previous comments
   markNotificationRead, // Thunk for marking as read
   markNotificationUnread, // Thunk for marking as unread
   deleteNotificationThunk, // Thunk for deleting
+  // New thunks and actions for bulk operations
+  markAllNotificationsRead, // Thunk
+  undoMarkAllNotificationsAsRead, // Thunk
+  clearReadNotificationsThunk, // Thunk
+  markAllAsReadLocalSetup, // Synchronous action for UI state prep
+  undoMarkAllAsReadLocalCleanup, // Synchronous action for UI state cleanup
 } from "@/redux/notificationSlice";
 import {
   List,
@@ -55,21 +59,37 @@ const NotificationList: React.FC<NotificationListProps> = ({ onClose }) => {
     notifications,
     unreadCount,
     canUndo,
+    lastMarkedAllAsReadIds, // Added for the undo functionality
     status: notificationStatus,
   } = useSelector((state: RootState) => state.notifications);
-
-  // useEffect(() => {
-  //   // Fetch notifications when component mounts if they haven't been fetched or are idle
-  //   // You might want to add more sophisticated logic if you only want to fetch once per session
-  //   // MOVED: This logic will be moved to a higher-level component for earlier fetching.
-  //   // if (notificationStatus === 'idle') {
-  //   //   dispatch(fetchNotifications());
-  //   // }
-  // }, [notificationStatus, dispatch]);
 
   const [unhoveredIds, setUnhoveredIds] = useState<string[]>([]);
   const [showOnlyUnread, setShowOnlyUnread] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
+  const handleMarkAllRead = () => {
+    dispatch(markAllAsReadLocalSetup());
+    dispatch(markAllNotificationsRead());
+  };
+
+  const handleUndoMarkAllRead = () => {
+    if (lastMarkedAllAsReadIds && lastMarkedAllAsReadIds.length > 0) {
+      dispatch(undoMarkAllNotificationsAsRead(lastMarkedAllAsReadIds))
+        .unwrap() // Useful for acting upon promise completion/rejection
+        .then(() => {
+          dispatch(undoMarkAllAsReadLocalCleanup());
+        })
+        .catch(() => {
+          // Handle potential errors from the thunk, e.g., show a message
+          // For now, cleanup is still called to reset UI, but this could be more nuanced
+          dispatch(undoMarkAllAsReadLocalCleanup());
+          console.error("Failed to undo mark all as read via API.");
+        });
+    } else {
+      // Fallback or if somehow called without IDs, ensure cleanup
+      dispatch(undoMarkAllAsReadLocalCleanup());
+    }
+  };
 
   const unread = notifications.filter((n) => !n.isRead);
   const read = notifications.filter((n) => n.isRead);
@@ -88,9 +108,18 @@ const NotificationList: React.FC<NotificationListProps> = ({ onClose }) => {
     }
   };
 
-  const handleDeleteAll = () => {
-    dispatch(clearReadNotifications());
-    setConfirmDeleteOpen(false);
+  const handleDeleteAllRead = () => {
+    dispatch(clearReadNotificationsThunk())
+      .unwrap()
+      .then(() => {
+        setConfirmDeleteOpen(false);
+      })
+      .catch((error: any) => {
+        console.error("Failed to delete all read notifications:", error);
+        // Optionally, keep the dialog open or show an error message to the user
+        // For now, we'll close it, but the error is logged.
+        setConfirmDeleteOpen(false);
+      });
   };
 
   const visibleNotifications = showOnlyUnread
@@ -129,22 +158,34 @@ const NotificationList: React.FC<NotificationListProps> = ({ onClose }) => {
           px={1}
           mb={1}
         >
-          <Stack direction="row" spacing={1}>
+          <Stack direction="row" spacing={1} alignItems="center">
             <Tooltip title="Mark all as read">
               <IconButton
                 size="small"
-                onClick={() => dispatch(markAllAsRead())}
-                disabled={unreadCount === 0}
+                onClick={handleMarkAllRead}
+                disabled={unreadCount === 0 || notificationStatus === 'loading'}
               >
                 <MarkEmailReadOutlined fontSize="small" />
               </IconButton>
             </Tooltip>
 
+            {canUndo && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={handleUndoMarkAllRead}
+                disabled={notificationStatus === 'loading'}
+                sx={{textTransform: 'none', fontSize: '0.75rem', lineHeight: '1.5'}}
+              >
+                Undo
+              </Button>
+            )}
+
             <Tooltip title="Delete all read">
               <IconButton
                 size="small"
                 onClick={() => setConfirmDeleteOpen(true)}
-                disabled={read.length === 0}
+                disabled={read.length === 0 || notificationStatus === 'loading'}
               >
                 <DeleteSweepTwoTone fontSize="small" />
               </IconButton>
@@ -297,9 +338,9 @@ const NotificationList: React.FC<NotificationListProps> = ({ onClose }) => {
           Are you sure you want to delete all read notifications?
         </DialogTitle>
         <DialogActions>
-          <Button onClick={() => setConfirmDeleteOpen(false)}>Cancel</Button>
-          <Button color="error" onClick={handleDeleteAll} autoFocus>
-            Delete
+          <Button onClick={() => setConfirmDeleteOpen(false)} disabled={notificationStatus === 'loading'}>Cancel</Button>
+          <Button color="error" onClick={handleDeleteAllRead} autoFocus disabled={notificationStatus === 'loading'}>
+            {notificationStatus === 'loading' ? <CircularProgress size={20}/> : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>

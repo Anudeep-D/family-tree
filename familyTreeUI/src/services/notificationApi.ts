@@ -152,3 +152,53 @@ export const deleteNotificationAPI = async (eventId: string): Promise<void> => {
   }
   // console.log('Successfully deleted:', await response.text());
 };
+
+// --- New API functions based on the plan ---
+
+// Mark all notifications as read for the current user
+// Expected to return a list of eventIds that were marked as read.
+export const markAllNotificationsReadAPI = async (): Promise<string[]> => {
+  const response = await fetch(`${API_BASE_URL}/read-all`, {
+    method: 'POST',
+    headers: getHeaders(),
+  });
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error('Failed to mark all notifications as read:', response.status, errorBody);
+    throw new Error(`Failed to mark all notifications as read: ${response.status} ${errorBody}`);
+  }
+  // The backend controller returns List<String> which is string[] (eventIds)
+  return response.json();
+};
+
+// Mark a batch of notifications as unread
+// eventIds: An array of notification event IDs to mark as unread.
+export const markNotificationsUnreadBatchAPI = async (eventIds: string[]): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/unread-batch`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(eventIds),
+  });
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error('Failed to mark batch of notifications as unread:', response.status, errorBody);
+    throw new Error(`Failed to mark batch of notifications as unread: ${response.status} ${errorBody}`);
+  }
+  // This endpoint returns a confirmation message string or 204 No Content, not JSON.
+  // console.log('Successfully marked batch as unread:', await response.text());
+};
+
+// Delete all read notifications for the current user
+export const clearReadNotificationsAPI = async (): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/read`, { // Note: API_BASE_URL is already /api/notifications
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  if (!response.ok) {
+    const errorBody = await response.text();
+    console.error('Failed to delete all read notifications:', response.status, errorBody);
+    throw new Error(`Failed to delete all read notifications: ${response.status} ${errorBody}`);
+  }
+  // This endpoint returns a confirmation message string or 204 No Content.
+  // console.log('Successfully cleared read notifications:', await response.text());
+};

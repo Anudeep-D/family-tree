@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,11 +49,11 @@ public class NotificationManagementService {
             } else {
                 log.info("Notification (Event ID: {}) for user {} was already READ. Status: {}",
                         eventId, userElementId, notification.getStatus());
-                return false;
+                return false; // Indicates no change was made as it was already read
             }
         }
         log.warn("Notification with event ID {} not found for user {} to mark as read.", eventId, userElementId);
-        return false;
+        return false; // Indicates not found
     }
 
     @Transactional
@@ -73,11 +74,11 @@ public class NotificationManagementService {
             } else {
                 log.info("Notification (Event ID: {}) for user {} was already UNREAD. Status: {}",
                         eventId, userElementId, notification.getStatus());
-                return false;
+                return false; // Indicates no change was made as it was already unread
             }
         }
         log.warn("Notification with event ID {} not found for user {} to mark as unread.", eventId, userElementId);
-        return false;
+        return false; // Indicates not found
     }
 
     @Transactional
@@ -97,5 +98,41 @@ public class NotificationManagementService {
     public List<Notification> getNotificationsForUser(String userElementId) {
         log.debug("Fetching all notifications for user {}", userElementId);
         return notificationRepository.findByRecipientUserIdOrderByCreatedAtDesc(userElementId);
+    }
+
+    @Transactional
+    public List<String> markAllNotificationsAsReadForUser(String userElementId) {
+        log.info("Attempting to mark all unread notifications as read for user {}", userElementId);
+        LocalDateTime now = LocalDateTime.now();
+        List<String> updatedEventIds = notificationRepository.updateStatusForAllUnreadNotificationsByUser(userElementId, now);
+        log.info("Marked {} notifications as read for user {}", updatedEventIds.size(), userElementId);
+        return updatedEventIds;
+    }
+
+    @Transactional
+    public void markNotificationsAsUnreadBatch(String userElementId, List<String> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            log.info("No event IDs provided to mark as unread for user {}. Skipping.", userElementId);
+            return;
+        }
+        log.info("Attempting to mark {} notifications as unread for user {}", eventIds.size(), userElementId);
+        LocalDateTime now = LocalDateTime.now();
+        notificationRepository.markNotificationsAsUnreadBatch(userElementId, eventIds, now);
+        log.info("Batch mark as unread operation completed for user {} for {} eventIds", userElementId, eventIds.size());
+    }
+
+    @Transactional
+    public boolean deleteAllReadNotificationsForUser(String userElementId) {
+        log.info("Attempting to delete all read notifications for user {}", userElementId);
+        // First, check if there are any read notifications to delete to avoid unnecessary logging if none exist.
+        // This is an optimization and can be removed if direct delete is preferred.
+        List<Notification> readNotifications = notificationRepository.findByRecipientUserIdAndStatus(userElementId, NotificationStatus.READ);
+        if (readNotifications.isEmpty()) {
+            log.info("No read notifications found to delete for user {}", userElementId);
+            return false; // Or true, depending on whether "nothing to delete" is a success. Let's say false for "no action taken".
+        }
+        notificationRepository.deleteAllReadNotificationsByUser(userElementId);
+        log.info("Successfully deleted all read notifications (count: {}) for user {}", readNotifications.size(), userElementId);
+        return true;
     }
 }
