@@ -9,15 +9,22 @@ import {
   Typography,
 } from "@mui/material";
 import { Home as HomeIcon } from "@mui/icons-material";
+import { useDispatch, useSelector } from "react-redux"; // Added
+import { AppDispatch, RootState } from "@/app/store"; // Added
+import { fetchNotifications } from "@/redux/notificationSlice"; // Added
 import Navbar from "./NavBar/Navbar";
 import Tree from "./Tree/Tree"; // This is the component that displays a single tree's graph
 import Trees from "./Trees/Trees"; // This is the component that lists all trees (previously Trees)
 import { Tree as TreeType } from "@/types/entityTypes"; // Renamed Tree to TreeType to avoid conflict with component
 import "./Home.scss";
+
 import { getErrorMessage } from "@/utils/common";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetTreeQuery } from "@/redux/queries/tree-endpoints";
 export default function Home() {
+  const dispatch: AppDispatch = useDispatch(); // Added
+  const notificationStatus = useSelector((state: RootState) => state.notifications.status); // Added
+
   const { treeId: encodedId } = useParams<{ treeId: string }>(); // Changed
   const treeId = encodedId && decodeURIComponent(encodedId!); // Changed
   const navigate = useNavigate();
@@ -28,6 +35,13 @@ export default function Home() {
     isError: isTreeError, // Changed
     error: TreeError, // Changed
   } = useGetTreeQuery({ treeId: treeId! }, { skip: !treeId }); // Changed
+
+  // useEffect to fetch notifications
+  useEffect(() => {
+    if (notificationStatus === 'idle') {
+      dispatch(fetchNotifications());
+    }
+  }, [notificationStatus]);
 
   useEffect(() => {
     if (treeId && (isTreeFetching || isTreeLoading)) // Changed

@@ -34,10 +34,21 @@ const initialState: NotificationState = {
 };
 
 // Async Thunks
-export const fetchNotifications = createAsyncThunk('notifications/fetchNotifications', async () => {
-  const response = await fetchNotificationsAPI();
-  return response; // This will be Notification[]
-});
+
+
+
+export const fetchNotifications = createAsyncThunk<Notification[], void, { rejectValue: string }>(
+  'notifications/fetchNotifications', 
+  async (_, { rejectWithValue }) => {
+    try {
+      // fetchNotificationsAPI is expected to return RawNotificationFromAPI[]
+      const notifications = await fetchNotificationsAPI(); 
+      return notifications;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to fetch notifications');
+    }
+  }
+);
 
 export const markNotificationRead = createAsyncThunk(
   'notifications/markNotificationRead',
