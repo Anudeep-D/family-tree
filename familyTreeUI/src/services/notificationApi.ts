@@ -194,6 +194,7 @@ export const clearReadNotificationsAPI = async (): Promise<void> => {
     method: 'DELETE',
     headers: getHeaders(),
   });
+  console.log("got this response from detele all", response.text);
   if (!response.ok) {
     const errorBody = await response.text();
     console.error('Failed to delete all read notifications:', response.status, errorBody);

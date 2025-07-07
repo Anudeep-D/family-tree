@@ -44,7 +44,6 @@ import {
   DeleteSweepTwoTone,
   MarkEmailReadOutlined,
   MarkEmailUnreadTwoTone,
-  DraftsTwoTone,
 } from "@mui/icons-material";
 import { formatDistanceToNow } from "date-fns";
 import NotificationMessage from "./NotificationMessage";
@@ -202,7 +201,7 @@ const NotificationList: React.FC<NotificationListProps> = ({ onClose }) => {
               onChange={() => setShowOnlyUnread((prev) => !prev)}
             />
             <Tooltip title="Only unread">
-              <DraftsTwoTone fontSize="small" />
+              <MarkEmailUnreadTwoTone fontSize="small" />
             </Tooltip>
           </Stack>
         </Stack>
@@ -234,10 +233,6 @@ const NotificationList: React.FC<NotificationListProps> = ({ onClose }) => {
         {notificationStatus !== "loading" &&
           visibleNotifications.length > 0 &&
           visibleNotifications.map((notification) => {
-            // Log details of notification being rendered
-            console.log(
-              `[NotificationList] Rendering item - ID: ${notification.id}, isRead: ${notification.isRead}, Message: "${notification.message}"`
-            );
             return (
               <Fade in key={notification.id} timeout={250}>
                 <ListItem

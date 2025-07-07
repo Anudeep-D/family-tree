@@ -122,7 +122,7 @@ public class NotificationManagementService {
     }
 
     @Transactional
-    public boolean deleteAllReadNotificationsForUser(String userElementId) {
+    public boolean deleteAllReadNotificationsForUser(String userElementId) throws Exception {
         log.info("Attempting to delete all read notifications for user {}", userElementId);
         // First, check if there are any read notifications to delete to avoid unnecessary logging if none exist.
         // This is an optimization and can be removed if direct delete is preferred.

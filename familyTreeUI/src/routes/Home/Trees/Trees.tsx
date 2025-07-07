@@ -298,120 +298,139 @@ const Trees: React.FC<TreesProps> = ({ handleTreeSelection }) => {
           {JSON.stringify(deleteMultipleError)}
         </Alert>
       )}
-      <TableContainer component={Paper} elevation={3} sx={{ mt: 2, mb: 2 }}>
-        <Table size="medium">
-          <TableHead>
-            <TableRow>
-              <TableCell padding="checkbox">
-                <Checkbox
-                  checked={
-                    // Changed
-                    selectedTreeIds.length === // Changed
-                      filteredTrees.slice(
-                        // Changed
-                        page * rowsPerPage,
-                        page * rowsPerPage + rowsPerPage
-                      ).length && filteredTrees.length > 0 // Changed
-                  }
-                  onChange={handleSelectAll}
-                  inputProps={{ "aria-label": "select all trees" }} // Changed
-                />
-              </TableCell>
-              {headCells.map((headCell) => (
-                <TableCell
-                  key={headCell.id}
-                  sortDirection={orderBy === headCell.id ? order : false}
-                >
-                  <TableSortLabel
-                    active={orderBy === headCell.id}
-                    direction={orderBy === headCell.id ? order : "asc"}
-                    onClick={(event) => handleRequestSort(event, headCell.id)}
-                  >
-                    {headCell.label}
-                    {orderBy === headCell.id ? (
-                      <Box component="span" sx={visuallyHidden}>
-                        {order === "desc"
-                          ? "sorted descending"
-                          : "sorted ascending"}
-                      </Box>
-                    ) : null}
-                  </TableSortLabel>
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {isTreesFetching || isTreesLoading ? ( // Changed for consistency
+      <Box
+        sx={{
+          mt: 2,
+          mb: 2,
+          maxHeight: "calc(100vh - 260px)",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <TableContainer
+          component={Paper}
+          elevation={3}
+          sx={{
+            flex: 1, // Fills the height minus pagination
+            overflowY: "auto",
+            borderRadius: "16px 16px 0px 0px"
+          }}
+        >
+          <Table stickyHeader size="medium">
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={3} align="center">
-                  <Skeleton variant="text" width="100%" height={20} />
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    checked={
+                      // Changed
+                      selectedTreeIds.length === // Changed
+                        filteredTrees.slice(
+                          // Changed
+                          page * rowsPerPage,
+                          page * rowsPerPage + rowsPerPage
+                        ).length && filteredTrees.length > 0 // Changed
+                    }
+                    onChange={handleSelectAll}
+                    inputProps={{ "aria-label": "select all trees" }} // Changed
+                  />
                 </TableCell>
+                {headCells.map((headCell) => (
+                  <TableCell
+                    key={headCell.id}
+                    sortDirection={orderBy === headCell.id ? order : false}
+                  >
+                    <TableSortLabel
+                      active={orderBy === headCell.id}
+                      direction={orderBy === headCell.id ? order : "asc"}
+                      onClick={(event) => handleRequestSort(event, headCell.id)}
+                    >
+                      {headCell.label}
+                      {orderBy === headCell.id ? (
+                        <Box component="span" sx={visuallyHidden}>
+                          {order === "desc"
+                            ? "sorted descending"
+                            : "sorted ascending"}
+                        </Box>
+                      ) : null}
+                    </TableSortLabel>
+                  </TableCell>
+                ))}
               </TableRow>
-            ) : filteredTrees.length > 0 ? ( // Changed
-              filteredTrees // Changed
-                .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                .map(
-                  (
-                    tree // Changed
-                  ) => (
-                    <TableRow key={tree.elementId} hover>
-                      <TableCell
-                        key={`${tree.elementId}-checkbox`}
-                        padding="checkbox"
-                      >
-                        <Checkbox
-                          checked={selectedTreeIds.includes(
-                            // Changed
-                            tree.elementId!
-                          )}
-                          onChange={() => toggleSelect(tree.elementId!)}
-                        />
-                      </TableCell>
-                      <TableCell key={`${tree.elementId}-name`}>
-                        <Link
-                          component="button"
-                          onClick={() => handleTreeSelection(tree!)} // Changed
-                        >
-                          {tree.name}
-                        </Link>
-                      </TableCell>
-                      <TableCell key={`${tree.elementId}-desc`}>
-                        {tree.desc ?? "-"}
-                      </TableCell>
-                      <TableCell key={`${tree.elementId}-role`}>
-                        {tree.access}
-                      </TableCell>
-                      <TableCell key={`${tree.elementId}-createdBy`}>
-                        {tree.createdBy}
-                      </TableCell>
-                      <TableCell key={`${tree.elementId}-createdAt`}>
-                        {tree.createdAt ?? "-"}
-                      </TableCell>
-                    </TableRow>
-                  )
-                )
-            ) : (
-              filteredTrees.length === 0 && ( // Changed
+            </TableHead>
+            <TableBody>
+              {isTreesFetching || isTreesLoading ? ( // Changed for consistency
                 <TableRow>
                   <TableCell colSpan={3} align="center">
-                    No trees found.
+                    <Skeleton variant="text" width="100%" height={20} />
                   </TableCell>
                 </TableRow>
-              )
-            )}
-          </TableBody>
-        </Table>
-
-        <TablePagination
-          rowsPerPageOptions={[10, 50, 100]}
-          component="div"
-          count={filteredTrees.length} // Changed
-          rowsPerPage={rowsPerPage}
-          page={page}
-          onPageChange={handleChangePage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
-      </TableContainer>
+              ) : filteredTrees.length > 0 ? ( // Changed
+                filteredTrees // Changed
+                  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                  .map(
+                    (
+                      tree // Changed
+                    ) => (
+                      <TableRow key={tree.elementId} hover>
+                        <TableCell
+                          key={`${tree.elementId}-checkbox`}
+                          padding="checkbox"
+                        >
+                          <Checkbox
+                            checked={selectedTreeIds.includes(
+                              // Changed
+                              tree.elementId!
+                            )}
+                            onChange={() => toggleSelect(tree.elementId!)}
+                          />
+                        </TableCell>
+                        <TableCell key={`${tree.elementId}-name`}>
+                          <Link
+                            component="button"
+                            onClick={() => handleTreeSelection(tree!)} // Changed
+                          >
+                            {tree.name}
+                          </Link>
+                        </TableCell>
+                        <TableCell key={`${tree.elementId}-desc`}>
+                          {tree.desc ?? "-"}
+                        </TableCell>
+                        <TableCell key={`${tree.elementId}-role`}>
+                          {tree.access}
+                        </TableCell>
+                        <TableCell key={`${tree.elementId}-createdBy`}>
+                          {tree.createdBy}
+                        </TableCell>
+                        <TableCell key={`${tree.elementId}-createdAt`}>
+                          {tree.createdAt ?? "-"}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  )
+              ) : (
+                filteredTrees.length === 0 && ( // Changed
+                  <TableRow>
+                    <TableCell colSpan={3} align="center">
+                      No trees found.
+                    </TableCell>
+                  </TableRow>
+                )
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <Paper elevation={3} sx={{ borderTop: "1px solid #dddddd3d" , borderRadius: "0px 0px 16px 16px"}}>
+          <TablePagination
+            rowsPerPageOptions={[10, 50, 100]}
+            component="div"
+            count={filteredTrees.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        </Paper>
+      </Box>
       <ConfirmDialog
         {...dialogOpen}
         onClose={() => {
