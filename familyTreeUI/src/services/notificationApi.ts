@@ -190,7 +190,7 @@ export const markNotificationsUnreadBatchAPI = async (eventIds: string[]): Promi
 
 // Delete all read notifications for the current user
 export const clearReadNotificationsAPI = async (): Promise<void> => {
-  const response = await fetch(`${API_BASE_URL}/read`, { // Note: API_BASE_URL is already /api/notifications
+  const response = await fetch(`${API_BASE_URL}/delete-all-read`, { // Note: API_BASE_URL is already /api/notifications
     method: 'DELETE',
     headers: getHeaders(),
   });

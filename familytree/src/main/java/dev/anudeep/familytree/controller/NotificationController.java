@@ -147,7 +147,7 @@ public class NotificationController {
         }
     }
 
-    @DeleteMapping("/read")
+    @DeleteMapping("/delete-all-read")
     public ResponseEntity<?> deleteAllReadNotifications(Principal principal) {
         if (principal == null || principal.getName() == null) {
             return ResponseEntity.status(401).body("User not authenticated.");
@@ -158,11 +158,10 @@ public class NotificationController {
             boolean success = notificationManagementService.deleteAllReadNotificationsForUser(userElementId);
             if (success) {
                 log.info("All read notifications deleted.");
-                return ResponseEntity.ok().body("All read notifications deleted.");
             } else {
                 log.info("No read notifications found to delete.");
-                return ResponseEntity.ok().body("No read notifications found to delete.");
             }
+            return ResponseEntity.noContent().build();
         } catch (Exception e) {
             log.error("Error deleting all read notifications for user {}: {}", userElementId, e.getMessage(), e);
             return ResponseEntity.status(500).body("Error processing request.");
