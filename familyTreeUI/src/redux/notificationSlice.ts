@@ -125,6 +125,7 @@ export const clearReadNotificationsThunk = createAsyncThunk<void, void, { reject
     try {
       await clearReadNotificationsAPI();
       // No specific data needed on success, the reducer will filter local state
+      return;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to clear read notifications');
     }
