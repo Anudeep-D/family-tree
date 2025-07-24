@@ -10,9 +10,9 @@
   justify-content: center;
   align-items: center;
   text-align: center;
-  background: #282c34; // Default background if no image
-  color: white;
-  border: 2px solid #4caf50; // Default border for alive
+  background: #E0F2F1; // A light pastel color
+  color: #5C5C5C; // Dark Gray
+  border: 2px solid #82A7A7; // A darker pastel color
   box-sizing: border-box;
   position: relative; // For overlay and handles
   overflow: hidden; // Ensures content/overlay respects border-radius
@@ -29,9 +29,9 @@
   }
 
   &.deceased {
-    border-color: #c9c9c9;
-    opacity: 0.8;
-    filter: grayscale(100%);
+    border-color: #BDBDBD;
+    opacity: 0.7;
+    filter: grayscale(80%);
   }
 
   &.alive {
@@ -43,7 +43,7 @@
   &.has-image {
     background-size: cover;
     background-position: center;
-    color: white; // Default text color on image, can be overridden by specific elements
+    color: #5C5C5C; // Dark Gray
 
     .person-name-on-image {
       
@@ -68,8 +68,8 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(40, 44, 52, 0.85); // Dark overlay, adjust alpha for desired image visibility
-      color: white;
+      background-color: rgba(250, 249, 246, 0.85); // Light overlay
+      color: #5C5C5C;
       flex-direction: column;
       justify-content: center;
       align-items: center;
@@ -87,7 +87,7 @@
         width: 6px;
       }
       &::-webkit-scrollbar-thumb {
-        background-color: rgba(255, 255, 255, 0.3);
+        background-color: rgba(92, 92, 92, 0.3);
         border-radius: 3px;
       }
       &::-webkit-scrollbar-track {
@@ -123,7 +123,7 @@
 
     .nickname {
       font-size: 0.75em; // Reduced from 0.85em
-      color: #bbb;     // Slightly adjust color if needed
+      color: #8E8E8E;     // A darker gray
       margin-bottom: 2px;
     }
 
@@ -144,7 +144,7 @@
   // Styles for nodes WITHOUT an image (or common styles for text details)
   .nickname {
     font-size: 0.85em;
-    color: #ccc; // Light grey for nickname
+    color: #8E8E8E; // A darker gray
   }
 
   .commonlook {
@@ -152,10 +152,10 @@
     margin-top: 3px;
 
     &.green {
-      color: #66bb6a; // Green
+      color: #A5D6A7; // A soft green
     }
     &.red {
-      color: #ef5350; // Red
+      color: #FF6B6B; // A soft red
     }
   }
 
@@ -164,13 +164,13 @@
     font-size: 0.8em;
     margin-top: 3px;
     &.neutral {
-      color: #ffd600; // Yellow
+      color: #FFD54F; // A soft yellow
     }
     &.good {
-      color: #66bb6a; // Green
+      color: #A5D6A7; // A soft green
     }
     &.evil {
-      color: #ef5350; // Red
+      color: #FF6B6B; // A soft red
     }
   }
 

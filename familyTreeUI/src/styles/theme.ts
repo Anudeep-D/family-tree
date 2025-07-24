@@ -2,38 +2,38 @@ import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
-    mode: "dark",
+    mode: "light",
     primary: {
-      main: "#0070E0", // Indigo 900
-      light: "#534BAE", // Lighter shade for Indigo 900
-      dark: "#000051", // Darker shade for Indigo 900
-      contrastText: "#fff",
+      main: "#B2D8D8", // Pastel Blue
+      light: "#E0F2F1",
+      dark: "#82A7A7",
+      contrastText: "#5C5C5C",
     },
     secondary: {
-      main: "#00ACC1", // Cyan 600
-      light: "#5DDEF4", // Lighter shade for Cyan 600
-      dark: "#007C91", // Darker shade for Cyan 600
-      contrastText: "#000", // Text might need to be dark for this vibrant teal
+      main: "#F0E68C", // Khaki
+      light: "#FFF9C4",
+      dark: "#BDAE5E",
+      contrastText: "#5C5C5C",
     },
     error: {
-      main: "#EA4335", // Keep or adjust if needed for dark theme
+      main: "#FF6B6B", // A soft red
     },
     warning: {
-      main: "#FBBC05", // Keep or adjust if needed for dark theme
+      main: "#FFD54F", // A soft yellow
     },
     info: {
-      main: "#34A853", // Google Green, consider a lighter shade for dark mode if needed
+      main: "#81C784", // A soft green
     },
     success: {
-      main: "#0F9D58", // Keep or adjust if needed for dark theme
+      main: "#A5D6A7", // A soft green
     },
     background: {
-      default: "#121212",
-      paper: "#1E1E1E",
+      default: "#FAF9F6", // Off-white
+      paper: "#FFFFFF",
     },
     text: {
-      primary: "#E0E0E0",
-      secondary: "#B0B0B0",
+      primary: "#5C5C5C",
+      secondary: "#8E8E8E",
     },
   },
   typography: {

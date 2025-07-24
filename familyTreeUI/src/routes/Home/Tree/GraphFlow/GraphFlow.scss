@@ -8,21 +8,21 @@
 }
 
 .BELONGS_TO-edge .react-flow__edge-path {
-  stroke: #1ac8f0  !important; // Ensure the animated edge has the same color as the arrow
+  stroke: #81C784  !important; // A soft green
   stroke-width: 2px;
 }
 
 .MARRIED_TO-edge .react-flow__edge-path {
   stroke-dasharray: 5 5 !important; // Defines a dash pattern (5 units on, 5 units off)
   animation: dashdraw 1s linear infinite  !important; // Adjusted duration for a slower, more subtle animation
-  stroke: #f1904b  !important; // Ensure the animated edge has the same color as the arrow
+  stroke: #FFD54F  !important; // A soft yellow
   stroke-width: 2px;
 }
 
 .PARENT_OF-edge .react-flow__edge-path {
   stroke-dasharray: 5 5 !important; // Defines a dash pattern (5 units on, 5 units off)
   animation: dashdraw 2s linear infinite  !important; // Adjusted duration for a slower, more subtle animation
-  stroke: #dfed26  !important; // Ensure the animated edge has the same color as the arrow
+  stroke: #FF6B6B  !important; // A soft red
   stroke-width: 2px;
 }
 
