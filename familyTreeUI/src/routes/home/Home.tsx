@@ -35,7 +35,7 @@ export default function Home() {
     isError: isTreeError, // Changed
     error: TreeError, // Changed
   } = useGetTreeQuery({ treeId: treeId! }, { skip: !treeId }); // Changed
-
+  const [treesKey, setTreesKey] = useState(0);
   // useEffect to fetch notifications
   useEffect(() => {
     if (notificationStatus === 'idle') {
@@ -71,7 +71,7 @@ export default function Home() {
             component="button"
             underline="hover"
             color="inherit"
-            onClick={() => navigate(`/`)}
+            onClick={() => {setTreesKey(prev => prev + 1);navigate(`/`)}}
           >
             <HomeIcon
               fontSize="small"
@@ -100,7 +100,7 @@ export default function Home() {
       {treeId && tree && <Tree tree={tree} />} 
 
       {!treeId && ( 
-        <Trees handleTreeSelection={handleTreeSelection} /> 
+        <Trees key={treesKey} handleTreeSelection={handleTreeSelection} /> 
       )}
     </Box>
   );

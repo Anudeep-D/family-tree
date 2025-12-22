@@ -78,6 +78,26 @@ services:
     networks:
       - backendnet
 
+  chatbot:
+    container_name: familytree-chatbot
+    build:
+      context: ./chatbot
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    networks:
+      - backendnet
+    environment:
+      NEO4J_URI: ${NEO4J_URI}
+      NEO4J_USERNAME: ${NEO4J_USERNAME}
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+      NEO4J_DATABASE: ${NEO4J_DATABASE}
+      GROQ_KEY: ${GROQ_KEY}
+    depends_on:
+      - neo4j
+
 volumes:
   neo4j-data:  # Volume for Neo4j data
   redis-data:  # Volume for Redis data

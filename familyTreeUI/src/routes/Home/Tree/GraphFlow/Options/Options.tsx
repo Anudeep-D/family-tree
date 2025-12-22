@@ -13,6 +13,7 @@ import { Tree } from "@/types/entityTypes";
 import { PopperWrapper } from "./Popper/PopperWrapper";
 import { FindPopper } from "./Option/Find/FindPopper";
 import FiltersPopper from "./Option/Filter/FiltersPopper";
+import { ChatDrawer } from "./Option/Chat/ChatDrawer";
 
 interface OptionsProps {
   tree: Tree;
@@ -52,6 +53,7 @@ const actions = [
 
 export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
   const [isAccessDialogOpen, setAccessDialogOpen] = React.useState(false);
+  const [isChatDrawerOpen, setChatDrawerOpen] = React.useState(false);
   const [openPopper, setOpenPopper] = React.useState(false);
   const [popperAnchorEl, setPopperAnchorEl] = React.useState<
     undefined | HTMLElement
@@ -90,8 +92,11 @@ export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
           break;
         }
         setPopperAnchorEl(event.currentTarget);
-        setPopperChild(<FiltersPopper onClose={()=>setOpenPopper(false)} />);
+        setPopperChild(<FiltersPopper onClose={() => setOpenPopper(false)} />);
         setOpenPopper((prev) => !prev);
+        break;
+      case "chat":
+        setChatDrawerOpen(true);
         break;
       default:
         break;
@@ -130,6 +135,11 @@ export const Options: React.FC<OptionsProps> = ({ tree, sortTree }) => {
         open={isAccessDialogOpen}
         onClose={() => setAccessDialogOpen(false)}
         tree={tree}
+      />
+
+      <ChatDrawer
+        open={isChatDrawerOpen}
+        onClose={() => setChatDrawerOpen(false)}
       />
 
       <PopperWrapper open={openPopper} anchorEl={popperAnchorEl}>

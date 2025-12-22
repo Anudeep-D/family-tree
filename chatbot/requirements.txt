@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+llama-index
+llama-index-llms-groq
+llama-index-graph-stores-neo4j
+llama-index-agent-openai
