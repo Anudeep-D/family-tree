@@ -2,7 +2,7 @@
 
 A full-stack Family Tree web application built using:
 
-- **Backend**: Java Spring Boot, Neo4j (graph DB)
+- **Backend**: Java Spring Boot, Neo4j (graph DB), Redis, RabbitMQ
 - **Frontend**: React + TypeScript, React Flow
 - **Auth**: JWT-based authentication & role-based access (Admin / Editor / Viewer)
 - **DevOps**: Podman, NGINX, podman-compose
