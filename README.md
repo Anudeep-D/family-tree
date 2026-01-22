@@ -39,7 +39,7 @@ A full-stack Family Tree web application built using:
 2. run with podman:
     ```bash
     cd family-tree
-    podman-compose up --build
+    podman-compose up -d --build
 
 3. run seperately:
     ```bash
