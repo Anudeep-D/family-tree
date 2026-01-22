@@ -12,10 +12,7 @@ const HouseNode = ({ data }: NodeProps<HouseNode>) => {
       {/* Popover and InfoIcon removed, will be handled by onNodeClick in GraphFlow */}
       {/* data.homeTown can still be used by GraphFlow to decide if popover should show */}
 
-      <Handle id="l1" type="target" position={Position.Left} />
-      <Handle id="r1" type="source" position={Position.Right} />
-      <Handle id="t1" type="target" position={Position.Top} />
-      <Handle id="b1" type="source" position={Position.Bottom} />
+      <Handle id="belongs-to" type="source" position={Position.Bottom} />
     </div>
   );
 };
