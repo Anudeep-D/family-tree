@@ -1,0 +1,249 @@
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Code Quality &amp; Security Review</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+      background: #ffffff;
+      color: #1f2328;
+      line-height: 1.6;
+      padding: 20px;
+    }
+    .container { max-width: 760px; margin: 0 auto; }
+    h1 { font-size: 28px; margin-bottom: 8px; font-weight: 600; }
+    .summary { background: #f7f8fa; border-left: 4px solid #3b82d4; padding: 16px; margin: 20px 0; border-radius: 4px; }
+    h2 { font-size: 20px; margin-top: 28px; margin-bottom: 12px; font-weight: 600; }
+    h3 { font-size: 16px; margin-top: 16px; margin-bottom: 8px; font-weight: 600; color: #1f2328; }
+    .section { margin-bottom: 24px; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f7f8fa; font-weight: 600; }
+    .critical { color: #c9302c; font-weight: 600; }
+    .high { color: #d9534f; font-weight: 600; }
+    .warning { color: #f0ad4e; font-weight: 600; }
+    .success { color: #5cb85c; font-weight: 600; }
+    .issue { background: #fef5f5; border-left: 3px solid #d9534f; padding: 12px; margin: 8px 0; border-radius: 2px; }
+    .fix { background: #f0f9f0; border-left: 3px solid #5cb85c; padding: 12px; margin: 8px 0; border-radius: 2px; }
+    code { background: #f7f8fa; padding: 2px 6px; border-radius: 3px; font-family: "Monaco", monospace; font-size: 13px; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 3px; font-size: 12px; font-weight: 600; margin: 0 4px 4px 0; }
+    .badge-critical { background: #f8d7da; color: #721c24; }
+    .badge-high { background: #f5c6cb; color: #721c24; }
+    .badge-warning { background: #fff3cd; color: #856404; }
+    .badge-success { background: #d4edda; color: #155724; }
+    ul { margin-left: 20px; margin-bottom: 12px; }
+    li { margin-bottom: 6px; }
+    .footer { border-top: 1px solid #e5e7eb; margin-top: 32px; padding-top: 16px; text-align: center; font-size: 12px; color: #57606a; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 Code Quality &amp; Security Review</h1>
+    <p style="color:#57606a;margin-bottom:16px">Family Tree Project – Dependency &amp; Vulnerability Analysis</p>
+
+    <div class="summary">
+      <strong>Executive Summary</strong>
+      <p style="margin-top:8px">Found <span class="critical">4 critical issues</span> and <span class="high">8 high-priority security/modernization concerns</span>. Immediate action required on container base images, Python version, deprecated packages, and network binding.</p>
+    </div>
+
+    
+    <div class="section">
+      <h2><span class="critical">🚨 CRITICAL ISSUES</span></h2>
+      
+      <div class="issue">
+        <h3>1. Python 3.9 EOL – Chatbot Dockerfile</h3>
+        <p><strong>Severity:</strong> <span class="critical">CRITICAL</span></p>
+        <p style="margin-top:6px"><code>chatbot/Dockerfile</code> uses <code>python:3.9-slim</code> which reached End of Life on <strong>October 5, 2025</strong>. No security patches will be released.</p>
+        <p style="margin-top:8px"><strong>Risk:</strong> Vulnerable to unpatched Python vulnerabilities; fails IBM security compliance.</p>
+        <div class="fix" style="margin-top:8px">
+          <strong>Fix:</strong> Update to Python 3.11 (latest stable) using Red Hat UBI minimal image for security compliance:
+          <pre style="background:#f7f8fa;padding:8px;margin-top:6px;border-radius:3px;overflow-x:auto"><code>FROM registry.redhat.io/ubi9/python-311-minimal:latest</code></pre>
+        </div>
+      </div>
+
+      <div class="issue">
+        <h3>2. Node.js 23 EOL Risk – familyTreeUI Dockerfile</h3>
+        <p><strong>Severity:</strong> <span class="critical">CRITICAL</span></p>
+        <p style="margin-top:6px"><code>familyTreeUI/Dockerfile</code> uses <code>node:23-alpine</code>. Node.js 23 is not LTS and only receives security updates until April 2025.</p>
+        <p style="margin-top:8px"><strong>Risk:</strong> EOL soon; rapidly losing security coverage.</p>
+        <div class="fix" style="margin-top:8px">
+          <strong>Fix:</strong> Use LTS version (Node 22):
+          <pre style="background:#f7f8fa;padding:8px;margin-top:6px;border-radius:3px;overflow-x:auto"><code>FROM node:22-alpine</code></pre>
+        </div>
+      </div>
+
+      <div class="issue">
+        <h3>3. Java Base Image – Not from Trusted Registry</h3>
+        <p><strong>Severity:</strong> <span class="critical">CRITICAL</span></p>
+        <p style="margin-top:6px"><code>familytree/Dockerfile</code> uses <code>eclipse-temurin:17-jdk</code>. IBM security policy requires images from <code>registry.redhat.io</code> (Red Hat UBI).</p>
+        <p style="margin-top:8px"><strong>Risk:</strong> Fails IBM container registry compliance; potential supply chain risk.</p>
+        <div class="fix" style="margin-top:8px">
+          <strong>Fix:</strong> Switch to Red Hat UBI8 Java image:
+          <pre style="background:#f7f8fa;padding:8px;margin-top:6px;border-radius:3px;overflow-x:auto"><code>FROM registry.redhat.io/ubi8/openjdk-17:latest</code></pre>
+        </div>
+      </div>
+
+      <div class="issue">
+        <h3>4. Insecure Network Binding – Chatbot Service</h3>
+        <p><strong>Severity:</strong> <span class="critical">CRITICAL</span></p>
+        <p style="margin-top:6px"><code>chatbot/Dockerfile</code> binds to <code>0.0.0.0:8000</code>. Exposes service to all interfaces in production.</p>
+        <p style="margin-top:8px"><strong>Risk:</strong> Violates IBM network security policy; enables unauthorized external access.</p>
+        <div class="fix" style="margin-top:8px">
+          <strong>Fix:</strong> Bind to localhost only:
+          <pre style="background:#f7f8fa;padding:8px;margin-top:6px;border-radius:3px;overflow-x:auto"><code>CMD ["uvicorn", "main:app", "--host", "127.0.0.1", "--port", "8000"]</code></pre>
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="section">
+      <h2><span class="high">⚠️ HIGH PRIORITY ISSUES</span></h2>
+
+      <h3>Node.js Dependencies</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Package</th>
+            <th>Current</th>
+            <th>Latest</th>
+            <th>Issue</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>@types/react</code></td>
+            <td>18.2.53</td>
+            <td>18.3.x</td>
+            <td><span class="warning">Outdated</span> – minor version available</td>
+          </tr>
+          <tr>
+            <td><code>@types/react-router-dom</code></td>
+            <td>5.3.3</td>
+            <td>5.3.x</td>
+            <td><span class="warning">Pinned</span> – should use ^ for fixes</td>
+          </tr>
+          <tr>
+            <td><code>webpack</code></td>
+            <td>5.89.0</td>
+            <td>5.95.x</td>
+            <td><span class="warning">Outdated</span> – patch updates available</td>
+          </tr>
+          <tr>
+            <td><code>typescript</code></td>
+            <td>5.3.3</td>
+            <td>5.7.x</td>
+            <td><span class="warning">Outdated</span> – consider updating for type safety</td>
+          </tr>
+          <tr>
+            <td><code>eslint</code></td>
+            <td>8.56.0</td>
+            <td>9.x</td>
+            <td><span class="warning">Major version</span> – breaking changes expected</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Python Dependencies – Requirements Not Pinned</h3>
+      <div class="issue">
+        <p><code>chatbot/requirements.txt</code> lists packages without versions:</p>
+        <ul style="margin-top:8px">
+          <li><code>fastapi</code> – No pinned version (currently ~0.115.x)</li>
+          <li><code>uvicorn</code> – No pinned version (currently ~0.32.x)</li>
+          <li><code>llama-index</code> – No pinned version (rapidly evolving, potential breaking changes)</li>
+        </ul>
+        <div class="fix" style="margin-top:12px">
+          <strong>Risk:</strong> <code>pip install</code> will fetch latest versions, causing non-deterministic builds and potential breaking changes.
+          <br /><strong>Fix:</strong> Generate <code>requirements.txt</code> with exact versions using <code>pip freeze</code>.
+        </div>
+      </div>
+
+      <h3>Spring Boot &amp; Java Dependencies</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>Version</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>spring-boot</code></td>
+            <td>3.4.5</td>
+            <td><span class="success">✓ Latest stable</span></td>
+          </tr>
+          <tr>
+            <td><code>springdoc-openapi</code></td>
+            <td>2.3.0</td>
+            <td><span class="success">✓ Latest stable</span></td>
+          </tr>
+          <tr>
+            <td><code>google-api-client</code></td>
+            <td>2.2.0</td>
+            <td><span class="warning">⚠️ Consider 2.10+</span></td>
+          </tr>
+          <tr>
+            <td><code>reactor-netty</code></td>
+            <td>1.1.17</td>
+            <td><span class="success">✓ Current</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Nginx Container – Not from Trusted Registry</h3>
+      <div class="issue">
+        <p><code>familyTreeUI/Dockerfile</code> uses <code>nginx:alpine</code> (from Docker Hub). Should use Red Hat UBI image for security compliance.</p>
+        <div class="fix" style="margin-top:8px">
+          <strong>Fix:</strong> 
+          <pre style="background:#f7f8fa;padding:8px;margin-top:6px;border-radius:3px;overflow-x:auto"><code>FROM registry.redhat.io/rhel9/nginx:latest</code></pre>
+        </div>
+      </div>
+    </div>
+
+    
+    <div class="section">
+      <h2>🔐 Security Best Practices – Not Implemented</h2>
+      
+      <h3>Container Hardening</h3>
+      <ul>
+        <li><strong>No non-root USER:</strong> All containers run as root. Add <code>USER 1001</code> before CMD.</li>
+        <li><strong>No read-only root filesystem:</strong> Recommend enabling in orchestration layer.</li>
+        <li><strong>No security scanning:</strong> No tool to scan built images for vulnerabilities.</li>
+      </ul>
+
+      <h3>Secrets Management</h3>
+      <ul>
+        <li>Verify <code>.env</code> files are in <code>.gitignore</code> (critical for credentials).</li>
+        <li>Ensure API keys are stored in secure vaults (Hashicorp Vault, IBM Key Protect), not env files.</li>
+      </ul>
+
+      <h3>Network Security</h3>
+      <ul>
+        <li>No HTTPS enforcement in Nginx config (check <code>nginx/default.conf</code>).</li>
+        <li>No TLS 1.3 enforcement documented.</li>
+      </ul>
+    </div>
+
+    
+    <div class="section">
+      <h2>📋 Recommended Fixes (Priority Order)</h2>
+      <ol style="margin-left:20px">
+        <li><strong>[URGENT]</strong> Update <code>chatbot/Dockerfile</code> to Python 3.11 UBI + fix network binding</li>
+        <li><strong>[URGENT]</strong> Update all Docker base images to Red Hat UBI registry</li>
+        <li><strong>[HIGH]</strong> Pin Python dependencies with exact versions in <code>requirements.txt</code></li>
+        <li><strong>[HIGH]</strong> Update Node.js 23 → 22 LTS in <code>familyTreeUI/Dockerfile</code></li>
+        <li><strong>[MEDIUM]</strong> Update Node.js build dependencies (webpack, TypeScript, ESLint)</li>
+        <li><strong>[MEDIUM]</strong> Add non-root user to all Dockerfiles</li>
+        <li><strong>[LOW]</strong> Run container security scanning in CI/CD pipeline</li>
+      </ol>
+    </div>
+
+    <div class="footer">
+      Made with IBM Bob
+    </div>
+  </div>
+</body>
+</html>

@@ -1,8 +1,11 @@
-fastapi
-uvicorn
-pydantic
-python-dotenv
-llama-index
-llama-index-llms-groq
-llama-index-graph-stores-neo4j
-llama-index-agent-openai
+# Core dependencies with pinned versions for reproducible builds
+fastapi==0.115.4
+uvicorn[standard]==0.32.1
+pydantic==2.8.2
+python-dotenv==1.0.1
+
+# LLM and AI dependencies
+llama-index==0.10.71
+llama-index-llms-groq==0.2.7
+llama-index-graph-stores-neo4j==0.2.16
+llama-index-agent-openai==0.3.1
