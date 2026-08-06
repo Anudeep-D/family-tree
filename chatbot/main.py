@@ -12,15 +12,21 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Initialize FastAPI app
-app = FastAPI()
+app = FastAPI(
+    title="Family Tree Chatbot API",
+    description="AI-powered family tree query service",
+    version="1.0.0"
+)
 
-# Configure CORS
+# Configure CORS - restrict to specific origins (security best practice)
+# In production, set specific domains instead of "*"
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # Neo4j connection details from environment variables
@@ -81,8 +87,24 @@ class ChatResponse(BaseModel):
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-    response = agent.chat(request.message)
-    return ChatResponse(reply=str(response))
+    """Process chat message and return response from the Neo4j knowledge graph agent."""
+    try:
+        if not request.message or not request.message.strip():
+            logger.warning("Received empty chat message")
+            raise HTTPException(status_code=400, detail="Message cannot be empty")
+        
+        logger.info(f"Processing chat message: {request.message[:50]}...")
+        response = agent.chat(request.message)
+        logger.info(f"✓ Chat response generated successfully")
+        return ChatResponse(reply=str(response))
+    except Exception as e:
+        logger.error(f"Error processing chat message: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to process chat message")
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring and orchestration."""
+    return {"status": "healthy"}
 
 if __name__ == "__main__":
     import uvicorn
