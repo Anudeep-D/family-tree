@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 import {
   CircularProgress,
@@ -6,47 +6,63 @@ import {
   Container,
   Typography,
   Paper,
+  Button,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth"; // Adjust path if useAuth is elsewhere
+import { useAuth } from "../../hooks/useAuth";
+import { auth, googleProvider } from "@/config/firebase";
+import { signInWithPopup } from "firebase/auth";
 import "./Login.scss";
 
 const LoginPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, login, redirectPath, isLoading, setRedirectPath } =
     useAuth();
+  const [isFirebaseLoginLoading, setIsFirebaseLoginLoading] = useState(false);
+
+  // Active provider setting from env (FIREBASE by default)
+  const authProvider = import.meta.env.VITE_AUTH_PROVIDER || "FIREBASE";
 
   // Redirect if already logged in
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
       const path = redirectPath || "/";
       navigate(path, { replace: true });
-      setRedirectPath(null); // Clear the redirect path after using it
+      setRedirectPath(null);
     }
   }, [isAuthenticated, isLoading, navigate, redirectPath, setRedirectPath]);
 
-  const handleLoginSuccess = async (credentialResponse: CredentialResponse) => {
+  // Google OAuth Success Handler
+  const handleGoogleLoginSuccess = async (credentialResponse: CredentialResponse) => {
     if (credentialResponse.credential) {
       try {
-        // The login function from useAuth should ideally handle the API call and token storage.
-        // We pass the credential to it.
         await login(credentialResponse.credential);
       } catch (err) {
         console.error("Login failed:", err);
-        // Optionally, display an error message to the user on the login page
       }
     } else {
       console.error("Google login failed: No credential returned");
     }
   };
 
-  const handleLoginError = () => {
+  const handleGoogleLoginError = () => {
     console.error("Google login failed");
-    // Optionally, display an error message to the user
   };
 
-  // If loading auth state, or if already authenticated and waiting for redirect,
-  // show a loading message or nothing to prevent flicker.
+  // Firebase Popup Login Handler
+  const handleFirebaseLogin = async () => {
+    try {
+      setIsFirebaseLoginLoading(true);
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      const idToken = await userCredential.user.getIdToken();
+      await login(idToken);
+    } catch (error) {
+      console.error("Firebase Google login failed:", error);
+    } finally {
+      setIsFirebaseLoginLoading(false);
+    }
+  };
+
   if (isLoading || isAuthenticated) {
     return (
       <Box className="loading-container">
@@ -69,7 +85,7 @@ const LoginPage = () => {
             elevation={3}
             sx={{
               p: 4,
-              mt: 8, // Margin top to push the paper down a bit
+              mt: 8,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -89,13 +105,40 @@ const LoginPage = () => {
             </Typography>
 
             <Box sx={{ mt: 2 }}>
-              <GoogleLogin
-                onSuccess={handleLoginSuccess}
-                onError={handleLoginError}
-                theme="filled_blue"
-                shape="pill"
-                width={280}
-              />
+              {authProvider === "FIREBASE" ? (
+                <Button
+                  variant="contained"
+                  onClick={handleFirebaseLogin}
+                  disabled={isFirebaseLoginLoading}
+                  sx={{
+                    backgroundColor: "#4285F4",
+                    color: "#fff",
+                    px: 3,
+                    py: 1.2,
+                    borderRadius: 5,
+                    textTransform: "none",
+                    fontSize: "16px",
+                    boxShadow: 2,
+                    "&:hover": {
+                      backgroundColor: "#357ae8",
+                    },
+                  }}
+                >
+                  {isFirebaseLoginLoading ? (
+                    <CircularProgress size={24} sx={{ color: "#fff" }} />
+                  ) : (
+                    "Sign in with Google (Firebase)"
+                  )}
+                </Button>
+              ) : (
+                <GoogleLogin
+                  onSuccess={handleGoogleLoginSuccess}
+                  onError={handleGoogleLoginError}
+                  theme="filled_blue"
+                  shape="pill"
+                  width={280}
+                />
+              )}
             </Box>
           </Paper>
         </Container>

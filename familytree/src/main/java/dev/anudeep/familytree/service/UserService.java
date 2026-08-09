@@ -1,52 +1,49 @@
 package dev.anudeep.familytree.service;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.json.gson.GsonFactory;
+import dev.anudeep.familytree.domain.model.AuthenticatedUserClaims;
+import dev.anudeep.familytree.domain.port.out.AuthProviderPort;
 import dev.anudeep.familytree.model.User;
 import dev.anudeep.familytree.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.util.Collections;
 
 @Slf4j
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
-    private final GoogleIdTokenVerifier verifier;
+    private final AuthProviderPort authProviderPort;
 
-    public UserService(UserRepository userRepository,
-                       @Value("${google.clientId}") String clientId) throws Exception {
+    public UserService(UserRepository userRepository, AuthProviderPort authProviderPort) {
         this.userRepository = userRepository;
-        this.verifier = new GoogleIdTokenVerifier.Builder(
-                GoogleNetHttpTransport.newTrustedTransport(),
-                GsonFactory.getDefaultInstance()
-        ).setAudience(Collections.singletonList(clientId)).build();
+        this.authProviderPort = authProviderPort;
     }
 
-    public User processGoogleToken(String token) {
-        try {
-            GoogleIdToken idToken = verifier.verify(token);
-            log.info("Token verified");
-            if (idToken == null) {
-                throw new RuntimeException("Invalid ID token");
-            }
-            log.info("idToken not null");
-            GoogleIdToken.Payload payload = idToken.getPayload();
-            log.info("payload :{}", payload);
-            String email = payload.getEmail();
-            String name = (String) payload.get("name");
-            String picture = (String) payload.get("picture");
-            log.info("email :{}", email);
-            return userRepository.findByEmail(email)
-                    .orElseGet(() -> userRepository.save(new User(email, name, picture)));
+    /**
+     * Processes an incoming authentication ID token using the active AuthProviderPort adapter
+     * (Firebase or Google) and registers or fetches the user in Neo4j.
+     *
+     * @param token Raw ID token from frontend
+     * @return User domain entity
+     */
+    public User processToken(String token) {
+        log.info("Processing auth token via active provider: {}", authProviderPort.getProviderName());
+        AuthenticatedUserClaims claims = authProviderPort.verifyToken(token);
+        
+        String email = claims.getEmail();
+        String name = claims.getName() != null ? claims.getName() : email;
+        String picture = claims.getPicture();
 
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to verify token: " + e.getMessage(), e);
-        }
+        log.info("Verified user claims for email: {}, provider: {}", email, claims.getProvider());
+
+        return userRepository.findByEmail(email)
+                .orElseGet(() -> userRepository.save(new User(email, name, picture)));
+    }
+
+    /**
+     * Backward-compatible alias for processToken.
+     */
+    public User processGoogleToken(String token) {
+        return processToken(token);
     }
 }

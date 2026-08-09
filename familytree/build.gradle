@@ -38,6 +38,9 @@ dependencies {
 	implementation 'com.google.http-client:google-http-client-jackson2:1.45.1'
 	implementation 'com.google.http-client:google-http-client-gson:1.45.1'
 
+	// Firebase Admin SDK
+	implementation 'com.google.firebase:firebase-admin:9.3.0'
+
 	// RabbitMQ client
 	implementation 'org.springframework.boot:spring-boot-starter-amqp'
 
