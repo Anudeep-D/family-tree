@@ -125,20 +125,14 @@ export const AuthProvider = ({ children }: AuthProviderProps): JSX.Element => {
         
         // Explicitly try to get the new session for Supabase after login and refetch
         // This ensures the client syncs up if cookies were updated.
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
+        // Supabase is optional — only sync session when the client is configured
+        if (supabase) {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (error) {
             console.error("Error getting Supabase session post-login:", error.message);
-        } else if (session) {
+          } else if (session) {
             console.log("Supabase client session established post-login:", session);
-            // If your backend provides a direct Supabase access token with the user object,
-            // you could use supabase.auth.setSession here.
-            // e.g., if user.supabaseAccessToken and user.supabaseRefreshToken are available:
-            // await supabase.auth.setSession({
-            //   access_token: user.supabaseAccessToken,
-            //   refresh_token: user.supabaseRefreshToken,
-            // });
-        } else {
-            console.log("No active Supabase session found post-login by getSession, relying on refreshSession in useEffect.");
+          }
         }
 
         if (redirectPath) {

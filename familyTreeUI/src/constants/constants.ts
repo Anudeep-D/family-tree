@@ -1,1 +1,3 @@
-export const baseUrl = `${process.env.HOST_NAME}:${process.env.SPRING_PORT}`;
+// In the container, the browser talks to the nginx proxy at the same origin.
+// Nginx forwards /api/* to the backend, so no explicit host/port is needed.
+export const baseUrl = ``;
