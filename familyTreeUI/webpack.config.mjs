@@ -56,9 +56,26 @@ try {
   console.warn("Could not load .env file. Proceeding with empty env.", e);
 }
 
-// Convert to Webpack-friendly format
+// Convert to Webpack-friendly format for process.env.*
 const envKeys = Object.keys(env || {}).reduce((prev, next) => {
   prev[`process.env.${next}`] = JSON.stringify(env[next]);
+  return prev;
+}, {});
+
+// Also load familyTreeUI/.env for VITE_* vars
+let uiEnv = {};
+try {
+  const uiDotenvResult = dotenv.config({ path: path.resolve(__dirname, '.env') });
+  if (uiDotenvResult.parsed) {
+    uiEnv = uiDotenvResult.parsed;
+  }
+} catch (e) {
+  // no-op
+}
+
+// Shim import.meta.env for Webpack (Vite-style env vars)
+const importMetaEnvKeys = Object.keys(uiEnv).reduce((prev, next) => {
+  prev[next] = JSON.stringify(uiEnv[next]);
   return prev;
 }, {});
 
@@ -130,7 +147,13 @@ export default {
     new HtmlWebpackPlugin({
       template: "./index.html", // Base HTML template for the app
     }),
-    new webpack.DefinePlugin(envKeys),
+    new webpack.DefinePlugin({
+      ...envKeys,
+      // Shim import.meta.env so VITE_* vars work in a Webpack build
+      'import.meta.env': JSON.stringify(importMetaEnvKeys),
+      // Shim process.env so any process.env.* references don't crash in the browser
+      'process.env': JSON.stringify(env || {}),
+    }),
     new CopyWebpackPlugin({
       patterns: [
         { from: "public", to: "." }, // Copies public/ to dist/

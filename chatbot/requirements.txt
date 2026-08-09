@@ -4,8 +4,8 @@ uvicorn[standard]==0.32.1
 pydantic==2.8.2
 python-dotenv==1.0.1
 
-# LLM and AI dependencies
-llama-index==0.10.71
-llama-index-llms-groq==0.2.7
-llama-index-graph-stores-neo4j==0.2.16
-llama-index-agent-openai==0.3.1
+# LangChain + Groq + Neo4j
+langchain==0.3.25
+langchain-core==0.3.60
+langchain-groq==0.3.2
+langchain-neo4j==0.4.0

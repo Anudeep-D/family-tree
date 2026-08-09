@@ -1,26 +1,87 @@
 import os
-from fastapi import FastAPI
-from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, StorageContext
-from llama_index.graph_stores.neo4j import Neo4jGraphStore
-from llama_index.core.agent import ReActAgent
-from llama_index.core.tools import QueryEngineTool, ToolMetadata
-from llama_index.llms.groq import Groq
+import logging
+from contextlib import asynccontextmanager
+
 from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+from langchain_neo4j import Neo4jGraph
+from langchain_groq import ChatGroq
+from langchain_neo4j import GraphCypherQAChain
 
 load_dotenv()
 
-# Initialize FastAPI app
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------------------------
+NEO4J_URI = os.getenv("NEO4J_URI", "bolt://neo4j:7687")
+NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "neo4j")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
+NEO4J_DATABASE = os.getenv("NEO4J_DATABASE", "neo4j")
+GROQ_API_KEY = os.getenv("GROQ_KEY")
+
+# ---------------------------------------------------------------------------
+# Lazy-initialised singletons (created once on first request)
+# ---------------------------------------------------------------------------
+_graph: Neo4jGraph | None = None
+_chain: GraphCypherQAChain | None = None
+
+
+def get_chain() -> GraphCypherQAChain:
+    """Return the QA chain, initialising it on first call."""
+    global _graph, _chain
+    if _chain is None:
+        logger.info("Initialising Neo4j connection and LangChain QA chain…")
+        _graph = Neo4jGraph(
+            url=NEO4J_URI,
+            username=NEO4J_USERNAME,
+            password=NEO4J_PASSWORD,
+            database=NEO4J_DATABASE,
+        )
+        llm = ChatGroq(
+            model="llama3-70b-8192",
+            api_key=GROQ_API_KEY,
+            temperature=0,
+        )
+        _chain = GraphCypherQAChain.from_llm(
+            llm=llm,
+            graph=_graph,
+            verbose=True,
+            allow_dangerous_requests=True,
+        )
+        logger.info("✓ QA chain ready")
+    return _chain
+
+
+# ---------------------------------------------------------------------------
+# FastAPI app
+# ---------------------------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Eagerly warm up the chain so the first request isn't slow
+    try:
+        get_chain()
+    except Exception as e:
+        logger.warning(f"Could not pre-warm chain at startup: {e}")
+    yield
+
+
 app = FastAPI(
     title="Family Tree Chatbot API",
-    description="AI-powered family tree query service",
-    version="1.0.0"
+    description="AI-powered family tree query service using LangChain + Groq",
+    version="2.0.0",
+    lifespan=lifespan,
 )
 
-# Configure CORS - restrict to specific origins (security best practice)
-# In production, set specific domains instead of "*"
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173").split(",")
+allowed_origins = os.getenv(
+    "ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -29,83 +90,39 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization"],
 )
 
-# Neo4j connection details from environment variables
-NEO4J_URI = os.getenv("NEO4J_URI")
-NEO4J_USERNAME = os.getenv("NEO4J_USERNAME")
-NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
-NEO4J_DATABASE = os.getenv("NEO4J_DATABASE")
 
-# Groq API key
-GROQ_API_KEY = os.getenv("GROQ_KEY")
-
-# Initialize Neo4j graph store
-graph_store = Neo4jGraphStore(
-    username=NEO4J_USERNAME,
-    password=NEO4J_PASSWORD,
-    url=NEO4J_URI,
-    database=NEO4J_DATABASE,
-)
-
-# Initialize Groq LLM
-llm = Groq(model="llama3-70b-8192", api_key=GROQ_API_KEY)
-
-# Create a query engine tool for Neo4j
-from llama_index.core.query_engine import KnowledgeGraphQueryEngine
-
-neo4j_query_engine = KnowledgeGraphQueryEngine(
-    storage_context=StorageContext.from_defaults(graph_store=graph_store),
-    llm=llm,
-    verbose=True,
-)
-
-neo4j_tool = QueryEngineTool(
-    query_engine=neo4j_query_engine,
-    metadata=ToolMetadata(
-        name="neo4j_query_engine",
-        description="""
-        This tool is connected to a Neo4j graph database containing family tree information.
-        It can be used to answer questions about people, relationships, and family structures.
-        Cypher queries can be used to retrieve information from the database.
-        Example queries:
-        "Who are the children of person X?"
-        "What is the relationship between person A and person B?"
-        "List all members of the 'Stark' family."
-        """
-    ),
-)
-
-
-# Create a ReAct agent
-agent = ReActAgent.from_tools([neo4j_tool], llm=llm, verbose=True)
-
-
+# ---------------------------------------------------------------------------
+# Models
+# ---------------------------------------------------------------------------
 class ChatRequest(BaseModel):
     message: str
+
 
 class ChatResponse(BaseModel):
     reply: str
 
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
-    """Process chat message and return response from the Neo4j knowledge graph agent."""
+    """Answer a natural-language question about the family tree via Neo4j Cypher."""
+    if not request.message or not request.message.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    logger.info("Processing: %s", request.message[:80])
     try:
-        if not request.message or not request.message.strip():
-            logger.warning("Received empty chat message")
-            raise HTTPException(status_code=400, detail="Message cannot be empty")
-        
-        logger.info(f"Processing chat message: {request.message[:50]}...")
-        response = agent.chat(request.message)
-        logger.info(f"✓ Chat response generated successfully")
-        return ChatResponse(reply=str(response))
+        result = get_chain().invoke({"query": request.message})
+        reply = result.get("result", "")
+        logger.info("✓ Response generated")
+        return ChatResponse(reply=reply)
     except Exception as e:
-        logger.error(f"Error processing chat message: {str(e)}")
+        logger.error("Chain error: %s", e)
         raise HTTPException(status_code=500, detail="Failed to process chat message")
+
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint for monitoring and orchestration."""
+    """Health check endpoint."""
     return {"status": "healthy"}
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)

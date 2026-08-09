@@ -1,38 +1,41 @@
 # Stage 1: Build the Spring Boot JAR
-# Use Red Hat UBI Java 17 for building (secure, actively maintained)
-FROM registry.redhat.io/ubi8/openjdk-17:latest as builder
-# Set working directory in the container
-WORKDIR /app
-# Copy only Gradle wrapper and build config files first
-COPY gradlew .
-COPY gradle gradle
-COPY build.gradle .
-COPY settings.gradle .
+# ubi8/openjdk-17 ships as jboss (UID 185) — no useradd needed
+FROM registry.access.redhat.com/ubi8/openjdk-17:latest AS builder
 
-# Pre-download dependencies (this step is cached unless these files change)
-RUN chmod +x ./gradlew && ./gradlew dependencies
+# Point Gradle user home to jboss home so the daemon cache is writable
+ENV GRADLE_USER_HOME=/home/jboss/.gradle
 
-# Now copy the actual source code
-COPY src src
+WORKDIR /home/jboss/build
 
-# Clean and then build the JAR Build the Spring Boot app (must have gradlew script)
+# Copy only Gradle wrapper and build config files first, preserving execute bit
+COPY --chown=185:0 --chmod=755 gradlew .
+COPY --chown=185:0 gradle gradle
+COPY --chown=185:0 build.gradle .
+COPY --chown=185:0 settings.gradle .
+
+# Switch to jboss so Gradle can write its cache
+USER 185
+
+# Pre-download dependencies (cached unless build files change)
+RUN ./gradlew dependencies
+
+# Copy source and build the JAR
+COPY --chown=185:0 src src
 RUN ./gradlew clean bootJar
 
 # Stage 2: Run the built JAR
-# Use Red Hat UBI Java 17 for a clean, secure run environment
-FROM registry.redhat.io/ubi8/openjdk-17:latest
-# Create non-root user for security
-RUN useradd -m -u 1001 appuser
+# ubi8/openjdk-17 runs as jboss (UID 185) — no useradd needed
+FROM registry.access.redhat.com/ubi8/openjdk-17:latest
 
-# Set working directory
-WORKDIR /app
-# Copy the built JAR from the build stage and set ownership
-COPY --from=builder --chown=appuser:appuser /app/build/libs/*.jar app.jar
+WORKDIR /deployments
+
+# Copy the built JAR from the build stage
+COPY --from=builder --chown=185:0 /home/jboss/build/build/libs/*.jar app.jar
+
 # Expose port 8080
 EXPOSE 8080
 
-# Switch to non-root user
-USER 1001
+# Run as jboss (already the default, make explicit)
+USER 185
 
-# Run the JAR file
 ENTRYPOINT ["java", "-jar", "app.jar"]
