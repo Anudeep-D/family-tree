@@ -266,34 +266,26 @@ const GraphFlow: FC<GraphFlowProps> = ({
         const isSourcePerson = edgeSourceNode.type === Nodes.Person;
         const isTargetPerson = edgeTargetNode.type === Nodes.Person;
         const isSourceHouse = edgeSourceNode.type === Nodes.House;
-        const isTargetHouse = edgeTargetNode.type === Nodes.House;
 
-        if (
-          (isSourcePerson && isTargetHouse) ||
-          (isSourceHouse && isTargetPerson)
-        ) {
-          // Determine correct source and target for BELONGS_TO (Person -> House)
-          const sourceId = isSourcePerson
-            ? connection.source
-            : connection.target;
-          const targetId = isTargetHouse
-            ? connection.target
-            : connection.source;
-
+        // Connection from House to Person (BELONGS_TO)
+        if (isSourceHouse && isTargetPerson) {
           const newBelongsToEdge: AppEdge = {
-            id: `${Edges.BELONGS_TO}-${sourceId}-${targetId}-${Date.now()}`,
-            source: sourceId,
-            target: targetId,
-            sourceHandle: null, // Use null for default connection
-            targetHandle: null, // Use null for default connection
+            id: `${Edges.BELONGS_TO}-${connection.source}-${
+              connection.target
+            }-${Date.now()}`,
+            source: connection.source!,
+            target: connection.target!,
+            sourceHandle: connection.sourceHandle,
+            targetHandle: connection.targetHandle,
             type: Edges.BELONGS_TO,
             markerEnd: defaultMarker,
             className: `${Edges.BELONGS_TO}-edge`,
             data: { updatedOn: new Date().toISOString() },
           };
           setEdges((eds) => addEdge(newBelongsToEdge, eds));
-          // Skip opening the dialog
-        } else {
+          // Skip opening the dialog for BELONGS_TO
+        } else if (isSourcePerson && isTargetPerson) {
+          // Connections between two persons (MARRIED_TO or PARENT_OF)
           setNewEdge({
             id: `${Date.now()}-new-pending`, // Temporary ID for the pending edge
             ...connection,
@@ -302,6 +294,7 @@ const GraphFlow: FC<GraphFlowProps> = ({
           setInvolvedNodes({ source: edgeSourceNode, target: edgeTargetNode });
           setEdgeDialogMode("new");
         }
+        // Other connections are implicitly disallowed by the specific handles
       }
     },
     [nodes, setEdges, setNewEdge, setInvolvedNodes, setEdgeDialogMode] // Ensure all dependencies are listed

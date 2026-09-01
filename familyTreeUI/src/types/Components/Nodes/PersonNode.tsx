@@ -90,10 +90,10 @@ const PersonNode = ({ data }: NodeProps<PersonNode>) => {
       ) : (
         mainContent
       )}
-      <Handle id="l1" type="target" position={Position.Left} />
-      <Handle id="r1" type="source" position={Position.Right} />
-      <Handle id="t1" type="target" position={Position.Top} />
-      <Handle id="b1" type="source" position={Position.Bottom} />
+      <Handle id="married-left" type="target" position={Position.Left} />
+      <Handle id="married-right" type="source" position={Position.Right} />
+      <Handle id="child-of" type="target" position={Position.Top} />
+      <Handle id="parent-of" type="source" position={Position.Bottom} />
     </div>
   );
 };
