@@ -93,3 +93,10 @@ pip install -r requirements.txt          # Deps (pinned versions)
 - RabbitMQ STOMP plugin must be enabled — `rabbitmq/enabled_plugins` is mounted read-only.
 - Backend container name is `familytree-backend`, Redis is `familytree-redis` — used as hostnames within the `backendnet` bridge network.
 - Backend Dockerfile uses `registry.access.redhat.com/ubi8/openjdk-17` (runs as UID 185 `jboss`). Chatbot uses `registry.access.redhat.com/ubi9/python-311` (UID 1001).
+
+## Architecture & Documentation Maintenance
+
+- Complete architectural specifications are maintained in [ARCHITECTURE.md](ARCHITECTURE.md).
+- **Mandatory Agent Rule**: Whenever making or reviewing architectural, structural, database schema, messaging, or API changes (e.g. adding/modifying endpoints, Neo4j models/relationships, auth providers, container ports, environment variables), you **MUST** check and update `ARCHITECTURE.md` to keep documentation completely in sync with the codebase.
+- Activate and follow the **`architecture-sync`** skill (`.agents/skills/architecture-sync/SKILL.md`) for the required checklist and workflow.
+
